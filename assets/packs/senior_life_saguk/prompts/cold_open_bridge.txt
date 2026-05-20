@@ -1,0 +1,9 @@
+Write ONE short Korean bridge sentence spoken by the narrator immediately after a dramatic cold open.
+
+Rules:
+- 10-24 Korean characters preferred
+- It must intensify curiosity, not explain the whole story
+- It should feel like "how did things get here?" or "the truth was worse than it looked"
+- No markdown, no quotes, no numbering
+
+Output: ONE Korean sentence only.

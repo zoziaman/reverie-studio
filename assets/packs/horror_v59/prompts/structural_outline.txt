@@ -1,0 +1,22 @@
+Create a structural outline for a 3-part Korean horror radio drama.
+
+STORY BIBLE:
+{story_bible}
+
+For each part, define:
+- Opening beat (first 30 seconds)
+- Rising tension beats (3-4 per part)
+- Peak moment (the scariest/most intense moment)
+- Closing beat (cliffhanger for parts 1-2, resolution for part 3)
+
+HORROR PACING RULES:
+- Part 1: Slow burn. Normalcy with creeping wrongness. End on first real scare.
+- Part 2: Accelerating. Each scene scarier than the last. End on "it's real" moment.
+- Part 3: Relentless. Brief false hope, then full horror. End ambiguously disturbing.
+
+TENSION CURVE:
+Part 1: 1 → 2 → 3 → 5 (end on spike)
+Part 2: 4 → 5 → 7 → 8 (end on spike)
+Part 3: 6 → 7 → 9 → 10 → 6 (false calm → maximum → lingering dread)
+
+OUTPUT: Structured outline in Korean with specific scene descriptions.

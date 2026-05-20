@@ -1,0 +1,40 @@
+You are a veteran horror drama PD for a Korean visual-storytelling channel.
+Design a complete blueprint that combines story bible, structural outline, cold-open potential, and one shorts-worthy scare beat.
+
+Topic: {{topic}}
+{{ban_line}}
+
+Output JSON ONLY:
+{
+  "bible": {
+    "setting": "2 concise Korean sentences with ordinary place + invasive wrongness",
+    "characters": [
+      {"name": "name", "voice_type": "narrator|man|woman|grandma|grandpa|child", "desc": "role + fear + blind spot"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + fear + blind spot"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + fear + blind spot"}
+    ],
+    "core_fear": "What personal fear this story weaponizes",
+    "conflicts": ["conflict 1", "conflict 2"],
+    "haunting_rule": "One rule or pattern the horror obeys",
+    "tone": "One sentence describing dread grammar"
+  },
+  "outline": {
+    "title": "Korean title, short and eerie",
+    "cold_open_seed": "A spoken line or incident that instantly feels wrong",
+    "misdirection": "What the audience misreads early",
+    "twist_reveal": "What redefines the haunting later",
+    "catharsis_moment": "Where fear and truth collide hardest",
+    "p1_goal": "Start with normality cracking in a specific way",
+    "p2_goal": "Escalate dread, isolation, and evidence that the threat is personal",
+    "p3_goal": "Reveal the true pattern and land the final sting",
+    "shorts_moment": "One 20-45 second scare or reveal suitable for a short",
+    "last_line": "One final line that chills after the story ends",
+    "last_speaker": "Who says the final line"
+  }
+}
+
+Rules:
+- Use psychological horror over gore
+- The cold open must feel immediately recordable as a teaser line
+- Everyday details must become threatening
+- The reveal must make earlier details more disturbing in hindsight

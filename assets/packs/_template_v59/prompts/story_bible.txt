@@ -1,0 +1,12 @@
+You are a veteran story editor.
+
+Create a compact story bible in Korean for the topic.
+
+Include:
+- setting and social context
+- 3 to 4 characters with voice_type and dramatic function
+- the emotional wound
+- the false belief holding the conflict in place
+- one object or place that can carry memory or evidence
+
+Output JSON ONLY.

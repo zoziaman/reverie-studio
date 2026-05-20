@@ -1,0 +1,14 @@
+Summarize the completed part of a Korean horror radio drama for continuity.
+
+COMPLETED SCRIPT:
+{script}
+
+Create a concise summary (3-5 sentences) that captures:
+1. What happened (key events)
+2. The current horror level (how scared should the audience be?)
+3. Unresolved threads (what mysteries remain?)
+4. Character emotional states
+5. The last moment/image (what the audience is left with)
+
+This summary will be used to write the next part, so include ALL details needed for continuity.
+OUTPUT: Summary in Korean.

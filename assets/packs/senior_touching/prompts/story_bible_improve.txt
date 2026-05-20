@@ -1,0 +1,17 @@
+You are a veteran drama producer with 20+ years of experience.
+Improve the story bible below based on the provided feedback.
+
+[Current Story Bible]
+{{bible}}
+
+[Feedback]
+{{feedback}}
+
+[Genre]
+heartwarming
+
+[Instructions]
+- Fix the specific issues raised in the feedback
+- Preserve the existing overall structure — only strengthen the weak points
+- Output as a numbered list, concise and actionable
+- Write the improved story bible in Korean

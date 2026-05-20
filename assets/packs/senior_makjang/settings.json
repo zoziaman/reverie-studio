@@ -1,0 +1,823 @@
+{
+  "style": {
+    "image_style": "dramatic webtoon illustration style, 2d art, high contrast shadows, emotional atmosphere",
+    "model": "senior"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "나레이션": "narrator_female",
+      "내레이션": "narrator_female",
+      "할아버지": "grandpa",
+      "할머니": "grandma",
+      "시어머니": "grandma",
+      "시아버지": "grandpa",
+      "남자": "young_man",
+      "여자": "young_woman",
+      "손주": "young_woman",
+      "손녀": "young_woman",
+      "손자": "young_man",
+      "grandpa": "grandpa",
+      "grandma": "grandma",
+      "man": "young_man",
+      "woman": "young_woman",
+      "young_woman": "young_woman",
+      "young_man": "young_man",
+      "antagonist": "middle_man",
+      "middle_woman": "middle_woman",
+      "middle_man": "middle_man",
+      "아들": "middle_man",
+      "딸": "middle_woman",
+      "며느리": "middle_woman",
+      "사위": "middle_man",
+      "이모": "middle_woman",
+      "삼촌": "middle_man",
+      "아버지": "middle_man",
+      "어머니": "middle_woman",
+      "아저씨": "middle_man",
+      "아줌마": "middle_woman"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "angry",
+      "sad",
+      "happy",
+      "calm",
+      "desperate",
+      "whisper",
+      "worried",
+      "scared"
+    ],
+    "emotion_weights": {
+      "angry": 5,
+      "desperate": 4,
+      "sad": 4,
+      "worried": 3,
+      "calm": 2,
+      "whisper": 3,
+      "happy": 1
+    },
+    "emotion_correction_targets": {
+      "angry": 4,
+      "worried": 4,
+      "desperate": 3
+    }
+  },
+  "characters": {
+    "narrator": {
+      "base": "cool gray silhouette figure, neutral observing pose, minimal features",
+      "style": "flat vector art, muted dramatic tones, webtoon style shading"
+    },
+    "grandma": {
+      "base": "dusty rose silhouette, elderly woman, tense rigid posture, gray-white hair, visible forehead wrinkle lines, stern or pained curved expression, aged face with deep worry lines",
+      "style": "flat vector art, dramatic pastel, emotional weight",
+      "age_negative": "young, teenager, child, smooth skin, youthful, black hair",
+      "gender_negative": "male, masculine, beard, broad shoulders"
+    },
+    "grandpa": {
+      "base": "dark brown silhouette, elderly man, rigid stern posture, white or gray hair, deep forehead creases, sharp worried or stern simple expression, aged imposing presence",
+      "style": "flat vector art, somber tones, dramatic mood",
+      "age_negative": "young, teenager, child, smooth skin, youthful, black hair",
+      "gender_negative": "female, feminine, long hair"
+    },
+    "man": {
+      "base": "dark slate silhouette, tense angular posture, sharp edges, neutral or frowning simple expression",
+      "style": "flat vector art, dramatic contrast, webtoon aesthetic"
+    },
+    "woman": {
+      "base": "muted mauve silhouette, emotional pose, simple expression showing distress or determination",
+      "style": "flat vector art, dramatic pastel, cinematic feel"
+    },
+    "antagonist": {
+      "base": "dark charcoal silhouette, imposing posture, slightly menacing simple expression",
+      "style": "flat vector art, high contrast, dramatic shadows"
+    },
+    "_default": {
+      "base": "muted colored silhouette, dramatic pose, simple emoticon expression",
+      "style": "flat vector art, dramatic pastel tones, webtoon style"
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 80,
+    "max_turns": 150
+  },
+  "restrictions": {
+    "no_realistic_faces": true,
+    "no_gore": true
+  },
+  "assets": {
+    "bgm_folder": "makjang",
+    "sfx_folder": "makjang",
+    "sfx_enabled": true,
+    "sfx_category": "emotional",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "forced_style": {
+      "force_positive": "flat vector illustration, dramatic pastel tones, webtoon aesthetic, emotional lighting, professional minimal design, cinematic composition",
+      "force_negative": "realistic face, detailed face, cute, childish, photograph, 3d render, realistic human, gore, blood"
+    },
+    "thumbnail_backgrounds": [
+      "torn contract papers on desk, harsh overhead light, rain on window, no people, dramatic",
+      "broken picture frame on floor, scattered documents, sharp shadows, no people",
+      "sealed legal envelope with red stamp on desk, desk lamp glow, no people",
+      "smartphone screen with unread messages, dark bedroom, blue glow, no people",
+      "wedding ring on table, cracked wine glass, city lights reflection, no people",
+      "bank statement papers spread out, calculator, tense lighting, no people",
+      "kitchen counter, car keys, abandoned luggage near door, no people",
+      "empty courthouse hallway, fluorescent lights, long corridor, no people",
+      "closed wooden door, light beam underneath, empty corridor, no people",
+      "dining table with untouched meal, spilled wine stain, one chair pushed back, no people",
+      "makeup items scattered on bathroom tile, broken mirror shards, no people",
+      "calendar with many dates crossed out, red marker, cold light, no people",
+      "empty meeting room, chairs aligned, single file folder on table, no people",
+      "opened drawer with documents peeking out, dusty attic light, no people",
+      "parking lot at night, one car door ajar, streetlight, no people",
+      "stairwell landing, echoing light, dropped glove, no people",
+      "apartment hallway, door number plate, harsh shadows, no people",
+      "desk with resignation letter, pen, coffee stain, no people",
+      "kitchen sink with overflowing water, dim light, no people",
+      "phone receiver off-hook, silent room, no people",
+      "laptop open to email screen (blurred), dark room, no people",
+      "trash bin with shredded papers, office corner, no people",
+      "curtain slightly open, streetlight stripes on wall, no people",
+      "high heel shoe left behind near sofa, dramatic shadow, no people",
+      "jewelry box open, empty slot, cold light, no people",
+      "messy bed, folded suit on chair, tense mood, no people",
+      "door chain lock broken, scratch marks, hallway light, no people",
+      "kitchen table, two cups, one overturned, no people",
+      "elevator lobby mirror reflections, empty space, no people",
+      "staircase with torn photo pieces on steps, no people"
+    ],
+    "safe_fallbacks": [
+      "dramatic shadows on empty room, rain on window, scattered documents on desk, no people, webtoon style",
+      "empty old room, dusty furniture, dim lamp light, cinematic atmosphere",
+      "rainy window with droplets, blurry city lights, melancholic mood, empty interior"
+    ],
+    "safe_fallback_prompt": "dramatic shadows on empty room, rain on window, scattered documents on desk, no people, webtoon style"
+  },
+  "sfx": {
+    "category_guide": "This is a DRAMATIC FAMILY CONFLICT video. Available SFX tags: tension (building conflict), dramatic (dramatic music swell), sad (melancholic), angry (confrontation), whoosh. Place 2-4 effects per minute at confrontation peaks.",
+    "keyword_map": {
+      "배신": "tension",
+      "돈": "tension",
+      "비밀": "tension",
+      "분노": "angry",
+      "화": "angry",
+      "눈물": "sad",
+      "울": "sad",
+      "충격": "dramatic",
+      "반전": "dramatic",
+      "이혼": "tension",
+      "유산": "tension",
+      "가족": "sad",
+      "거짓말": "tension"
+    }
+  },
+  "atmosphere": {
+    "mood_map": {
+      "confrontation": "harsh dramatic lighting, deep shadows, tense composition",
+      "betrayal": "cold lighting, stark contrast, isolated framing",
+      "emotional": "warm but dim lighting, melancholic atmosphere",
+      "revelation": "sudden bright light, dramatic contrast, shock composition"
+    },
+    "keywords": {
+      "confrontation": [
+        "싸움",
+        "대립",
+        "분노",
+        "화",
+        "소리"
+      ],
+      "betrayal": [
+        "배신",
+        "거짓말",
+        "비밀",
+        "숨기"
+      ],
+      "emotional": [
+        "눈물",
+        "슬프",
+        "미안",
+        "후회"
+      ],
+      "revelation": [
+        "진실",
+        "밝혀",
+        "드러나",
+        "충격",
+        "반전"
+      ]
+    }
+  },
+  "emergency": {
+    "template_sequence": [
+      [
+        "나레이션",
+        "narrator",
+        "강남 대저택, 가족 모임이 시작되었습니다.",
+        "calm"
+      ],
+      [
+        "현수",
+        "young_man",
+        "아버지, 할 말이 있습니다.",
+        "calm"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "식탁 위로 무거운 침묵이 내려앉았습니다.",
+        "calm"
+      ],
+      [
+        "정숙",
+        "middle_woman",
+        "무슨 일이야? 다들 왜 이래.",
+        "worried"
+      ],
+      [
+        "현수",
+        "young_man",
+        "회사 일입니다.",
+        "calm"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "밥 먹고 해라.",
+        "angry"
+      ],
+      [
+        "현수",
+        "young_man",
+        "밥 먹고는 못 할 얘기입니다.",
+        "angry"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "현수는 서류 봉투를 꺼냈습니다.",
+        "calm"
+      ],
+      [
+        "정숙",
+        "middle_woman",
+        "그게 뭔데?",
+        "worried"
+      ],
+      [
+        "현수",
+        "young_man",
+        "형이 회사 돈을 빼돌린 증거입니다.",
+        "angry"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "아버지의 얼굴이 굳었습니다.",
+        "calm"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "뭐라고?",
+        "angry"
+      ],
+      [
+        "민서",
+        "young_woman",
+        "오빠, 지금 무슨 소리 하는 거야?",
+        "scared"
+      ],
+      [
+        "현수",
+        "young_man",
+        "민서 너도 알고 있었잖아.",
+        "angry"
+      ],
+      [
+        "민서",
+        "young_woman",
+        "나는 몰라. 나는 아무것도 몰라.",
+        "scared"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "현수의 손이 떨리고 있었습니다.",
+        "sad"
+      ],
+      [
+        "정숙",
+        "middle_woman",
+        "현수야, 제발 그만해.",
+        "sad"
+      ],
+      [
+        "현수",
+        "young_man",
+        "어머니, 이건 그만할 문제가 아닙니다.",
+        "angry"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "닥쳐!",
+        "angry"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "접시가 깨지는 소리가 울렸습니다.",
+        "angry"
+      ],
+      [
+        "현수",
+        "young_man",
+        "아버지도 알고 계셨죠?",
+        "angry"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "...나가.",
+        "angry"
+      ],
+      [
+        "현수",
+        "young_man",
+        "대답하세요.",
+        "desperate"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "아버지는 창밖을 바라보셨습니다.",
+        "sad"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "다 내 잘못이다.",
+        "sad"
+      ],
+      [
+        "정숙",
+        "middle_woman",
+        "여보?",
+        "worried"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "형한테도, 너한테도, 잘못했다.",
+        "sad"
+      ],
+      [
+        "현수",
+        "young_man",
+        "늦었습니다.",
+        "sad"
+      ],
+      [
+        "민서",
+        "young_woman",
+        "오빠, 가족인데 이러면 안 되지.",
+        "sad"
+      ],
+      [
+        "현수",
+        "young_man",
+        "가족이니까 이러는 거야.",
+        "angry"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "현관문이 열리고, 큰아들이 들어왔습니다.",
+        "calm"
+      ],
+      [
+        "준호",
+        "middle_man",
+        "무슨 일이야? 다들 왜 이런 표정이야.",
+        "calm"
+      ],
+      [
+        "현수",
+        "young_man",
+        "형, 할 말 있어.",
+        "calm"
+      ],
+      [
+        "준호",
+        "middle_man",
+        "뭔데?",
+        "calm"
+      ],
+      [
+        "현수",
+        "young_man",
+        "형이 회사 돈 30억 빼돌린 거 다 알아.",
+        "angry"
+      ],
+      [
+        "준호",
+        "middle_man",
+        "...누가 그래.",
+        "worried"
+      ],
+      [
+        "현수",
+        "young_man",
+        "증거 다 있어. 계좌 내역.",
+        "angry"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "준호의 얼굴이 하얗게 변했습니다.",
+        "calm"
+      ],
+      [
+        "정숙",
+        "middle_woman",
+        "준호야, 사실이야?",
+        "sad"
+      ],
+      [
+        "준호",
+        "middle_man",
+        "어머니, 그게...",
+        "worried"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "됐다. 다 됐어.",
+        "sad"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "아버지는 자리에서 일어나셨습니다.",
+        "calm"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "이 집, 이 회사, 다 정리하겠다.",
+        "calm"
+      ],
+      [
+        "현수",
+        "young_man",
+        "아버지!",
+        "scared"
+      ],
+      [
+        "민서",
+        "young_woman",
+        "아빠, 그게 무슨 말이야?",
+        "scared"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "내가 만든 거 내가 끝내는 거다.",
+        "sad"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "가족은 아무 말도 하지 못했습니다.",
+        "sad"
+      ],
+      [
+        "정숙",
+        "middle_woman",
+        "여보, 제발...",
+        "desperate"
+      ],
+      [
+        "아버지",
+        "grandpa",
+        "미안하다.",
+        "sad"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "그날 밤, 대저택의 불이 모두 꺼졌습니다.",
+        "calm"
+      ]
+    ]
+  },
+  "video": {
+    "pause_duration": 0.5,
+    "zoom_speed": 1.0
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "basic",
+    "default_scene_type": "dialogue",
+    "idle_drift_enabled": true,
+    "impact_shake_enabled": true,
+    "snap_zoom_enabled": true,
+    "subtitle_pulse_enabled": true,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "prop_keywords": [
+      "유언장",
+      "계약서",
+      "녹음",
+      "반지",
+      "상속",
+      "증거",
+      "통장",
+      "서류"
+    ],
+    "scene_motion_rules": {
+      "prop_reveal": ["snap_zoom", "subtitle_pulse"],
+      "reveal": ["snap_zoom", "impact_shake"],
+      "shock_entry": ["impact_shake", "snap_zoom"],
+      "confrontation": ["subtitle_pulse", "impact_shake"]
+    }
+  },
+  "script_quality": {
+    "min_non_narrator_roles": 3,
+    "max_narration_ratio": 0.35,
+    "min_turns_for_gate": 20,
+    "max_ellipsis_ratio": 0.12,
+    "warn_topic_overlap_ratio": 0.25
+  },
+  "shorts": {
+    "enabled": true,
+    "duration_sec": 35,
+    "upload_with_main": true,
+    "title_suffix": "#Shorts"
+  },
+  "hook_style": {
+    "top_label": "【 막 장 】",
+    "top_color": "#FFD700",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      10,
+      10,
+      20
+    ],
+    "duration": 4.0
+  },
+  "thumbnail": {
+    "text_default": "충격",
+    "style_guide": "충격/반전 느낌의 자극적 제목. 예시: \"그 돈의 진실\", \"숨겨왔던 비밀\", \"드러난 정체\". 배신/돈/비밀/정체 관련 단어. 궁금증 폭발.",
+    "title_hooks": [
+      "드러난 정체",
+      "숨겨진 증거",
+      "그 돈의 끝",
+      "거짓의 대가",
+      "가족의 배신",
+      "마침내 폭로"
+    ]
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, dramatic atmosphere, emotional, family drama, illustration style, intense lighting, confrontation",
+    "negative": "(worst quality:1.4), (low quality:1.4), horror, scary, nsfw, text, watermark, realistic face, detailed face, cute, childish, photograph, 3d render, realistic human, gore, blood",
+    "cfg_scale": 6.0,
+    "steps": 15
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "version": "v60.1.0",
+    "characters": {
+      "narrator": {
+        "id": "narrator",
+        "name": "나레이터",
+        "base": "no person, dramatic interior scene, tense atmospheric environment, cinematic composition",
+        "style": "dramatic webtoon illustration, high contrast, tense cinematic lighting",
+        "expressions": {
+          "neutral": "still tense environment",
+          "dramatic": "harsh dramatic lighting, shock composition"
+        }
+      },
+      "grandma": {
+        "id": "grandma",
+        "name": "할머니",
+        "display_name": "할머니",
+        "aliases": [
+          "grandma",
+          "할머니",
+          "시어머니",
+          "어머니"
+        ],
+        "gender_negative": "(male:1.5), (man:1.5), (boy:1.5), (1boy:1.5), masculine, short hair buzzcut, suit jacket, male face, beard, mustache",
+        "age_negative": "(young:1.5), (teenager:1.4), (child:1.4), youthful, smooth skin, baby face, plump cheeks, (20s:1.4), (30s:1.3)",
+        "base": "solo, (elderly korean woman:1.5), (70s:1.4), (permed silver hair:1.3), (wrinkled face:1.3), hanbok or casual elderly attire, (old age:1.4), 155cm",
+        "style": "dramatic webtoon illustration, high contrast shadows, emotional weight",
+        "expressions": {
+          "neutral": "composed stern gaze",
+          "angry": "sharp eyes, clenched jaw, pointing finger",
+          "sad": "collapsed posture, tears streaming, devastated",
+          "desperate": "grabbing someone's sleeve, pleading eyes"
+        }
+      },
+      "grandpa": {
+        "id": "grandpa",
+        "name": "할아버지",
+        "display_name": "할아버지",
+        "aliases": [
+          "grandpa",
+          "할아버지",
+          "시아버지",
+          "아버지",
+          "아빠"
+        ],
+        "gender_negative": "(female:1.5), (woman:1.5), (girl:1.5), (1girl:1.5), feminine, long hair, dress, skirt, female face, (bishoujo:1.4), (moe:1.4)",
+        "age_negative": "(young:1.5), (teenager:1.4), (child:1.4), youthful, smooth skin, baby face, (20s:1.4), (30s:1.3)",
+        "base": "solo, (elderly korean man:1.5), (70s:1.4), (thinning gray hair:1.3), (wrinkled face:1.3), traditional korean outfit, stern weathered expression, (old age:1.4), strong build",
+        "style": "dramatic webtoon illustration, somber tones, high contrast",
+        "expressions": {
+          "neutral": "cold authoritative stare",
+          "angry": "slamming table, veins visible, furious",
+          "sad": "head down, shoulders slumped, regretful",
+          "calm": "looking out window, contemplative, weary"
+        }
+      },
+      "young_man": {
+        "id": "young_man",
+        "name": "남자",
+        "display_name": "남자",
+        "aliases": [
+          "young_man",
+          "man",
+          "남자",
+          "아들",
+          "남편",
+          "오빠",
+          "형"
+        ],
+        "gender_negative": "(female:1.5), (woman:1.5), (girl:1.5), (1girl:1.5), feminine, long hair, dress, skirt, female face, (bishoujo:1.4), (moe:1.4)",
+        "age_negative": "(elderly:1.3), (old man:1.3), wrinkled face, bald head, gray hair, (60s:1.3), (70s:1.3), (80s:1.3)",
+        "base": "solo, korean man, late 30s, sharp jawline, slicked back hair, expensive suit, ambitious eyes, 180cm lean build",
+        "style": "dramatic webtoon illustration, high contrast, cinematic",
+        "expressions": {
+          "neutral": "calculating cold gaze",
+          "angry": "shouting, veins on neck, aggressive lean",
+          "sad": "looking away, guilt-ridden, clenched fists",
+          "desperate": "kneeling, begging, broken composure"
+        }
+      },
+      "young_woman": {
+        "id": "young_woman",
+        "name": "여자",
+        "display_name": "여자",
+        "aliases": [
+          "young_woman",
+          "woman",
+          "여자",
+          "딸",
+          "아내",
+          "며느리",
+          "누나",
+          "언니"
+        ],
+        "gender_negative": "(male:1.5), (man:1.5), (boy:1.5), (1boy:1.5), masculine, buzzcut, suit jacket, male face, beard, mustache",
+        "age_negative": "(elderly:1.3), (old woman:1.3), wrinkled face, gray hair, hunched, (60s:1.3), (70s:1.3), (80s:1.3)",
+        "base": "solo, korean woman, early 30s, straight black hair, minimal makeup, professional attire, determined expression, 165cm slender",
+        "style": "dramatic webtoon illustration, emotional contrast, cinematic",
+        "expressions": {
+          "neutral": "guarded composed look",
+          "angry": "tears of rage, confrontational stance",
+          "sad": "silently crying, mascara running",
+          "desperate": "collapsed on floor, shaking"
+        }
+      },
+      "antagonist": {
+        "id": "antagonist",
+        "name": "악역",
+        "display_name": "악역",
+        "aliases": [
+          "antagonist",
+          "악역",
+          "악당"
+        ],
+        "gender_negative": "(child:1.5), (teenager:1.4), cute, innocent, sweet",
+        "age_negative": "(child:1.5), (teenager:1.4), youthful innocent, baby face",
+        "base": "solo, korean person, smirking expression, expensive clothing, condescending posture, scheming eyes",
+        "style": "dramatic webtoon illustration, dark shadows on face, menacing composition",
+        "expressions": {
+          "neutral": "self-satisfied smirk",
+          "threatening": "leaning forward, intimidating stare",
+          "exposed": "shocked wide eyes, caught off guard"
+        }
+      },
+      "_default": {
+        "base": "muted colored silhouette, dramatic tense pose, simple emoticon expression",
+        "style": "dramatic webtoon illustration, high contrast pastel tones"
+      }
+    },
+    "image_generation": {
+      "target_images": 120,
+      "min_images": 100,
+      "max_images": 150,
+      "reuse_threshold": 0.85,
+      "quality_threshold": 0.7,
+      "max_consecutive_reuse": 2
+    },
+    "scene_analysis": {
+      "use_gemini": true,
+      "context_window": 5,
+      "emotion_detection": true,
+      "action_detection": true
+    },
+    "character_consistency": {
+      "enabled": true,
+      "similarity_threshold": 0.8,
+      "expression_swap": true,
+      "pose_library": false
+    },
+    "sd_model": {
+      "checkpoint": "meinamix_v12Final.safetensors",
+      "vae": "",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "Normal",
+      "steps": 20,
+      "cfg_scale": 7.0,
+      "width": 768,
+      "height": 432,
+      "clip_skip": 2,
+      "positive_base": "masterpiece, best quality, dramatic webtoon illustration, high contrast, intense cinematic lighting, confrontation, emotional family drama",
+      "negative_base": "worst quality, low quality, multiple people, 2girls, 2boys, crowd, group, horror, 3d render, photorealistic, blurry, watermark, text, deformed, bad anatomy, extra limbs, realistic face, detailed face, gore, blood",
+      "lora_models": []
+    },
+    "subtitle_style": {
+      "font_family": "NanumSquareRoundEB",
+      "font_size": 44,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#1A1A2E",
+      "stroke_width": 3,
+      "shadow_color": "rgba(26,26,46,0.8)",
+      "shadow_blur": 10,
+      "background_enabled": true,
+      "background_color": "rgba(26,26,46,0.65)",
+      "background_padding": 14,
+      "background_radius": 8,
+      "position": "bottom",
+      "margin_bottom": 60
+    },
+    "visual_effects": {
+      "vignette_enabled": true,
+      "vignette_intensity": 0.35,
+      "vignette_color": "#0D0D1A",
+      "color_filter_enabled": true,
+      "color_filter": "drama",
+      "color_filter_intensity": 0.25,
+      "ken_burns_enabled": true,
+      "ken_burns_zoom_range": [
+        1.0,
+        1.15
+      ],
+      "ken_burns_pan_enabled": true,
+      "film_grain_enabled": false,
+      "film_grain_intensity": 0.0
+    },
+    "transitions": {
+      "default": "crossfade",
+      "duration": 0.4,
+      "scene_change": "fade_black",
+      "scene_change_duration": 0.6
+    }
+  },
+  "scene_analyzer": {
+    "art_style_prefix": "dramatic webtoon illustration, vivid colors, high contrast,",
+    "art_style_description": "드라마틱한 웹툰 스타일 — 강한 명암, 감정 대립, 시네마틱 구도",
+    "texture_keywords": "sharp shadows, cinematic lighting, intense mood, dramatic composition, emotional weight",
+    "forbidden_styles": "monochrome, black and white, watercolor, soft pastel, 3d render, photorealistic, photograph, childish, cute",
+    "good_examples": [
+      "dramatic webtoon illustration, vivid colors, high contrast, solo elderly korean woman crying, hands clasped, dim interior light, close-up",
+      "dramatic webtoon illustration, vivid colors, high contrast, solo korean man 40s confronting someone, tense expression, cinematic angle, medium shot",
+      "dramatic webtoon illustration, vivid colors, high contrast, empty corridor, rain outside window, tense atmosphere, no people",
+      "dramatic webtoon illustration, vivid colors, high contrast, solo elderly man looking at old photo, regret expression, single lamp, bust shot"
+    ]
+  },
+  "requirements": {
+    "sd_model": {
+      "name": "MeinaMix V12",
+      "filename": "meinamix_v12Final.safetensors",
+      "download_url": "https://civitai.com/models/7240/meinamix",
+      "size_gb": 2.0,
+      "why": "2D 일러스트 최적. 드라마틱한 명암, 감정 대립 장면, 웹툰 스타일 표현이 뛰어남."
+    },
+    "vram_min_gb": 6,
+    "vram_recommended_gb": 8
+  }
+}

@@ -1,0 +1,8 @@
+Write ONE short Korean narrator bridge sentence after a painful or emotional cold open.
+
+Rules:
+- 10-24 Korean characters preferred
+- It must deepen curiosity, not explain everything
+- The tone should feel warm, aching, and urgent
+
+Output: ONE Korean sentence only.

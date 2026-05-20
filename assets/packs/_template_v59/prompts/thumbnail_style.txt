@@ -1,0 +1,5 @@
+- Thumbnail title should expose the wound, secret, or reversal
+- Prefer 2-4 short phrases over a full sentence
+- Avoid vague words like "story", "episode", or "content"
+- Good structures: accusation + truth, promise + betrayal, object + meaning, relationship + reversal
+- The text should still work on a small mobile screen

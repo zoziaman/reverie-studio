@@ -1,0 +1,283 @@
+{
+  "style": {
+    "image_style": "stylized narrative illustration, cinematic composition, clean silhouettes, mood-first lighting",
+    "model": "custom"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "narration": "narrator_female",
+      "grandma": "grandma",
+      "grandpa": "grandpa",
+      "man": "young_man",
+      "woman": "young_woman",
+      "child": "child"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "calm",
+      "sad",
+      "happy",
+      "angry",
+      "worried",
+      "desperate",
+      "scared",
+      "whisper"
+    ],
+    "emotion_weights": {
+      "calm": 3,
+      "sad": 3,
+      "worried": 2,
+      "desperate": 2
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 60,
+    "max_turns": 120
+  },
+  "assets": {
+    "bgm_folder": "default",
+    "sfx_folder": "default",
+    "sfx_enabled": true,
+    "sfx_category": "dramatic",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "forced_style": {
+      "force_positive": "story-driven illustration, cinematic framing, readable silhouettes, emotionally clear expressions",
+      "force_negative": "photorealistic portrait, 3d render, horror gore, over-detailed face, crowded composition"
+    },
+    "thumbnail_backgrounds": [
+      "empty room with one meaningful object, dramatic light, no people",
+      "desk with letters, phone, or documents, tense atmosphere, no people",
+      "quiet street, station, or hallway with emotional silence, no people"
+    ],
+    "safe_fallbacks": [
+      "empty room, atmospheric light, story-driven object focus, no people",
+      "rainy window, desk lamp glow, emotional stillness, no people",
+      "old letter or photo on a table, cinematic light, no people"
+    ],
+    "safe_fallback_prompt": "story-driven illustration, emotional object focus, cinematic composition, no people"
+  },
+  "thumbnail": {
+    "text_default": "drama",
+    "style_guide": "Use 2-4 short Korean phrases that expose the core wound, secret, or emotional reversal.",
+    "title_hooks": [
+      "숨겨진 진실",
+      "마지막 고백",
+      "돌이킬 수 없는 밤",
+      "그 말의 대가",
+      "뒤늦은 후회",
+      "끝내 밝혀진 것"
+    ]
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, cinematic illustration, story-driven scene, clean composition",
+    "negative": "(worst quality:1.4), (low quality:1.4), text, watermark, photorealistic, 3d render, gore, crowd",
+    "cfg_scale": 7.0,
+    "steps": 20,
+    "sampler": "DPM++ 2M Karras",
+    "width": 1024,
+    "height": 576
+  },
+  "video": {
+    "pause_duration": 0.4,
+    "zoom_speed": 1.0,
+    "fps": 30
+  },
+  "hook_style": {
+    "top_label": "DRAMA",
+    "top_color": "#F5C542",
+    "main_color": "#FFFFFF",
+    "bg_color": [12, 12, 20],
+    "duration": 4.0
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "basic",
+    "default_scene_type": "dialogue",
+    "idle_drift_enabled": true,
+    "impact_shake_enabled": true,
+    "snap_zoom_enabled": true,
+    "subtitle_pulse_enabled": true,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "prop_keywords": [
+      "문자",
+      "계좌",
+      "장부",
+      "봉투",
+      "편지",
+      "녹음",
+      "사진",
+      "계약서"
+    ],
+    "scene_motion_rules": {
+      "reveal": ["snap_zoom", "subtitle_pulse"],
+      "shock_entry": ["impact_shake", "snap_zoom"],
+      "confrontation": ["subtitle_pulse", "impact_shake"],
+      "memory_object": ["slow_push", "idle_drift"]
+    }
+  },
+  "shorts": {
+    "enabled": true,
+    "duration_sec": 35,
+    "upload_with_main": true,
+    "title_suffix": "#Shorts"
+  },
+  "sfx": {
+    "category_guide": "Use tension, reveal, sadness, and release cues only at emotional turning points. Avoid over-filling quiet scenes.",
+    "keyword_map": {
+      "secret": "tension",
+      "betrayal": "tension",
+      "cry": "sad",
+      "reunion": "happy",
+      "reveal": "dramatic"
+    }
+  },
+  "atmosphere": {
+    "mood_map": {
+      "tense": "hard directional light, negative space, emotional pressure",
+      "sad": "muted colors, soft shadows, lingering silence",
+      "warm": "golden light, soft highlights, forgiving mood",
+      "reveal": "sudden contrast, object emphasis, visual clarity"
+    },
+    "keywords": {
+      "tense": ["secret", "warning", "threat", "doorway"],
+      "sad": ["letter", "rain", "regret", "departure"],
+      "warm": ["promise", "home", "reunion", "meal"],
+      "reveal": ["document", "recording", "photo", "truth"]
+    }
+  },
+  "emergency": {
+    "template_sequence": [
+      ["narration", "narrator", "That night, one sentence changed everything.", "calm"],
+      ["woman", "young_woman", "What do you mean... you knew all along?", "worried"],
+      ["narration", "narrator", "Nobody in that room was ready for the answer.", "calm"]
+    ]
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "version": "v59.2.0",
+    "prompt_strategy": "panel_card",
+    "llm_hint_tag_limit": 4,
+    "characters": {
+      "narrator": {
+        "id": "narrator",
+        "name": "Narrator",
+        "base": "environment-only storyteller perspective, no direct face, emotionally charged space",
+        "style": "cinematic illustration, restrained palette, clear storytelling"
+      },
+      "grandma": {
+        "id": "grandma",
+        "name": "Grandma",
+        "base": "elderly korean woman, gentle but expressive face, practical clothes",
+        "style": "narrative illustration, believable emotion, readable silhouette"
+      },
+      "grandpa": {
+        "id": "grandpa",
+        "name": "Grandpa",
+        "base": "elderly korean man, weathered face, restrained posture, practical clothes",
+        "style": "narrative illustration, cinematic light, readable silhouette"
+      },
+      "young_man": {
+        "id": "young_man",
+        "name": "Young Man",
+        "base": "korean man, 30s to 40s, contemporary clothes, emotionally legible pose",
+        "style": "narrative illustration, cinematic framing"
+      },
+      "young_woman": {
+        "id": "young_woman",
+        "name": "Young Woman",
+        "base": "korean woman, 20s to 40s, contemporary clothes, emotionally legible pose",
+        "style": "narrative illustration, cinematic framing"
+      },
+      "child": {
+        "id": "child",
+        "name": "Child",
+        "base": "korean child, simple outfit, expressive body language",
+        "style": "narrative illustration, clean silhouette"
+      },
+      "_default": {
+        "base": "single person or object-centered scene, readable silhouette, clear action",
+        "style": "narrative illustration, cinematic composition"
+      }
+    },
+    "image_generation": {
+      "target_images": 100,
+      "min_images": 80,
+      "max_images": 120,
+      "reuse_threshold": 0.85,
+      "quality_threshold": 0.7,
+      "max_consecutive_reuse": 2
+    },
+    "scene_analysis": {
+      "use_gemini": true,
+      "context_window": 5,
+      "emotion_detection": true,
+      "action_detection": true
+    },
+    "character_consistency": {
+      "enabled": true,
+      "similarity_threshold": 0.8,
+      "expression_swap": true,
+      "pose_library": false
+    },
+    "sd_model": {
+      "checkpoint": "meinamix_v12Final.safetensors",
+      "vae": "",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "Normal",
+      "steps": 20,
+      "cfg_scale": 7.0,
+      "width": 768,
+      "height": 432,
+      "clip_skip": 2,
+      "positive_base": "masterpiece, best quality, cinematic illustration, story-driven scene, emotional clarity",
+      "negative_base": "worst quality, low quality, crowd, photorealistic, 3d render, gore, text, watermark",
+      "lora_models": []
+    },
+    "subtitle_style": {
+      "font_family": "NanumSquareRoundEB",
+      "font_size": 42,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#111111",
+      "stroke_width": 3,
+      "shadow_color": "rgba(0,0,0,0.8)",
+      "shadow_blur": 8,
+      "background_enabled": true,
+      "background_color": "rgba(0,0,0,0.55)",
+      "background_padding": 12,
+      "background_radius": 8,
+      "position": "bottom",
+      "margin_bottom": 60
+    },
+    "visual_effects": {
+      "vignette_enabled": true,
+      "vignette_intensity": 0.25,
+      "vignette_color": "#000000",
+      "color_filter_enabled": true,
+      "color_filter": "drama",
+      "color_filter_intensity": 0.2,
+      "ken_burns_enabled": true,
+      "ken_burns_zoom_range": [1.0, 1.1],
+      "ken_burns_pan_enabled": true,
+      "film_grain_enabled": false,
+      "film_grain_intensity": 0.0
+    },
+    "transitions": {
+      "default": "crossfade",
+      "duration": 0.5,
+      "scene_change": "fade_black",
+      "scene_change_duration": 0.7
+    }
+  }
+}

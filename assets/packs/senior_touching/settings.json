@@ -1,0 +1,819 @@
+{
+  "style": {
+    "image_style": "soft watercolor painting style, 2d illustration, warm pastel colors, nostalgic atmosphere",
+    "model": "senior"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "나레이션": "narrator_female",
+      "내레이션": "narrator_female",
+      "할아버지": "grandpa",
+      "할머니": "grandma",
+      "남자": "young_man",
+      "여자": "young_woman",
+      "손주": "young_woman",
+      "손녀": "young_woman",
+      "손자": "young_man",
+      "grandpa": "grandpa",
+      "grandma": "grandma",
+      "child": "child",
+      "grandchild": "young_woman",
+      "man": "young_man",
+      "woman": "young_woman",
+      "young_woman": "young_woman",
+      "young_man": "young_man",
+      "middle_woman": "middle_woman",
+      "middle_man": "middle_man",
+      "아들": "middle_man",
+      "딸": "middle_woman",
+      "며느리": "middle_woman",
+      "사위": "middle_man",
+      "삼촌": "middle_man",
+      "이모": "middle_woman",
+      "아버지": "middle_man",
+      "어머니": "middle_woman",
+      "아저씨": "middle_man",
+      "아줌마": "middle_woman"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "sad",
+      "happy",
+      "calm",
+      "excited",
+      "whisper",
+      "worried",
+      "desperate",
+      "scared"
+    ],
+    "emotion_weights": {
+      "sad": 5,
+      "happy": 2,
+      "calm": 3,
+      "worried": 1,
+      "whisper": 2,
+      "desperate": 1
+    },
+    "emotion_correction_targets": {
+      "sad": 4,
+      "worried": 3,
+      "happy": 2
+    }
+  },
+  "characters": {
+    "narrator": {
+      "base": "soft sky blue rounded silhouette figure, gentle glow, abstract friendly form, simple dot eyes and curved smile line",
+      "style": "flat vector art, pastel colors, soft gradient shading, warm lighting, Kurzgesagt style"
+    },
+    "grandma": {
+      "base": "warm coral pink rounded silhouette, elderly woman, hunched posture, gray-white hair bun, subtle wrinkles on forehead, gentle curved smile, two soft dot eyes, aged gentle face, slow graceful movement",
+      "style": "flat vector art, pastel watercolor feel, soft gradients, heartwarming mood",
+      "age_negative": "young, teenager, child, smooth skin, youthful face, black hair",
+      "gender_negative": "male, masculine, beard, mustache, broad shoulders"
+    },
+    "grandpa": {
+      "base": "muted warm brown rounded silhouette, elderly man, slightly stooped posture, white or gray short hair, gentle wrinkle lines on forehead and around eyes, calm neutral expression, sturdy but gentle aged form",
+      "style": "flat vector art, earthy pastel tones, soft shading, comforting presence",
+      "age_negative": "young, teenager, child, smooth skin, youthful face, black hair",
+      "gender_negative": "female, feminine, long hair, dress"
+    },
+    "man": {
+      "base": "soft gray-blue angular silhouette, upright posture, simple neutral expression with dot eyes",
+      "style": "flat vector art, cool pastel tones, clean design"
+    },
+    "woman": {
+      "base": "soft peach curved silhouette, graceful form, gentle smile line, dot eyes",
+      "style": "flat vector art, warm pastel tones, elegant simplicity"
+    },
+    "child": {
+      "base": "small bright yellow rounded silhouette, energetic pose, big dot eyes, wide smile curve",
+      "style": "flat vector art, cheerful pastel, playful design"
+    },
+    "_default": {
+      "base": "soft colored abstract humanoid silhouette, gentle form, simple emoticon-like face",
+      "style": "flat vector art, pastel colors, Headspace style"
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 60,
+    "max_turns": 120
+  },
+  "restrictions": {
+    "no_realistic_faces": true,
+    "warm_tone_only": true
+  },
+  "assets": {
+    "bgm_folder": "touching",
+    "sfx_folder": "touching",
+    "sfx_enabled": true,
+    "sfx_category": "emotional",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "forced_style": {
+      "force_positive": "flat vector illustration, soft pastel colors, gentle gradients, Kurzgesagt style, Headspace aesthetic, warm lighting, professional minimal design, heartwarming mood",
+      "force_negative": "realistic face, detailed face, scary, dark, horror, complex details, photograph, 3d render, realistic human"
+    },
+    "thumbnail_backgrounds": [
+      "rainy bus stop at dusk, empty wooden bench, warm streetlight, no people, gentle mood",
+      "old handwritten letter on wooden table, warm sunlight, teacup steam, no people",
+      "vintage transistor radio on shelf, soft golden hour light, no people",
+      "steam tea cup on windowsill, rain droplets on glass, cozy interior, no people",
+      "open photo album on table, sepia photos, soft light, no people",
+      "empty train station platform at sunset, orange sky glow, no people",
+      "knitted blanket draped over rocking chair, fireplace glow, no people",
+      "old music box on dresser, soft bedroom light, no people",
+      "postcard with handwritten message, stamp visible, desk lamp, no people",
+      "pocket watch on wooden surface, chain coiled, warm light, no people",
+      "pair of slippers by the door, gentle morning light, no people",
+      "umbrella left near doorway, raincoat hanging, quiet home, no people",
+      "small bouquet in vase, wilted petals, soft sunbeam, no people",
+      "kitchen table, simple meal set, one chair, calm light, no people",
+      "library desk, open book, reading glasses, sunbeam, no people",
+      "old calendar with circled date, red pen, warm wall light, no people",
+      "empty seaside bench at dawn, soft pastel sky, no people",
+      "narrow alley in small town, wet stones after rain, no people",
+      "market street early morning, shutters closed, calm mood, no people",
+      "old suitcase in corner, dust, gentle light, no people",
+      "handwritten recipe card beside mixing bowl, morning light, no people",
+      "window lace curtain, rain outside, warm lamp inside, no people",
+      "telephone on small table, note beside it, warm mood, no people",
+      "train ticket on table, tea stain, soft sunlight, no people",
+      "wooden drawer open, old photographs inside, no people",
+      "pair of gloves on chair, quiet room, no people",
+      "old scarf hanging on coat rack, warm hallway light, no people",
+      "garden gate slightly open, flower path, golden light, no people",
+      "laundry line with white cloth, breeze, calm yard, no people",
+      "small shrine corner with candle, gentle glow, no people"
+    ],
+    "safe_fallbacks": [
+      "empty old room, dusty furniture, dim lamp light, cinematic atmosphere",
+      "rainy window with droplets, blurry city lights, melancholic mood, empty interior",
+      "warm sunlight through window, old wooden table, cup of tea, peaceful room, no people",
+      "messy desk with scattered papers, coffee cup, noir lighting, no people",
+      "empty train station platform at dusk, long perspective, solitude"
+    ],
+    "safe_fallback_prompt": "warm sunlight through window, old wooden table, cup of tea, peaceful room, no people, watercolor style"
+  },
+  "sfx": {
+    "category_guide": "This is an EMOTIONAL/HEARTWARMING video. Available SFX tags: sad (gentle sobbing), crying, happy (warm music swell), whoosh. Place 1-3 effects per minute at emotional peaks.",
+    "keyword_map": {
+      "눈물": "crying",
+      "울": "crying",
+      "슬프": "sad",
+      "행복": "happy",
+      "기쁨": "happy",
+      "감동": "sad",
+      "그리움": "sad",
+      "따뜻": "happy",
+      "웃음": "happy",
+      "이별": "sad",
+      "재회": "happy"
+    }
+  },
+  "atmosphere": {
+    "mood_map": {
+      "peaceful": "soft warm light, gentle atmosphere, golden hour glow",
+      "sad": "muted tones, soft shadows, melancholic light, rain mood",
+      "happy": "bright warm lighting, golden hour glow, cheerful colors",
+      "nostalgic": "sepia warmth, soft focus, vintage feeling"
+    },
+    "keywords": {
+      "peaceful": [
+        "평화",
+        "고요",
+        "따뜻",
+        "포근"
+      ],
+      "sad": [
+        "슬프",
+        "애잔",
+        "그리움",
+        "눈물",
+        "이별"
+      ],
+      "happy": [
+        "행복",
+        "기쁨",
+        "웃음",
+        "재회"
+      ],
+      "nostalgic": [
+        "추억",
+        "옛날",
+        "어릴적",
+        "그때"
+      ]
+    }
+  },
+  "emergency": {
+    "template_sequence": [
+      [
+        "나레이션",
+        "narrator",
+        "오래된 골목길, 작은 이발소가 하나 있었습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "어서 오렴.",
+        "calm"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니는 매일 같은 자리에 앉아 계셨습니다.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "할머니, 밥 드셨어요?",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "응, 먹었어. 너는?",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "저도 먹었어요.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니의 이발소는 동네에서 가장 오래된 가게였습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "이 가게, 네 할아버지가 차린 거야.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "알아요. 매번 말씀하시잖아요.",
+        "happy"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "그래, 맨날 똑같은 얘기 하지?",
+        "sad"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "아니에요. 좋아요, 그 이야기.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니의 눈가에 주름이 깊어졌습니다.",
+        "sad"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "네 할아버지는 참 좋은 사람이었어.",
+        "sad"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니는 가위를 내려놓으셨습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "이제 손이 떨려서 머리를 못 깎겠구나.",
+        "sad"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "할머니, 제가 배울게요.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "뭘?",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "이발이요. 할머니한테 배울게요.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니는 한참 동안 손녀를 바라보셨습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "진짜?",
+        "happy"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "네. 진짜요.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "그날부터 손녀는 매일 이발소에 왔습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "거기 말고, 여기를 이렇게.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "이렇게요?",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "그래, 잘하네.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "가위 소리가 이발소에 다시 울렸습니다.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "할머니, 저 첫 손님 받아도 돼요?",
+        "excited"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "아직 멀었어.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "에이, 할머니도.",
+        "happy"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "그래, 해봐.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "첫 손님은 동네 아저씨였습니다.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "어서 오세요.",
+        "calm"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니는 옆에서 조용히 지켜보셨습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "잘하네. 역시 내 손녀야.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "손녀의 눈에 눈물이 고였습니다.",
+        "sad"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "할머니, 고마워요.",
+        "sad"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "뭐가 고마워.",
+        "calm"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "그냥요. 다요.",
+        "sad"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니는 손녀의 머리를 쓰다듬으셨습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "울지 마. 왜 울어.",
+        "sad"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "안 울어요.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "이발소 간판이 바뀐 것은 그해 겨울이었습니다.",
+        "calm"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "할머니의 이름 옆에, 손녀의 이름이 나란히 적혔습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "이쁘다.",
+        "happy"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "할머니가 더 이쁘죠.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "작은 이발소에 봄이 왔습니다.",
+        "calm"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "가위 소리는 여전히 울리고 있었습니다.",
+        "calm"
+      ],
+      [
+        "할머니",
+        "grandma",
+        "오래오래 하자. 우리.",
+        "happy"
+      ],
+      [
+        "손녀",
+        "young_woman",
+        "네, 할머니.",
+        "happy"
+      ],
+      [
+        "나레이션",
+        "narrator",
+        "어떤 사랑은 가위 소리처럼, 조용하지만 오래갑니다.",
+        "calm"
+      ]
+    ]
+  },
+  "video": {
+    "pause_duration": 0.5,
+    "zoom_speed": 1.0
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "basic",
+    "default_scene_type": "dialogue",
+    "idle_drift_enabled": true,
+    "impact_shake_enabled": true,
+    "snap_zoom_enabled": true,
+    "subtitle_pulse_enabled": true,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "prop_keywords": [
+      "편지",
+      "사진",
+      "유품",
+      "반지",
+      "가계부",
+      "쪽지",
+      "달력",
+      "편지봉투"
+    ],
+    "scene_motion_rules": {
+      "memory_object": ["slow_push", "idle_drift"],
+      "reveal": ["snap_zoom", "slow_push"],
+      "prop_reveal": ["snap_zoom", "subtitle_pulse"],
+      "confrontation": ["subtitle_pulse", "impact_shake"]
+    }
+  },
+  "script_quality": {
+    "min_non_narrator_roles": 3,
+    "max_narration_ratio": 0.5,
+    "min_turns_for_gate": 20,
+    "max_ellipsis_ratio": 0.12,
+    "warn_topic_overlap_ratio": 0.25
+  },
+  "shorts": {
+    "enabled": true,
+    "duration_sec": 35,
+    "upload_with_main": true,
+    "title_suffix": "#Shorts"
+  },
+  "hook_style": {
+    "top_label": "【 오늘의 이야기 】",
+    "top_color": "#87CEEB",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      10,
+      10,
+      20
+    ],
+    "duration": 4.0
+  },
+  "thumbnail": {
+    "text_default": "감동실화",
+    "style_guide": "감동/눈물 자극하는 제목. 예시: \"엄마의 마지막 선물\", \"50년 만의 재회\". 가족/시간/이별 관련 단어 사용. 따뜻하면서 궁금증 유발.",
+    "title_hooks": [
+      "늦은 진심",
+      "끝내 못한 말",
+      "마지막 약속",
+      "숨겨둔 편지",
+      "뒤늦은 고백",
+      "그날의 이유"
+    ]
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, warm atmosphere, emotional, family, illustration style, soft lighting, nostalgic, heartwarming",
+    "negative": "(worst quality:1.4), (low quality:1.4), horror, scary, dark, nsfw, text, watermark, realistic face, detailed face, cute, childish, photograph, 3d render, realistic human",
+    "cfg_scale": 6.0,
+    "steps": 15
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "version": "v60.1.0",
+    "characters": {
+      "narrator": {
+        "id": "narrator",
+        "name": "나레이터",
+        "base": "no person, warm landscape only, soft atmospheric scene, golden hour environmental storytelling",
+        "style": "soft watercolor illustration, warm pastel tones, gentle light, Kurzgesagt style",
+        "expressions": {
+          "neutral": "calm peaceful landscape",
+          "sad": "melancholic atmosphere, rain mood"
+        }
+      },
+      "grandma": {
+        "id": "grandma",
+        "name": "할머니",
+        "display_name": "할머니",
+        "aliases": [
+          "grandma",
+          "할머니",
+          "외할머니",
+          "어머니"
+        ],
+        "gender_negative": "(male:1.5), (man:1.5), (boy:1.5), (1boy:1.5), masculine, short buzzcut, suit jacket, male face, beard, mustache",
+        "age_negative": "(young:1.5), (teenager:1.4), (child:1.4), youthful, smooth skin, baby face, plump cheeks, (20s:1.4), (30s:1.3)",
+        "base": "solo, (elderly korean woman:1.5), (70s:1.4), (short permed silver hair:1.3), (warm smile wrinkles:1.3), (wrinkled face:1.3), floral pattern blouse, gentle posture, kind eyes, (old age:1.4), 155cm small frame",
+        "style": "soft watercolor illustration, warm pastel tones, gentle light",
+        "expressions": {
+          "neutral": "gentle warm smile, hands folded",
+          "happy": "wide warm smile, eyes crinkled, joyful",
+          "sad": "teary eyes, quivering lips, looking down",
+          "calm": "serene expression, peaceful gaze"
+        }
+      },
+      "grandpa": {
+        "id": "grandpa",
+        "name": "할아버지",
+        "display_name": "할아버지",
+        "aliases": [
+          "grandpa",
+          "할아버지",
+          "외할아버지",
+          "아버지",
+          "아빠"
+        ],
+        "gender_negative": "(female:1.5), (woman:1.5), (girl:1.5), (1girl:1.5), feminine, long hair, dress, skirt, female face, (bishoujo:1.4), (moe:1.4)",
+        "age_negative": "(young:1.5), (teenager:1.4), (child:1.4), youthful, smooth skin, baby face, (20s:1.4), (30s:1.3)",
+        "base": "solo, (elderly korean man:1.5), (70s:1.4), (thinning gray hair:1.3), (wrinkled face:1.3), (reading glasses:1.2), knit vest over cotton shirt, gentle weathered face, (old age:1.4), 170cm",
+        "style": "soft watercolor illustration, warm earthy tones, gentle light",
+        "expressions": {
+          "neutral": "steady calm gaze, slight smile",
+          "happy": "warm laughing, eyes bright",
+          "sad": "looking away, lips pressed, teary",
+          "calm": "contemplative gaze, hands behind back"
+        }
+      },
+      "child": {
+        "id": "child",
+        "name": "손주",
+        "display_name": "손주",
+        "aliases": [
+          "child",
+          "손주",
+          "손녀",
+          "손자",
+          "아이",
+          "어린이"
+        ],
+        "gender_negative": "(elderly:1.5), wrinkled, aged, gray hair",
+        "age_negative": "(adult:1.5), (elderly:1.5), mature face, wrinkled, (20s:1.4), (30s:1.4), (40s:1.4)",
+        "base": "solo, korean child, 8-10 years old, round face, school uniform or casual clothes, bright curious eyes",
+        "style": "soft watercolor illustration, bright warm tones, cheerful",
+        "expressions": {
+          "neutral": "curious wide eyes",
+          "happy": "big smile, energetic pose",
+          "sad": "pouting, teary eyes"
+        }
+      },
+      "_default": {
+        "base": "soft colored abstract humanoid silhouette, gentle warm form, simple emoticon-like face",
+        "style": "soft watercolor illustration, pastel tones, Headspace style"
+      },
+      "young_man": {
+        "id": "young_man",
+        "name": "남자",
+        "display_name": "남자",
+        "aliases": [
+          "young_man",
+          "man",
+          "남자",
+          "아들",
+          "남편",
+          "오빠"
+        ],
+        "gender_negative": "(female:1.5), (woman:1.5), (girl:1.5), (1girl:1.5), feminine, long hair, dress, skirt, female face, (bishoujo:1.4), (moe:1.4)",
+        "age_negative": "(elderly:1.3), (old man:1.3), wrinkled face, bald head, gray hair, (60s:1.3), (70s:1.3)",
+        "base": "solo, korean man, 40s, neat short black hair, button-up shirt, warm expression, 175cm average build",
+        "style": "soft watercolor illustration, warm tones, gentle light",
+        "expressions": {
+          "neutral": "calm composed look",
+          "happy": "warm genuine smile",
+          "sad": "downcast eyes, heavy expression"
+        }
+      },
+      "young_woman": {
+        "id": "young_woman",
+        "name": "여자",
+        "display_name": "여자",
+        "aliases": [
+          "young_woman",
+          "woman",
+          "여자",
+          "딸",
+          "아내",
+          "며느리",
+          "손녀"
+        ],
+        "gender_negative": "(male:1.5), (man:1.5), (boy:1.5), (1boy:1.5), masculine, buzzcut, suit jacket, male face, beard, mustache",
+        "age_negative": "(elderly:1.3), wrinkled, aged, gray hair",
+        "base": "solo, korean woman, 30s, shoulder-length dark hair, soft cardigan, gentle demeanor, 163cm slender",
+        "style": "soft watercolor illustration, warm tones, gentle light",
+        "expressions": {
+          "neutral": "gentle composed expression",
+          "happy": "bright warm smile",
+          "sad": "tears forming, hand near face"
+        }
+      }
+    },
+    "image_generation": {
+      "target_images": 100,
+      "min_images": 80,
+      "max_images": 120,
+      "reuse_threshold": 0.85,
+      "quality_threshold": 0.7,
+      "max_consecutive_reuse": 2
+    },
+    "scene_analysis": {
+      "use_gemini": true,
+      "context_window": 5,
+      "emotion_detection": true,
+      "action_detection": true
+    },
+    "character_consistency": {
+      "enabled": true,
+      "similarity_threshold": 0.8,
+      "expression_swap": true,
+      "pose_library": false
+    },
+    "sd_model": {
+      "checkpoint": "meinamix_v12Final.safetensors",
+      "vae": "",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "Normal",
+      "steps": 20,
+      "cfg_scale": 7.0,
+      "width": 768,
+      "height": 432,
+      "clip_skip": 2,
+      "positive_base": "masterpiece, best quality, soft watercolor illustration, warm pastel colors, gentle lighting, heartwarming mood, family, emotional",
+      "negative_base": "worst quality, low quality, multiple people, 2girls, 2boys, crowd, group, horror, scary, dark, 3d render, photorealistic, blurry, watermark, text, deformed, bad anatomy, extra limbs, realistic face, detailed face",
+      "lora_models": []
+    },
+    "subtitle_style": {
+      "font_family": "NanumSquareRoundEB",
+      "font_size": 42,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#4A3728",
+      "stroke_width": 3,
+      "shadow_color": "rgba(74,55,40,0.6)",
+      "shadow_blur": 8,
+      "background_enabled": true,
+      "background_color": "rgba(74,55,40,0.5)",
+      "background_padding": 12,
+      "background_radius": 8,
+      "position": "bottom",
+      "margin_bottom": 60
+    },
+    "visual_effects": {
+      "vignette_enabled": true,
+      "vignette_intensity": 0.2,
+      "vignette_color": "#3D2B1F",
+      "color_filter_enabled": true,
+      "color_filter": "warm",
+      "color_filter_intensity": 0.2,
+      "ken_burns_enabled": true,
+      "ken_burns_zoom_range": [
+        1.0,
+        1.1
+      ],
+      "ken_burns_pan_enabled": true,
+      "film_grain_enabled": false,
+      "film_grain_intensity": 0.0
+    },
+    "transitions": {
+      "default": "crossfade",
+      "duration": 0.6,
+      "scene_change": "fade_white",
+      "scene_change_duration": 0.8
+    }
+  },
+  "scene_analyzer": {
+    "art_style_prefix": "soft watercolor illustration, warm pastel colors, 2d illustration,",
+    "art_style_description": "따뜻한 수채화 감동 드라마 일러스트 — 부드러운 브러쉬, 따뜻한 파스텔 톤",
+    "texture_keywords": "gentle brushstrokes, delicate linework, emotional warmth, nostalgic atmosphere, golden hour lighting",
+    "forbidden_styles": "monochrome, black and white, ink drawing, 3d render, photorealistic, photograph, horror, dark, scary, anime, cel shading",
+    "good_examples": [
+      "soft watercolor illustration, warm pastel colors, solo elderly grandmother in kitchen, gentle smile, morning sunlight, bust shot",
+      "soft watercolor illustration, warm pastel colors, solo korean man 40s sitting at table, worried expression, dim lamp light, medium shot",
+      "soft watercolor illustration, warm pastel colors, empty living room, old wooden furniture, golden hour glow, no people",
+      "soft watercolor illustration, warm pastel colors, solo elderly grandfather looking out window, contemplative, side view, medium shot"
+    ]
+  },
+  "requirements": {
+    "sd_model": {
+      "name": "MeinaMix V12",
+      "filename": "meinamix_v12Final.safetensors",
+      "download_url": "https://civitai.com/models/7240/meinamix",
+      "size_gb": 2.0,
+      "why": "2D 일러스트 최적. 캐릭터 연령 표현, 감정 전달, 따뜻한 톤 표현이 뛰어남."
+    },
+    "vram_min_gb": 6,
+    "vram_recommended_gb": 8
+  }
+}

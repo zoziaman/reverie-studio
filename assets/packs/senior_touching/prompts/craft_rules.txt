@@ -1,0 +1,182 @@
+[CRAFT RULES - 감동 스토리 작법]
+
+== 기본 규칙 ==
+1) Write EXACTLY {{target_turns}} turns — no fewer, no more.
+   - Minimum dialogue turns (non-narration): {{min_dialogue}}
+   - Maximum narration turns: {{max_narration}}
+   ★ COUNT CAREFULLY: If you write more than {{max_narration}} narration turns, the script WILL be rejected.
+   ★ Maximum 2 consecutive narration turns. After 2 narration, the NEXT turn MUST be character dialogue.
+2) Show, Don't Tell: Instead of "she was sad", write "tears rolled down her cheek."
+3) Dialogue to narration ratio = 7:3. Narration ONLY for scene transitions.
+   - Every scene MUST have character dialogue. Pure-narration scenes are FORBIDDEN.
+4) No repetition: never re-explain existing information. Always add new developments.
+5) Ellipsis: ONLY "..." allowed. Never ". . ." — never end sentences with commas.
+6) voice_type must match the character's age/gender accurately.
+7) Character names: common Korean names that indicate gender ONLY!
+
+== 감동 전용 작법 ==
+8) 감정 곡선 설계:
+   - 도입: 일상의 따뜻함 (텐션 2/10)
+   - 전개: 작은 갈등 또는 이별 암시 (텐션 4/10)
+   - 위기: 관계의 시험 (텐션 6/10)
+   - 절정: 진심 고백 또는 재회 (텐션 8/10, 감동 폭발)
+   - 결말: 여운이 남는 따뜻한 마무리 (텐션 5/10)
+
+9) 감정 표현 기법:
+   - 직접 "감동적이었다" 쓰지 말고 행동/대사로 보여줄 것
+   - 할머니/할아버지는 말 대신 행동으로 사랑 표현 (밥 차려주기, 등 두드리기)
+   - 눈물은 최대 2~3회만 — 남용하면 감동이 줄어듦
+   - "그때 알았다" 같은 깨달음 나레이션은 이야기 끝에 1회만 허용
+
+10) 대사 톤 가이드:
+   - 할머니/할아버지: 짧고 투박하지만 속 깊은 말 ("밥 먹었냐?", "추울텐데...")
+   - 젊은 캐릭터: 현대적이지만 예의 바른 존댓말
+   - 감정이 격해지면 말이 짧아지고, 말 대신 침묵이 들어감
+
+11) Vary sentence length: 평온한 장면 = 중간 문장 (15~25자), 감정 고조 = 짧은 문장 (5~10자), 클라이맥스 = 한 단어.
+12) sfx_tag는 감정적 피크에서만 사용 (전체 턴의 8~12%).
+
+== 🔴 MANDATORY: 구체적 배경 설정 (12점 기준 — 누락 시 감점) 🔴 ==
+반드시 도입부에 3개 이상의 구체적 숫자/정보 포함 필수:
+- 연도: "1998년", "2003년 여름", "IMF 이듬해"
+- 장소: "경상남도 함양군 작은 마을", "서울 마포구 좁은 골목"
+- 나이/숫자: "예순다섯 살 할머니", "함께 산 23년", "마지막으로 본 지 7년"
+★ "어느 시골", "먼 곳" 같은 모호한 배경 금지.
+★ 예시: "2001년, 강원도 정선의 인구 200명짜리 마을에서 예순일곱 살의 할머니는..."
+
+== 🔴 MANDATORY: 세대 간 오해→이해 구조 (보너스 +3점) 🔴 ==
+반드시 세대 간 오해가 이해로 전환되는 구조 포함 필수:
+- Pattern A: 어른의 행동이 처음엔 이해 못 함 → 나중에 사랑/희생임을 깨달음
+  예) 할머니가 매일 전화만 해서 귀찮았는데 → 치매 때문에 나를 잊을까봐였음을 나중에 앎
+- Pattern B: 말 없는 어른의 무뚝뚝함 뒤에 담긴 깊은 감정의 발견
+  예) 할아버지가 아들에게 한 번도 잘했다고 안 했는데 → 일기장에는 매일 자랑스럽다고 적혀있었음
+- Pattern C: 갈등하던 두 세대가 소품/사건을 통해 서로 이해
+★ 이 구조 없으면 "평범한 슬픈 이야기"에 그침. 세대 차이에서 감동이 나와야 함.
+
+== 🔴 MANDATORY: 소품을 감동의 핵심으로 (보너스 +2점) 🔴 ==
+반드시 소품이 감정 전달의 물질적 매개 역할 필수:
+- 편지/수첩: 살아있을 때 못 한 말이 담긴 편지, 오래된 메모
+- 사진: 함께한 시간의 증거, 이미 세상을 떠난 사람과의 기억
+- 음식/요리: 손맛/레시피가 사랑의 언어 (할머니의 된장찌개 레시피)
+- 낡은 물건: 오래 간직한 지갑, 뜨개질한 장갑, 안경, 낡은 시계
+★ 소품은 도입부에 등장 → 클라이맥스에서 의미 폭발. 이를 "소품 복귀(Callback)" 기법이라 함.
+★ 예시: 처음엔 낡은 수첩이 등장(관심 없음) → 마지막에 그 수첩이 할머니의 비밀/사랑의 증거
+
+== 🔴 MANDATORY: 최소 4인 캐릭터 구성 🔴 ==
+최소 4명의 구별되는 캐릭터 필수:
+1. 중심 노인 캐릭터 (할머니 또는 할아버지) — 연령/말투/특징 명확
+2. 갈등/관계 캐릭터 (아들/며느리/손주 중 1인) — 세대 차이를 보여주는 역할
+3. 보조 캐릭터 (이웃, 다른 가족 구성원, 친구) — 다른 관점 제공
+4. 나레이터 (관찰자 시점)
+★ 각 캐릭터 말투/역할/관점이 명확히 달라야 함 (비슷비슷한 사람들 금지)
+★ 캐릭터 이름은 성 없이 역할명으로만 (할머니, 아들, 손녀 등)
+
+== 🔴 MANDATORY: 감각적 디테일 (12점 기준) 🔴 ==
+추상적 감정 설명 금지. 반드시 신체/감각으로 표현:
+- 촉각: "거칠고 두꺼운 손", "차가운 손등", "이불 솔기의 올이 풀린 감촉"
+- 후각: "된장 냄새가 배인 부엌", "오래된 나무와 한약 냄새"
+- 청각: "가쁜 숨소리", "끓는 국 소리", "멀리서 들리는 기차 소리"
+- 미각: "짜고 뜨거운 국", "꼭 삼키고 싶은데 목이 메는 느낌"
+- 시각: "햇볕에 바랜 사진", "굽은 등", "손등의 주름"
+★ 파트당 최소 3개 이상 감각 묘사 포함 필수
+
+== 🔴 MANDATORY: 일상어 감동 기법 🔴 ==
+평범한 일상 언어가 맥락에서 감동을 만드는 기법 필수 사용:
+- 기법: 이야기 초반의 평범한 대사가 후반에 다른 의미로 재등장
+- 예시: 처음엔 "밥은 먹었냐?" (일상 인사) → 마지막엔 같은 말이 유일한 작별 인사
+- 예시: "다음에 또 와" → 더 이상 올 수 없는 상황에서 이 말의 의미가 폭발
+- 예시: "괜찮아" → 전혀 괜찮지 않은 상황에서의 강한 체념
+★ 최소 1개의 '일상어 감동 기법' 포함 필수 (없으면 -3점)
+
+== 🔴 MANDATORY: 제목 가이드 (5점 기준) 🔴 ==
+제목은 반드시 클릭을 유도하는 형식으로:
+- 의문형: "왜 할머니는 그 방에 들어가지 않았을까?", "아들은 왜 30년을 침묵했나"
+- 반전 암시형: "며느리가 시어머니에게 숨긴 것", "죽기 전 할머니가 마지막으로 한 일"
+- 발견형: "아들이 정리하다 발견한 할머니의 노트", "할아버지의 지갑 안에 들어있던 것"
+★ "슬픈 이야기", "감동적인 노부부 이야기" 같은 직접 설명형 제목 금지
+★ 제목만 봐도 "무슨 내용일까?" 궁금증이 생겨야 함
+
+== 🔴 MANDATORY EMOTION DISTRIBUTION (STRICT!) 🔴 ==
+This is the most important rule. You MUST follow this:
+
+For {{target_turns}} turns, aim for this distribution:
+| Emotion   | Count  | %       | When to use |
+|-----------|--------|---------|-------------|
+| sad       | 5-8    | 14-23%  | Loss, longing, regret, parting — the CORE touching emotion |
+| calm      | 5-7    | 14-20%  | Peaceful moments, warm daily life, gentle narration |
+| happy     | 4-7    | 11-20%  | Love, tenderness, gratitude, reunion, warmth, small joys |
+| worried   | 3-5    | 9-14%   | Anxiety about loved ones, concern, unease |
+| whisper   | 2-4    | 6-11%   | Intimate confessions, quiet tears, "..." silence beats |
+| desperate | 1-3    | 3-9%    | Peak emotional moments, final plea |
+
+★ MINIMUM REQUIREMENTS (if not met, script is rejected): ★
+- sad: at least 3 turns
+- happy: at least 2 turns
+- whisper: at least 2 turns
+- At least 4 different emotions used total
+- calm: maximum 30% (about 10 turns for 35-turn script)
+
+★ COMMON MISTAKE — DO NOT DO THIS: ★
+❌ Narrator emotion always "calm" → Results in 60%+ calm → REJECTED!
+✅ Narrator emotion varies by scene mood:
+   - Peaceful daily life: "calm" (e.g., "그날도 할머니는 부엌에 서 계셨다.")
+   - Something worrying: "worried" (e.g., "하지만 손녀는 오지 않았다.")
+   - Emotional weight: "sad" (e.g., "그때서야 알았다. 그 말의 의미를.")
+   - Quiet confession: "whisper" (e.g., "할머니의 손이... 떨리고 있었다.")
+   - Warm/loving moment: "happy" (e.g., "밥 한 그릇에 담긴 그 마음.")
+
+★ EXAMPLE: Good emotion distribution for Part 1 (35 turns): ★
+turns 1-7: calm(4), happy(2), whisper(1) — peaceful opening
+turns 8-15: calm(2), happy(2), worried(2), sad(1), whisper(1) — daily life + unease
+turns 16-25: sad(3), worried(2), whisper(2), calm(1), happy(2) — conflict surfaces
+turns 26-35: sad(3), desperate(2), whisper(1), worried(2), happy(1), calm(1) — first emotional peak
+→ Total: sad=7, calm=8, happy=7, worried=6, whisper=5, desperate=2 ✅
+
+== 🔴 MANDATORY SILENCE BEATS (STRICT!) 🔴 ==
+Each part MUST include exactly 2-3 silence beats.
+A silence beat is a turn where the text is ONLY: "..."
+(just three dots, nothing else)
+The role is "나레이션" and the emotion is "whisper".
+
+Place silence beats:
+- Before a character's heartfelt confession (builds emotional anticipation)
+- After a painful revelation (lets it sink in)
+- When characters share a meaningful silence (unspoken understanding)
+
+Example:
+{{"role": "나레이션", "character": "narrator", "text": "...", "emotion": "whisper"}}
+
+== 🔴 MANDATORY CHARACTER ACTIONS (STRICT!) 🔴 ==
+Characters MUST take at least 3 concrete physical actions per part:
+- VISIT: 찾아가기, 집에 들어가기, 문 앞에 서기
+- CARE: 밥 차려주기, 이불 덮어주기, 손 잡아주기
+- REMEMBER: 사진 꺼내기, 과거 장소 방문, 오래된 편지/물건 발견
+- COMMUNICATE: 전화 걸기, 편지 쓰기, 직접 말하기, 고백하기
+
+❌ WRONG: Characters just sit and talk for 10+ turns
+✅ RIGHT: Character arrives → sets down bags → looks around old room → picks up faded photo → tears up
+
+== DIALOGUE RULES ==
+- Characters speak naturally — no exposition dumps
+- Emotion makes people say LESS, not more
+- Unfinished sentences increase emotion: "엄마가 그때... 아니, 아무것도 아니야"
+- Maximum 3 sentences per dialogue turn
+- 할머니/할아버지 dialogue: maximum 2 short sentences (투박하게!)
+
+== STRUCTURE PER SCENE ==
+1. Establish warmth (daily routine, familiar sounds)
+2. First crack (subtle sign something is changing/ending)
+3. Character notices (delayed — audience feels it first)
+4. Emotional deepening (each interaction reveals more depth)
+5. Emotional peak/Cliffhanger
+
+== FORBIDDEN ==
+- Telling emotions directly ("감동적이었다", "눈물이 났다" as narration judgment)
+- Melodramatic overreaction (screaming, fainting from sadness)
+- Neat, tidy resolutions (real emotions are messy and lingering)
+- Excessive crying (tears max 2-3 times total, impact matters)
+- Characters explaining their feelings in long monologues
+- Using [calm] as default emotion for ALL narration
+- Characters being passive for more than 5 consecutive turns
+
+ALL dialogue text must be written in Korean.

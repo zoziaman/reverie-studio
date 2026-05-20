@@ -1,0 +1,67 @@
+# ============================================================
+# Stable Diffusion WebUI (AUTOMATIC1111) Dockerfile
+# ============================================================
+# 빌드: docker compose build stable-diffusion
+# 참조: https://github.com/AUTOMATIC1111/stable-diffusion-webui
+#
+# ⚠️ 첫 실행 시 자동으로 추가 의존성 다운로드 (~500MB)
+# ⚠️ SD 모델(.safetensors)은 볼륨으로 마운트 (docker-compose.yml 참조)
+# ============================================================
+
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+
+# 시스템 패키지
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxrender1 \
+    libxext6 \
+    libgomp1 \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /stable-diffusion-webui
+
+# AUTOMATIC1111 SD WebUI 클론 (고정 버전으로 안정성 확보)
+RUN git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git . \
+    && git checkout v1.10.1
+
+# Python 기본 의존성 사전 설치 (빌드 타임)
+RUN pip install --no-cache-dir \
+    torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 \
+    --extra-index-url https://download.pytorch.org/whl/cu118
+
+# xformers (VRAM 절약 필수)
+RUN pip install --no-cache-dir xformers==0.0.22.post7
+
+# SD WebUI 의존성 사전 설치
+RUN pip install --no-cache-dir -r requirements_versions.txt
+
+# 모델/출력 디렉토리 생성 (볼륨 마운트 포인트)
+RUN mkdir -p \
+    models/Stable-diffusion \
+    models/VAE \
+    models/Lora \
+    models/ControlNet \
+    outputs
+
+# 포트 오픈
+EXPOSE 7860
+
+# 헬스체크 (SD WebUI 준비 완료 확인)
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=5 \
+    CMD curl -f http://localhost:7860/sdapi/v1/samplers || exit 1
+
+# API 모드로 실행 (--api 필수: Reverie가 REST API 사용)
+CMD ["python", "launch.py", \
+    "--api", \
+    "--listen", \
+    "--port", "7860", \
+    "--no-gradio-queue", \
+    "--skip-torch-cuda-test", \
+    "--no-download-sd-model", \
+    "--xformers"]

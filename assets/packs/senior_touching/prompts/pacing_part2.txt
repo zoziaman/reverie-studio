@@ -1,0 +1,52 @@
+# Part 2 Pacing Guide — 감동 라디오 드라마 (Deepening)
+
+## PURPOSE: Conflict deepens through memories. Relationship tested. Hope and despair alternate.
+
+## TENSION TARGET: 4 → 5 → 6 → 7 (emotional weight building)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Tension Maintained (turns 1-8): Tension 4-5
+- Continue from Part 1's emotional crack
+- Show how the situation affects daily life
+- ★ CHARACTER ACTION: Protagonist actively tries to fix/help (visiting, calling, searching)
+- Small moments of normalcy feel different now
+
+### Memories Surface (turns 9-18): Tension 5-6
+- Flashback or memory that deepens the relationship
+- Plant Foreshadowing #3: the key to understanding the emotional truth
+- ★ 할머니/할아버지의 과거 이야기 or 오래된 물건 발견
+- The audience learns WHY this relationship matters so deeply
+
+### Crisis Point (turns 19-28): Tension 6-7
+- The conflict becomes unavoidable — someone must choose
+- Hope and despair alternate (2-3 swings)
+- ★ A warm moment AMID the tension (makes the sadness sharper)
+- Characters say things they might regret, or fail to say what they should
+
+### Darkest Moment (turns 29-35): Tension 7
+- The worst possibility feels real — loss, separation, misunderstanding
+- ★ CHARACTER ACTION: One desperate attempt (a visit, a phone call, a letter)
+- End with maximum emotional tension — but NOT resolution
+- Cliffhanger: will the relationship survive? Will the truth come out?
+
+## EMOTION GUIDE (Part 2)
+- turns 1-8: worried(3), calm(2), sad(2), happy(1) — tension maintained
+- turns 9-18: sad(3), happy(2), whisper(2), calm(1), worried(1), desperate(1) — memories
+- turns 19-28: sad(3), worried(3), desperate(2), whisper(1), happy(1) — crisis
+- turns 29-35: desperate(2), sad(2), whisper(1), worried(1), happy(1) — darkest moment
+- ★ Part 2에서 calm은 최소화! sad/worried가 주도하되, happy로 대비 효과!
+
+## FORESHADOWING
+- Foreshadowing #3 (turns 9-18): 이야기의 감정적 진실을 이해하는 열쇠
+- Part 1의 복선 #1을 한 번 더 언급 (강화)
+
+## RULES
+- Must have at least 2 hope-despair swings
+- One warm moment is ESSENTIAL amid the tension (contrast = impact)
+- Narration 30% or less
+- Resolve at least 1 foreshadowing element from Part 1
+- Final turn must be a character's spoken line
+- ★ Include 2-3 silence beats (before and after revelations)
+- ★ Characters must take at least 3 physical actions
+- ★ At least 1 turn where a character is unable to finish their sentence

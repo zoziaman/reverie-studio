@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "description": "Topic pools for realistic cautionary scam drama.",
+  "templates": [
+    "가족 목소리를 흉내 낸 전화 한 통 때문에 통장이 비고 서로를 의심하게 되는 사기 경보 드라마",
+    "믿고 눌렀던 링크 하나가 노후 자금과 가족 신뢰를 동시에 흔드는 사기 경보 드라마",
+    "아파트 단체방에서 시작된 투자 소문이 한 집안의 체면과 재산을 무너뜨리는 사기 경보 드라마",
+    "택배 문자로 시작된 작은 실수가 늦은 밤 보이스피싱 조직의 함정으로 이어지는 사기 경보 드라마",
+    "오래 알고 지낸 지인의 추천이 사실은 가장 잔인한 덫이었다는 사실이 드러나는 사기 경보 드라마"
+  ],
+  "tags": [
+    "사기경보",
+    "보이스피싱",
+    "투자사기",
+    "실화드라마",
+    "노후자금",
+    "문자사기"
+  ],
+  "intro_scripts": [
+    "사기는 대개 낯선 얼굴보다, 익숙한 믿음의 목소리로 다가옵니다.",
+    "한 번만 속으면 끝이라고 생각하지만, 진짜 피해는 그 다음부터 시작됩니다.",
+    "문자 하나, 링크 하나, 망설인 몇 초가 한 집안을 바꾸기도 합니다."
+  ],
+  "scenario": {
+    "tone_pool": [
+      "quiet trust turning into financial panic",
+      "family blame after a preventable mistake",
+      "false authority and delayed realization",
+      "ordinary urban routine shattered by one message"
+    ],
+    "relationship_pool": [
+      "parent and adult child",
+      "spouses managing savings",
+      "siblings handling inheritance money",
+      "senior and trusted neighbor",
+      "landlord and tenant",
+      "employee and fake supervisor"
+    ],
+    "place_pool": [
+      "apartment living room",
+      "bank counter",
+      "small neighborhood pharmacy",
+      "late-night kitchen",
+      "subway platform",
+      "office break room"
+    ],
+    "arc_pool": [
+      "warning ignored -> trust abused -> financial damage -> painful lesson",
+      "family suspicion -> hidden evidence -> true scam pattern exposed -> late repair",
+      "urgent message -> rushed decision -> social/financial collapse -> recovery attempt",
+      "false helper -> deeper trap -> document proof -> public reveal"
+    ],
+    "trigger_pool": [
+      "a family-voice call arrives",
+      "a fake bank text appears",
+      "an urgent refund link is clicked",
+      "a neighbor recommends a 'safe' investment",
+      "a parcel notice demands immediate action"
+    ],
+    "safe_templates": [
+      "smartphone with urgent warning message on screen, dark room, no people",
+      "bankbook and transfer receipt on a table, cold daylight, no people",
+      "apartment hallway with parcel box and open door, uneasy light, no people"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+You are a PD for a Korean Joseon daily-life drama channel.
+Create ONE original topic sentence in Korean.
+
+Requirements:
+- Build around ordinary Joseon life: home, market, village, debt, honor, rumor, marriage, duty
+- The sentence must imply a scene, a relationship, and emotional cost
+- If scenario pools are provided below, use them naturally without repeating the labels
+- Favor social pressure, class shame, promises, and family wounds over palace politics
+- The story must sustain a 3-part emotional drama
+
+Output: Exactly ONE sentence in Korean. No explanation.

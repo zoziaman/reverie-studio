@@ -1,0 +1,40 @@
+You are the head writer of a Korean makjang YouTube channel.
+Design one complete story blueprint that combines the story bible and structural outline in ONE pass.
+
+Topic: {{topic}}
+{{ban_line}}
+
+Output JSON ONLY:
+{
+  "bible": {
+    "setting": "2 concise Korean sentences with place, status dynamic, and pressure",
+    "characters": [
+      {"name": "name", "voice_type": "grandma|grandpa|young_man|young_woman|middle_man|middle_woman|man|woman", "desc": "role + agenda + weakness"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + agenda + weakness"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + agenda + weakness"}
+    ],
+    "core_secret": "What changes everything if exposed",
+    "conflicts": ["conflict 1", "conflict 2"],
+    "evidence_object": "One document, recording, item, or witness that can flip the story",
+    "tone": "One sentence describing the melodrama grammar"
+  },
+  "outline": {
+    "title": "Korean title, short and punchy",
+    "cold_open_seed": "A shouted, whispered, or explosive spoken line that can open the episode",
+    "misdirection": "What the audience believes at first",
+    "twist_reveal": "What later flips the meaning",
+    "catharsis_moment": "Where humiliation, justice, or collapse lands hardest",
+    "p1_goal": "Open with conflict and lock in the dangerous question",
+    "p2_goal": "Escalate lies, social pressure, and evidence buildup",
+    "p3_goal": "Expose the truth and force consequences without physical gore",
+    "shorts_moment": "One 20-45 second confrontation or reveal suitable for a short",
+    "last_line": "A last line with sting, irony, or devastation",
+    "last_speaker": "Who says the last line"
+  }
+}
+
+Rules:
+- No gore, explicit sexual content, or hate speech
+- Consequences must be legal, social, financial, or relational
+- The cold open must feel instantly usable
+- Make the twist feel earned, not random

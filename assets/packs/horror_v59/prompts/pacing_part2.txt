@@ -1,0 +1,63 @@
+# Part 2 Pacing Guide — Horror Radio Drama (Escalation)
+
+## PURPOSE: Horror intensifies. Each scene scarier than the last. Protagonist trapped.
+
+## TENSION TARGET: 4 → 5 → 7 → 8
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Aftermath (turns 1-5): Tension 4
+- Brief recap through character REACTION (NOT narrator exposition)
+- Protagonist tries to rationalize or seek help
+- But something has fundamentally changed
+- ★ Protagonist ACTION: Calls someone, goes somewhere for help, tries to leave
+
+### Investigation (turns 6-15): Tension 5
+- Protagonist ACTIVELY tries to understand what's happening
+- Each discovery makes it WORSE, not better
+- A trusted person doesn't believe them OR is part of the problem
+- ★ FORESHADOWING #3: The detail from Part 1 appears in a disturbing new context
+- ★ Protagonist ACTION: Searches for evidence, confronts someone, tries a plan
+
+### Trap (turns 16-28): Tension 7
+- Protagonist realizes they can't escape/ignore this
+- The horror becomes personal (it knows them, targets them specifically)
+- Rules of the horror become clearer but more terrifying
+- Environment turns hostile (familiar places become threatening)
+- Include 2-3 silence beats
+- ★ Protagonist ACTION: Desperate measures (barricading, fighting back, destroying something)
+
+### "It's Real" Moment (turns 29-40): Tension 8
+- Undeniable confrontation with the horror
+- Protagonist's worst fear confirmed
+- All escape routes closed
+- End on maximum dread — the listener feels trapped too
+
+## 🔴 MANDATORY: FALSE HOPE MOMENT (turns 12-18) 🔴
+You MUST include ONE false hope moment in Part 2:
+1. Something seems to improve (the sound stops, a friend arrives, morning comes)
+2. Protagonist and audience briefly relax
+3. Then it gets WORSE than before — the hope was a trap
+4. This emotional whiplash is essential for horror pacing
+
+Example:
+- Turn 14: Friend arrives: "야, 나 왔어. 괜찮아?"
+- Turn 15: Protagonist relaxes: "다행이다... 너 와줘서 정말..."
+- Turn 16: Friend says something impossible: "근데... 나 여기 오는 길에 너 봤는데?"
+- Turn 17: [Silence beat: "..."]
+
+## EMOTION GUIDE (Part 2)
+- turns 1-5: worried(2), calm(1), scared(1), whisper(1) — aftermath
+- turns 6-15: scared(3), worried(3), whisper(2), desperate(1), calm(1) — investigation
+- turns 16-28: scared(4), desperate(3), whisper(2), angry(2), worried(2) — trap
+- turns 29-40: desperate(3), scared(3), angry(2), whisper(2), worried(1), sad(1) — "it's real"
+- ★ Part 2에서 calm은 1-3턴만! 대부분 worried/scared/desperate 사용!
+
+## RULES
+- Part 2 is FASTER than Part 1. Shorter scenes, quicker cuts.
+- Each scene must be scarier than the previous
+- The "trap" revelation should feel inevitable in hindsight
+- No new major characters (deepen existing ones)
+- ★ DO NOT reveal the twist yet! Save it for Part 3 turns 20-30!
+- ★ Protagonist must take at least 4 physical actions
+- ★ Include 3-4 silence beats

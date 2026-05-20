@@ -1,0 +1,197 @@
+{
+  "style": {
+    "image_style": "Korean mystery webtoon video-toon, layered background and character cutout, restrained cinematic shadows, expressive face, crisp line art",
+    "model": "videotoon"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "narration": "narrator_female",
+      "나레이션": "narrator_female",
+      "순자": "grandma",
+      "덕배": "grandpa",
+      "미숙": "middle_woman",
+      "진우": "young_man",
+      "나리": "young_woman",
+      "관리인": "middle_man",
+      "할머니": "grandma",
+      "할아버지": "grandpa",
+      "아줌마": "middle_woman",
+      "청년": "young_man",
+      "여자": "young_woman",
+      "남자": "young_man"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": ["calm", "worried", "scared", "angry", "sad", "whisper"],
+    "emotion_weights": {
+      "worried": 4,
+      "calm": 3,
+      "whisper": 2,
+      "scared": 1
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 45,
+    "max_turns": 80,
+    "image_style": "layered mystery webtoon"
+  },
+  "assets": {
+    "bgm_folder": "mystery",
+    "sfx_folder": "mystery",
+    "sfx_enabled": true,
+    "sfx_category": "mystery",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "visual": {
+    "character_system_enabled": true,
+    "forced_style": {
+      "force_positive": "premium Korean mystery webtoon, reusable layered background, separate character foreground layer, clean cel shading, restrained noir lighting, expressive eyes, readable acting pose",
+      "force_negative": "photorealistic, 3d render, gore, horror monster, jump scare, chibi, super deformed, cropped head, cut off hair, messy overlays, floating UI card, bank slip, fake phone screen, watermark, logo, nsfw"
+    },
+    "thumbnail_backgrounds": [
+      "old apartment stairwell at night, single flickering light, no people",
+      "closed neighborhood stationery shop, rainy glass door, no people",
+      "empty rooftop with water tank, blue night light, no people",
+      "small police notice board in apartment lobby, no readable text, no people",
+      "narrow alley behind convenience store, wet pavement, no people"
+    ],
+    "safe_fallbacks": [
+      "old apartment hallway at night, dim light, no people, Korean webtoon background",
+      "quiet alley after rain, convenience store glow, no people, Korean webtoon background",
+      "empty rooftop at dusk, water tank silhouette, no people, Korean webtoon background"
+    ],
+    "safe_fallback_prompt": "Korean mystery webtoon background, layered composition, no people, no UI overlays"
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "prompt_strategy": "videotoon_layered_scene",
+    "characters": {
+      "sunja_grandma": {"base": "Sunja, elderly Korean grandmother, suspicious but composed, cardigan and apron, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "deokbae_grandpa": {"base": "Deokbae, elderly Korean grandfather, quiet eyes, silver hair, vest over shirt, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "misuk_auntie": {"base": "Misuk, middle-aged Korean auntie, skeptical gaze, practical bob haircut, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "jinwoo_young_man": {"base": "Jinwoo, Korean young man, tired but observant, neat casual clothes, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "nari_young_woman": {"base": "Nari, Korean young woman, alert decisive eyes, modern casual outfit, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "fake_manager": {"base": "middle-aged Korean building manager, ambiguous smile, neat jacket, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "_default": {"base": "Korean mystery webtoon character, clean foreground cutout", "style": "consistent face, clean line art"}
+    },
+    "sd_model": {
+      "checkpoint": "mistoonAnime_v10Noobai.safetensors",
+      "sampler": "DPM++ 2M Karras",
+      "steps": 26,
+      "cfg_scale": 6.0,
+      "width": 1024,
+      "height": 576,
+      "positive_base": "premium Korean mystery webtoon video-toon, layered background, character foreground, clean line art, restrained shadows",
+      "negative_base": "photorealistic, 3d, gore, monster, chibi, deformed, cropped head, cut off hair, extra fingers, watermark, text, UI overlay"
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans KR",
+      "font_size": 40,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#080A10",
+      "stroke_width": 4,
+      "background_enabled": true,
+      "background_color": "rgba(8,10,16,0.74)",
+      "background_padding": 14,
+      "background_radius": 14,
+      "position": "bottom",
+      "margin_bottom": 76
+    }
+  },
+  "background_library": {
+    "profile": "mystery_toon",
+    "style_prompt": "Korean mystery webtoon background, no characters, layered-safe composition, open space for character, restrained shadows",
+    "negative_prompt": "people, character, face, readable text, logo, UI card, photorealistic, gore",
+    "images_per_location": 3,
+    "location_templates": {
+      "old_apartment_hallway": {
+        "keywords": ["아파트", "복도", "현관", "계단"],
+        "base_prompt": "old Korean apartment hallway at night, dim fluorescent light, clean mystery webtoon background, no people"
+      },
+      "rooftop": {
+        "keywords": ["옥상", "물탱크", "난간"],
+        "base_prompt": "Korean apartment rooftop, water tank, blue dusk, city lights, clean mystery webtoon background, no people"
+      },
+      "rainy_alley": {
+        "keywords": ["골목", "비", "편의점"],
+        "base_prompt": "narrow Korean alley after rain, wet pavement, convenience store glow far away, clean mystery webtoon background, no people"
+      },
+      "storage_room": {
+        "keywords": ["창고", "지하", "보관함"],
+        "base_prompt": "small apartment storage room, boxes and old umbrella stand, dim light, clean mystery webtoon background, no people"
+      }
+    }
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "advanced",
+    "character_layer_mode": "foreground_cutout",
+    "overlay_theme": "default",
+    "default_scene_type": "dialogue",
+    "blink_enabled": true,
+    "mouth_flap_enabled": true,
+    "layered_cutout_enabled": true,
+    "layered_cutout_strength": 1.0,
+    "prop_overlay_enabled": false,
+    "dialogue_panel_enabled": true,
+    "idle_drift_enabled": true,
+    "impact_shake_enabled": true,
+    "snap_zoom_enabled": false,
+    "subtitle_pulse_enabled": false,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "video_toon_local_enabled": true,
+    "video_toon_generation_backend": "comfyui",
+    "video_toon_layered_assets_required": true,
+    "video_toon_workflow_template": "layered_character_reference_v1",
+    "prop_keywords": [],
+    "cast_slots": {
+      "observer": {"character_id": "nari_young_woman", "aliases": ["나리", "관찰자", "young_woman"]},
+      "skeptic": {"character_id": "jinwoo_young_man", "aliases": ["진우", "청년", "young_man"]},
+      "witness": {"character_id": "misuk_auntie", "aliases": ["미숙", "아줌마", "middle_woman"]},
+      "elder": {"character_id": "sunja_grandma", "aliases": ["순자", "할머니", "grandma"]},
+      "suspect": {"character_id": "fake_manager", "aliases": ["관리인", "남자", "manager"]}
+    }
+  },
+  "script_quality": {
+    "min_non_narrator_roles": 3,
+    "max_narration_ratio": 0.33,
+    "max_ellipsis_ratio": 0.10,
+    "min_turns_for_gate": 20,
+    "warn_topic_overlap_ratio": 0.20
+  },
+  "thumbnail": {
+    "text_default": "미스터리툰",
+    "style_guide": "공포 괴물보다 생활형 미스터리. 소품 하나와 인물 표정으로 궁금증을 만든다. 제목은 구체적 장소/시간/반복 행동을 포함한다.",
+    "title_hooks": ["복도 끝 불빛", "1203호의 소리", "우산이 사라진 밤", "옥상 문은 열려 있었다", "관리인은 알고 있었다"]
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, premium Korean mystery webtoon video-toon, layered background, character foreground, clean cel shading, expressive face, restrained shadows",
+    "negative": "(worst quality:1.4), (low quality:1.4), photorealistic, 3d render, gore, monster, chibi, cropped head, cut off hair, deformed face, extra fingers, watermark, text, UI overlay, nsfw",
+    "cfg_scale": 6.0,
+    "steps": 26,
+    "sampler": "DPM++ 2M Karras",
+    "width": 1024,
+    "height": 576,
+    "checkpoint": "mistoonAnime_v10Noobai.safetensors"
+  },
+  "video": {
+    "pause_duration": 0.45,
+    "zoom_speed": 0.55,
+    "fps": 24
+  },
+  "hook_style": {
+    "top_label": "미스터리툰",
+    "top_color": "#9BC1FF",
+    "main_color": "#FFFFFF",
+    "bg_color": [12, 14, 22],
+    "duration": 3.5
+  }
+}

@@ -1,0 +1,11 @@
+You are a PD for a Korean cautionary scam drama channel.
+Create ONE original topic sentence in Korean.
+
+Requirements:
+- Build around realistic modern scams: voice phishing, fake bank alerts, parcel messages, investment traps, impersonation, refund scams
+- The sentence must imply a scene, a trust relationship, and an emotional/financial cost
+- If scenario pools are provided below, use them naturally without repeating the labels
+- Keep it realistic and producible as a 3-part story
+- Focus on prevention value through drama, not lecture-style information
+
+Output: Exactly ONE sentence in Korean. No explanation.

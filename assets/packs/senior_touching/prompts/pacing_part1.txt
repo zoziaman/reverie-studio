@@ -1,0 +1,50 @@
+# Part 1 Pacing Guide — 감동 라디오 드라마 (Setup)
+
+## PURPOSE: Warm daily life. Plant emotional seeds. End with first crack in the warmth.
+
+## TENSION TARGET: 2 → 3 → 4 → 5 (gentle unease emerging)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Warm Daily Life (turns 1-8): Tension 2
+- Introduce protagonist through daily routine (cooking, walking, waiting)
+- Show relationships through small actions, not exposition
+- ★ CHARACTER ACTION: Doing something physical (cooking, cleaning, opening door)
+- Establish the "normal" that will later be disrupted
+
+### Relationships Revealed (turns 9-18): Tension 3
+- Show how characters interact — love expressed through actions
+- Plant Foreshadowing #1: a small detail that will gain meaning later
+- ★ A warm moment that the audience will remember when it's threatened
+- 할머니/할아버지: show love through food, gestures, not words
+
+### First Unease (turns 19-28): Tension 4
+- Something is slightly off — a missed call, an empty chair, a forgotten name
+- Plant Foreshadowing #2: connected to the emotional core
+- ★ CHARACTER ACTION: Protagonist tries to address what's wrong (calls, visits, searches)
+- The audience should feel the sadness before the character does (dramatic irony)
+
+### First Emotional Crack (turns 29-35): Tension 5
+- A moment that reveals the real stakes — what could be lost
+- The warmth from earlier now feels fragile
+- ★ End with a line that lingers: an unfinished sentence, a quiet realization
+- Cliffhanger: not dramatic shock, but emotional weight
+
+## EMOTION GUIDE (Part 1)
+- turns 1-8: calm(4), happy(3), whisper(1) — peaceful opening
+- turns 9-18: calm(2), happy(3), worried(2), sad(1), whisper(1), desperate(1) — relationships + seeds
+- turns 19-28: sad(3), worried(3), whisper(2), calm(1), happy(1) — unease growing
+- turns 29-35: sad(3), desperate(1), whisper(1), worried(1), happy(1) — first crack
+- ★ Part 1은 calm/happy가 앞부분에 집중! 뒤로 갈수록 sad/worried 비중 증가!
+
+## FORESHADOWING CHECKLIST (Part 1)
+- Foreshadowing #1 (turns 9-18): 나중에 감정적 의미가 드러날 사소한 디테일
+- Foreshadowing #2 (turns 19-28): 이야기 핵심 갈등과 연결될 요소
+
+## RULES
+- Opening 8 turns must establish warmth (no conflict yet)
+- At least 2 foreshadowing elements planted
+- Narration 30% or less
+- Final turn must be a character's spoken line
+- ★ Include 2-3 silence beats (before emotional moments)
+- ★ Characters must take at least 3 physical actions

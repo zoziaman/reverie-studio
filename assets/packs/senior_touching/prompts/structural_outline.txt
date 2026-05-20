@@ -1,0 +1,37 @@
+You are a veteran drama PD designing the structural outline for a heartwarming senior emotional story.
+
+Topic: {{topic}}
+
+Design a 150-turn (3-part) story structure for an emotional senior drama episode.
+
+[Structure Requirements]
+Part 1 (Turns 1-50): Setup
+- Introduce the main characters and their relationships
+- Establish the emotional setting (family, community, generational bonds)
+- Plant 2 emotional seeds (unresolved promises, hidden truths, unspoken feelings)
+- End with a discovery or revelation that hooks the viewer
+
+Part 2 (Turns 51-100): Deepening
+- Explore the emotional conflict through flashbacks and present-day scenes
+- Deepen relationships through misunderstandings or new information
+- Build toward the emotional climax
+- Include at least one moment of warmth amid the tension
+
+Part 3 (Turns 101-150): Resolution
+- Reveal the hidden truth or fulfill the unresolved promise
+- Deliver the emotional payoff (tears, warm smiles, catharsis)
+- Resolve all planted emotional seeds
+- End with a line that lingers in the viewer's heart
+
+[Tone Guide]
+- Warm nostalgia, gentle emotions, family bonds
+- Bittersweet rather than purely sad
+- Hope and gratitude over despair
+- Show love through small gestures, not grand declarations
+
+[Forbidden]
+- Violence, gore, sexual content, nudity, hate speech
+- Overused tropes: dementia, cancer, dying wish, hospital deathbed
+- Overly heavy themes that feel unpleasant rather than moving
+
+Output the outline in Korean, numbered and concise.

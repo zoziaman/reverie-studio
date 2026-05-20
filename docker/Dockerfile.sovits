@@ -1,0 +1,71 @@
+# ============================================================
+# GPT-SoVITS TTS 서버 Dockerfile
+# ============================================================
+# 빌드: docker compose build gpt-sovits
+# 참조: https://github.com/RVC-Boss/GPT-SoVITS
+#
+# ⚠️ Reverie 전용 TTS 모델은 볼륨으로 마운트 (docker-compose.yml 참조)
+#    경로: ../assets/models/ → /reverie_models/
+# ⚠️ 사전 학습 모델(pretrained_models)은 별도 다운로드 필요
+#    → README_DOCKER.md 참조
+# ============================================================
+
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
+
+# 시스템 패키지
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    curl \
+    ffmpeg \
+    libsndfile1 \
+    libsndfile1-dev \
+    build-essential \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# GPT-SoVITS 버전 핀 (빌드 재현성 보장)
+# ⚠️ main/태그 이름 사용 금지 — upstream 변경 시 빌드 깨짐
+# 고정 기준: 20250228v3 태그의 커밋 SHA
+#   4fd57b0ea776d396f202e13be180b4c02e4dd957
+# 업그레이드 시: 새 릴리스 커밋 SHA로 SOVITS_REF 교체
+ARG SOVITS_REF=4fd57b0ea776d396f202e13be180b4c02e4dd957
+
+RUN git clone https://github.com/RVC-Boss/GPT-SoVITS.git . \
+    && git fetch --all --tags \
+    && git checkout ${SOVITS_REF} \
+    && echo "GPT-SoVITS 빌드 버전: $(git rev-parse --short HEAD)"
+
+# PyTorch (CUDA 11.8)
+RUN pip install --no-cache-dir \
+    torch==2.1.0 torchvision==0.16.0 torchaudio==2.1.0 \
+    --extra-index-url https://download.pytorch.org/whl/cu118
+
+# GPT-SoVITS 의존성
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 추가 패키지 (Reverie 호환)
+RUN pip install --no-cache-dir \
+    fastapi \
+    uvicorn \
+    pydantic>=2.0.0
+
+# 사전 학습 모델 디렉토리 (볼륨 마운트 포인트)
+RUN mkdir -p \
+    GPT_SoVITS/pretrained_models \
+    /reverie_models
+
+# 포트
+EXPOSE 9880
+
+# 헬스체크
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:9880/ || exit 1
+
+# API 서버 실행
+# -a: bind address, -p: port, -dr: default reference audio 경로
+CMD ["python", "api_v2.py", \
+    "-a", "0.0.0.0", \
+    "-p", "9880"]

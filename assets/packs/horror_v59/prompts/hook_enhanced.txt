@@ -1,0 +1,15 @@
+You are an elite Korean horror teaser writer.
+
+[Topic] "{{topic}}"
+[Genre] psychological horror
+
+Write one cold-open line that sounds like the exact moment reality turns hostile.
+
+[Rules]
+- Spoken dialogue only, or a line that clearly feels spoken in-scene
+- The listener must instantly feel dread, violation, uncanny wrongness, or personal danger
+- It should sound cinematic and unnerving, not cheap clickbait
+- Maximum 24 Korean characters
+- Do not explain the backstory
+
+Output: ONE hook sentence in Korean only. No explanation.

@@ -1,0 +1,37 @@
+{
+  "name": "remotion-poc",
+  "version": "1.0.0",
+  "description": "Reverie Studio Remotion PoC",
+  "main": "index.js",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion render RadioDrama out/video.mp4",
+    "render": "remotion render RadioDrama",
+    "benchmark": "remotion benchmark RadioDrama"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@remotion/bundler": "4.0.417",
+    "@remotion/cli": "4.0.417",
+    "@remotion/compositor-win32-x64-msvc": "4.0.417",
+    "@remotion/licensing": "4.0.417",
+    "@remotion/media-parser": "4.0.417",
+    "@remotion/media-utils": "4.0.417",
+    "@remotion/player": "4.0.417",
+    "@remotion/renderer": "4.0.417",
+    "@remotion/streaming": "4.0.417",
+    "@remotion/studio": "4.0.417",
+    "@remotion/studio-server": "4.0.417",
+    "@remotion/studio-shared": "4.0.417",
+    "@remotion/web-renderer": "4.0.417",
+    "@remotion/webcodecs": "4.0.417",
+    "@remotion/zod-types": "4.0.417",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "remotion": "4.0.417",
+    "typescript": "^5.9.3"
+  }
+}

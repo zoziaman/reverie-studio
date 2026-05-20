@@ -1,0 +1,51 @@
+# Part 1 Pacing Guide — Horror Radio Drama (Setup)
+
+## PURPOSE: Establish normalcy, plant seeds of wrongness, end on first real scare.
+
+## TENSION TARGET: 1 → 2 → 3 → 5
+
+## STRUCTURE (Target: 25-35 dialogue turns, ~3 minutes)
+
+### Opening (turns 1-5): Tension 1
+- Narrator sets the scene: ordinary day, ordinary place
+- Protagonist is introduced through ACTION, not description
+- ONE sensory detail that feels slightly off (but dismissible)
+- ★ Protagonist must DO something mundane (working, walking, cooking) — not just exist
+
+### Early Signs (turns 6-15): Tension 2
+- First subtle wrongness — could be nothing
+- Protagonist notices but rationalizes it away
+- ★ FORESHADOWING #1: Plant a detail that will return in Part 3 (an object, a phrase, a sound)
+- Environmental sound shifts slightly
+- ★ Protagonist ACTION: Investigates the wrongness (opens door, checks window, calls someone)
+
+### Growing Unease (turns 16-25): Tension 3
+- Second wrongness — harder to dismiss
+- ★ FORESHADOWING #2: Same detail appears again, slightly different
+- Protagonist's behavior changes (checking over shoulder, speaking quieter)
+- A piece of information doesn't add up
+- ★ Protagonist ACTION: Tries to verify or solve (asks someone, searches for information, tries to leave)
+- Include 1-2 silence beats here
+
+### First Scare / Cliffhanger (turns 26-35): Tension 5
+- Something undeniable happens
+- Protagonist's rational world cracks
+- ★ Protagonist ACTION: Physical response (runs, locks door, grabs something for defense)
+- End mid-action or mid-realization
+- The listener MUST want to hear Part 2
+
+## EMOTION GUIDE (Part 1)
+- turns 1-5: calm(3), worried(1), whisper(1) — peaceful opening
+- turns 6-15: worried(4), calm(2), whisper(2), scared(2) — early signs
+- turns 16-25: scared(3), whisper(2), worried(2), desperate(1), calm(2) — growing unease
+- turns 26-35: scared(3), desperate(2), worried(2), angry(1), whisper(1), sad(1) — first scare
+- ★ calm은 도입부(turns 1-10)에 집중. 후반에는 거의 사용하지 마세요!
+
+## RULES
+- NO rushing to the horror. Slow burn is essential.
+- Minimum 5 turns of pure normalcy before first wrongness
+- At least 1 moment of dark humor or warmth (contrast makes horror stronger)
+- End on a question, not an answer
+- ★ Protagonist must take at least 3 physical actions (not just talking/listening)
+- ★ Plant exactly 2 foreshadowing elements that pay off in Part 2 or 3
+- ★ Include 2-3 silence beats ("..." turns with emotion "whisper")

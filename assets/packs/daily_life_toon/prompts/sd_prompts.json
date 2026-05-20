@@ -1,0 +1,6 @@
+{
+  "base": {
+    "positive": "premium Korean webtoon video-toon, layered background, character foreground cutout, clean line art, expressive face, cel shading, natural daily lighting",
+    "negative": "photorealistic, 3d render, chibi, cropped head, cut off hair, deformed face, extra limbs, text, watermark, floating UI overlay, bank card, phone UI, nsfw"
+  }
+}

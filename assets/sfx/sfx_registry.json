@@ -1,0 +1,208 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-01-29T04:50:05.186143",
+  "sfx": {
+    "notification.mp3": {
+      "filename": "notification.mp3",
+      "category": "common",
+      "tags": ["notification", "happy"],
+      "duration_ms": 504,
+      "volume_adjust": 0.0,
+      "description": "알림/긍정 효과음 (v61.1 #78: 태그 추가, #64: happy 매핑)",
+      "use_count": 0
+    },
+    "whoosh.mp3": {
+      "filename": "whoosh.mp3",
+      "category": "common",
+      "tags": [
+        "whoosh"
+      ],
+      "duration_ms": 575,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: whoosh.mp3",
+      "use_count": 0
+    },
+    "crying.mp3": {
+      "filename": "crying.mp3",
+      "category": "emotional",
+      "tags": [
+        "crying"
+      ],
+      "duration_ms": 3768,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: crying.mp3",
+      "use_count": 0
+    },
+    "piano_sad.mp3": {
+      "filename": "piano_sad.mp3",
+      "category": "emotional",
+      "tags": [
+        "sad"
+      ],
+      "duration_ms": 19278,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: piano_sad.mp3",
+      "use_count": 0
+    },
+    "night_crickets.mp3": {
+      "filename": "night_crickets.mp3",
+      "category": "horror\\ambient",
+      "tags": [
+        "night"
+      ],
+      "duration_ms": 10680,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: night_crickets.mp3",
+      "use_count": 0
+    },
+    "rain.mp3": {
+      "filename": "rain.mp3",
+      "category": "horror\\ambient",
+      "tags": [
+        "rain"
+      ],
+      "duration_ms": 104359,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: rain.mp3",
+      "use_count": 0
+    },
+    "thunder.mp3": {
+      "filename": "thunder.mp3",
+      "category": "horror\\ambient",
+      "tags": [
+        "thunder"
+      ],
+      "duration_ms": 15888,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: thunder.mp3",
+      "use_count": 0
+    },
+    "wind_howl.mp3": {
+      "filename": "wind_howl.mp3",
+      "category": "horror\\ambient",
+      "tags": [
+        "wind"
+      ],
+      "duration_ms": 12624,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: wind_howl.mp3",
+      "use_count": 0
+    },
+    "impact.mp3": {
+      "filename": "impact.mp3",
+      "category": "horror\\jump_scare",
+      "tags": [
+        "impact",
+        "angry"
+      ],
+      "duration_ms": 5120,
+      "volume_adjust": 0.0,
+      "description": "충격/분노 효과음 (v61.1 #64: angry 태그 추가)",
+      "use_count": 0
+    },
+    "scream.mp3": {
+      "filename": "scream.mp3",
+      "category": "horror\\jump_scare",
+      "tags": [
+        "scream"
+      ],
+      "duration_ms": 8098,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: scream.mp3",
+      "use_count": 0
+    },
+    "sudden_hit.mp3": {
+      "filename": "sudden_hit.mp3",
+      "category": "horror\\jump_scare",
+      "tags": [
+        "impact",
+        "jumpscare"
+      ],
+      "duration_ms": 11280,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: sudden_hit.mp3",
+      "use_count": 0
+    },
+    "door_creak.mp3": {
+      "filename": "door_creak.mp3",
+      "category": "horror\\supernatural",
+      "tags": [
+        "door"
+      ],
+      "duration_ms": 8098,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: door_creak.mp3",
+      "use_count": 0
+    },
+    "footsteps_slow.mp3": {
+      "filename": "footsteps_slow.mp3",
+      "category": "horror\\supernatural",
+      "tags": [
+        "footsteps"
+      ],
+      "duration_ms": 5112,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: footsteps_slow.mp3",
+      "use_count": 0
+    },
+    "glass_break.mp3": {
+      "filename": "glass_break.mp3",
+      "category": "horror\\supernatural",
+      "tags": [
+        "impact",
+        "glass"
+      ],
+      "duration_ms": 2743,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: glass_break.mp3",
+      "use_count": 0
+    },
+    "whisper.mp3": {
+      "filename": "whisper.mp3",
+      "category": "horror\\supernatural",
+      "tags": [
+        "whisper"
+      ],
+      "duration_ms": 3120,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: whisper.mp3",
+      "use_count": 0
+    },
+    "breathing.mp3": {
+      "filename": "breathing.mp3",
+      "category": "horror\\tension",
+      "tags": [
+        "breathing"
+      ],
+      "duration_ms": 56400,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: breathing.mp3",
+      "use_count": 0
+    },
+    "heartbeat.mp3": {
+      "filename": "heartbeat.mp3",
+      "category": "horror\\tension",
+      "tags": [
+        "heartbeat",
+        "tension"
+      ],
+      "duration_ms": 7419,
+      "volume_adjust": 0.0,
+      "description": "자동 스캔: heartbeat.mp3",
+      "use_count": 0
+    },
+    "suspense_drone.mp3": {
+      "filename": "suspense_drone.mp3",
+      "category": "horror\\tension",
+      "tags": [
+        "suspense",
+        "tension",
+        "dramatic"
+      ],
+      "duration_ms": 18192,
+      "volume_adjust": 0.0,
+      "description": "서스펜스/긴장/극적 분위기 드론 (v61.1 #64: dramatic 태그 추가)",
+      "use_count": 0
+    }
+  }
+}

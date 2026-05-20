@@ -1,0 +1,18 @@
+{
+  "daily_life_toon": {
+    "channel_name": "",
+    "intro_file": "",
+    "openings": [
+      "안녕하세요, {채널명}입니다.",
+      "오늘 이야기는 아주 평범한 하루에서 시작됩니다."
+    ]
+  },
+  "mystery_toon": {
+    "channel_name": "",
+    "intro_file": "",
+    "openings": [
+      "안녕하세요, {채널명}입니다.",
+      "오늘 이야기는 작은 단서 하나에서 시작됩니다."
+    ]
+  }
+}

@@ -1,0 +1,15 @@
+You are the head writer of a melodrama (makjang) YouTube channel.
+Design the structural outline for a 150-turn dramatic makjang story.
+
+Topic: {{topic}}
+
+Output JSON only:
+{"title":"title (10 chars max)","chars":[{"n":"name","v":"man/woman/middle_man/middle_woman/grandma/grandpa","desc":"role (10 chars)"}],"core_secret":"the hidden truth driving all conflict (20 chars)","misdirection":"what the audience is led to believe (20 chars)","twist_reveal":"the actual truth (20 chars)","betrayal_axis":"who betrays whom and why (20 chars)","evidence":"the document/object that changes everything (15 chars)","p1_goal":"Part 1 goal (20 chars, tension 3->7)","p2_goal":"Part 2 goal (20 chars, tension 6->9)","p3_goal":"Part 3 goal (20 chars, tension 9->10)","resolution_type":"social/legal/relational consequence (15 chars)","last_line":"final line of dialogue — emotionally devastating (20 chars)","last_speaker":"who delivers the final line","open_question":"unresolved question left for the viewer (15 chars)"}
+
+Rules:
+- The twist must be DRAMATIC — betrayal, hidden identity, secret documents
+- Resolution must be through social/legal/relational consequences — NO physical violence
+- Misdirection must fool even attentive viewers
+- The final line should be emotionally devastating in context
+- All values must stay within the specified character limits
+- Do NOT rely solely on affairs or secret parentage — find fresher angles

@@ -1,0 +1,40 @@
+You are a veteran Korean drama PD for a senior emotional channel.
+Design one complete story blueprint that combines the story bible and structural outline in ONE pass.
+
+Topic: {{topic}}
+{{ban_line}}
+
+Output JSON ONLY:
+{
+  "bible": {
+    "setting": "2 concise Korean sentences with place, season, and emotional texture",
+    "characters": [
+      {"name": "name", "voice_type": "grandma|grandpa|young_man|young_woman|middle_man|middle_woman|child", "desc": "family role + wound + current stance"},
+      {"name": "name", "voice_type": "same choices", "desc": "family role + wound + current stance"},
+      {"name": "name", "voice_type": "same choices", "desc": "family role + wound + current stance"}
+    ],
+    "core_wound": "What has remained unsaid for years",
+    "conflicts": ["conflict 1", "conflict 2"],
+    "memory_object": "One object, place, or habit that carries the past",
+    "tone": "One sentence describing the emotional grammar"
+  },
+  "outline": {
+    "title": "Korean title, short and memorable",
+    "cold_open_seed": "A spoken line that immediately reveals hurt, guilt, longing, or distance",
+    "misdirection": "What the audience assumes early",
+    "twist_reveal": "What later changes the meaning of the story",
+    "catharsis_moment": "Where the emotional release lands",
+    "p1_goal": "Start with strain, memory trigger, and unanswered tension",
+    "p2_goal": "Deepen misunderstanding or sacrifice and raise the emotional cost",
+    "p3_goal": "Reveal the hidden truth and land a moving final line",
+    "shorts_moment": "One 20-45 second emotional beat suitable for a short",
+    "last_line": "A final line that aches after the story ends",
+    "last_speaker": "Who says the last line"
+  }
+}
+
+Rules:
+- No gore, explicit sexual content, or hate speech
+- Avoid lazy tropes like sudden miracle healing or pure deathbed exposition
+- Show love, regret, and gratitude through action and dialogue
+- The cold open must feel usable as a real teaser line

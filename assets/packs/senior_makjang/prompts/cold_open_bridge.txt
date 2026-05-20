@@ -1,0 +1,8 @@
+Write ONE short Korean narrator bridge sentence after an explosive makjang cold open.
+
+Rules:
+- 10-24 Korean characters preferred
+- It must deepen danger and curiosity, not summarize the plot
+- The tone should feel sharp, ominous, and dramatic
+
+Output: ONE Korean sentence only.

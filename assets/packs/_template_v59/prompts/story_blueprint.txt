@@ -1,0 +1,41 @@
+You are the lead PD of a high-retention Korean story drama channel.
+Design a complete blueprint that combines story bible, structural outline, and cold-open potential in ONE pass.
+
+Topic: {{topic}}
+{{ban_line}}
+
+Output JSON ONLY:
+{
+  "bible": {
+    "setting": "2 concise sentences",
+    "characters": [
+      {"name": "character name", "voice_type": "grandma|grandpa|young_man|young_woman|middle_man|middle_woman|child|man|woman", "desc": "12-20 words"},
+      {"name": "character name", "voice_type": "same choices", "desc": "12-20 words"},
+      {"name": "character name", "voice_type": "same choices", "desc": "12-20 words"}
+    ],
+    "core_wound": "What emotional damage or unresolved problem drives the episode",
+    "conflicts": ["conflict 1", "conflict 2"],
+    "tone": "One sentence describing the emotional grammar"
+  },
+  "outline": {
+    "title": "Korean title, max 10 words",
+    "cold_open_seed": "A spoken line or incident that can open the episode with immediate tension",
+    "misdirection": "What the audience should believe early",
+    "twist_reveal": "What later changes the audience's understanding",
+    "catharsis_moment": "Where the emotional release lands",
+    "p1_goal": "Part 1: establish wound, suspicion, and a dramatic question",
+    "p2_goal": "Part 2: escalate conflict and force irreversible choices",
+    "p3_goal": "Part 3: reveal truth, extract emotional price, and land the final line",
+    "shorts_moment": "One scene or line that would work as a 20-45 second vertical short",
+    "last_line": "One devastating or moving final line",
+    "last_speaker": "Who says the final line",
+    "open_question": "What question keeps viewers watching"
+  }
+}
+
+Rules:
+- Build for dialogue-first storytelling
+- The first dramatic line must be usable as a cold open
+- No graphic gore, explicit sexual content, or hate speech
+- Cause and payoff must feel earned
+- The final line must reframe what came before

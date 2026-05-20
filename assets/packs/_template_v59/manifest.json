@@ -1,0 +1,35 @@
+{
+  "pack_id": "template_v59_story_drama",
+  "pack_name": "Reverie Story Drama Template",
+  "version": "59.2.0",
+  "author": "Reverie Studio",
+  "description": "Operational template pack for story-driven channels. Copy this pack, then replace the tone, pools, visuals, and examples for your genre.",
+  "created_at": "2026-03-15T00:00:00+09:00",
+  "reverie_version_min": "1",
+  "reverie_version_max": null,
+  "license": {
+    "type": "template",
+    "key_required": false,
+    "expires_at": null
+  },
+  "genre": "custom",
+  "channel_type": "custom",
+  "channel_display_name": "Template Channel",
+  "required_models": {
+    "checkpoint": null,
+    "vae": null,
+    "lora": []
+  },
+  "features": [
+    "story_blueprint",
+    "cold_open",
+    "metadata",
+    "shorts_ready",
+    "visual_storytelling"
+  ],
+  "template_notes": [
+    "Replace topic pools with your niche-specific emotional triggers.",
+    "Rewrite hook prompts before shipping a new pack.",
+    "Validate placeholder coverage before building a revpack."
+  ]
+}

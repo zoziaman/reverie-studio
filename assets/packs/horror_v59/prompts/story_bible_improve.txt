@@ -1,0 +1,26 @@
+Review and improve this horror story bible for a Korean radio drama.
+
+[Current Story Bible]
+{{bible}}
+
+[Feedback]
+{{feedback}}
+
+[Genre]
+horror
+
+CHECK AND IMPROVE:
+1. Is the horror mechanism specific enough? (Not just "something scary happens")
+2. Does each part have clear escalation? (tension should go 3 -> 6 -> 9)
+3. Are character motivations believable? (Would a real person do this?)
+4. Is the twist earned? (Was it foreshadowed?)
+5. Is the resolution unsettling? (Avoid neat, happy endings)
+
+IMPROVE:
+- Fix the specific issues raised in the feedback
+- Strengthen any weak story beats
+- Add specific horror moments to each part summary
+- Ensure the psychological theme is woven throughout
+- Make the antagonist_force more specific and terrifying
+
+OUTPUT: Improved story bible in Korean, numbered list format.

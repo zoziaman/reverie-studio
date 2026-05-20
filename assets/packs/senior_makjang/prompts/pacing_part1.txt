@@ -1,0 +1,51 @@
+# Part 1 Pacing Guide — 막장 드라마 (Setup)
+
+## PURPOSE: Surface peace shattered. Secrets planted. End with first explosion.
+
+## TENSION TARGET: 3 → 4 → 6 → 7 (calm surface → first cracks → first eruption)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Surface Peace (turns 1-7): Tension 3
+- Family gathering, meal, or celebration — everyone seems fine
+- But subtle signs: forced smiles, averted eyes, loaded silences
+- ★ CHARACTER ACTION: Arriving, sitting down, pouring tea — surface normalcy
+- Establish relationships and power dynamics through small interactions
+
+### Seeds of Conflict (turns 8-16): Tension 4-5
+- A careless comment, a misplaced item, a phone that rings at the wrong time
+- Plant Foreshadowing #1: a detail that will become explosive later
+- ★ Someone says something with double meaning — audience catches it, characters don't
+- Power plays: who controls the conversation? Who stays silent?
+
+### Cracks Appear (turns 17-26): Tension 5-6
+- The mask slips — someone's composure breaks momentarily
+- Plant Foreshadowing #2: connected to the central secret
+- ★ CHARACTER ACTION: Confronting someone privately, finding something hidden, making a suspicious call
+- Suspicion builds — "Something is wrong with this family"
+
+### First Explosion (turns 27-35): Tension 7
+- Someone says what shouldn't be said — or reveals what should stay hidden
+- ★ The "가면이 벗겨지는 순간" — one devastating line
+- An argument, a walkout, a slap of truth
+- Cliffhanger: a bombshell that changes everything
+
+## EMOTION GUIDE (Part 1)
+- turns 1-7: calm(3), worried(2), happy(1), whisper(1) — surface peace
+- turns 8-16: worried(3), calm(2), whisper(2), angry(1), sad(1) — seeds planted
+- turns 17-26: angry(3), worried(2), whisper(2), desperate(1), sad(1), calm(1) — cracks
+- turns 27-35: angry(4), desperate(2), sad(1), whisper(1), worried(1) — explosion
+- ★ Part 1 앞부분은 calm/worried, 뒷부분은 angry/desperate로 급격 전환!
+
+## FORESHADOWING CHECKLIST (Part 1)
+- Foreshadowing #1 (turns 8-16): 나중에 폭발할 비밀의 실마리
+- Foreshadowing #2 (turns 17-26): 중심 갈등과 직결되는 증거/단서
+
+## RULES
+- Opening 7 turns: surface peace ONLY (no conflict yet — the calm before storm)
+- At least 2 foreshadowing elements planted
+- Narration 30% or less
+- Final turn must be a character's spoken line (impactful)
+- ★ Include 3-5 silence beats (especially after shocking lines)
+- ★ Characters must take at least 4 physical actions
+- ★ At least 1 turn where 존대→반말 전환 occurs

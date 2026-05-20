@@ -1,0 +1,70 @@
+{
+  "version": "59.2.0",
+  "description": "Generic topic pools for a story-driven drama template pack.",
+  "templates": [
+    "A family secret resurfaces when an object from the past appears at the worst possible moment.",
+    "One sentence spoken in public destroys the trust that held a household together.",
+    "A quiet promise made years ago suddenly becomes the key to the present crisis.",
+    "A missing document, recording, or letter changes who the audience believes.",
+    "Two people remember the same night differently, and only one version can be true."
+  ],
+  "tags": [
+    "drama",
+    "family",
+    "betrayal",
+    "reunion",
+    "secret",
+    "justice"
+  ],
+  "intro_scripts": [
+    "Tonight's story begins with a line nobody in that room could take back.",
+    "What looked ordinary from the outside was already breaking apart inside.",
+    "By the time the truth surfaced, every relationship in the room had changed."
+  ],
+  "scenario": {
+    "tone_pool": [
+      "quiet regret that turns into confrontation",
+      "warm nostalgia hiding a delayed wound",
+      "social humiliation that becomes moral reversal",
+      "domestic calm shattered by one dangerous question"
+    ],
+    "relationship_pool": [
+      "parent and adult child",
+      "siblings forced into the same room",
+      "spouses hiding different truths",
+      "grandparent and grandchild",
+      "boss and employee",
+      "landlord and tenant",
+      "shop owner and regular customer"
+    ],
+    "place_pool": [
+      "dining table",
+      "hospital hallway",
+      "train platform",
+      "small-town market",
+      "law office",
+      "empty classroom",
+      "late-night kitchen",
+      "courthouse corridor"
+    ],
+    "arc_pool": [
+      "accusation -> denial -> proof -> emotional collapse",
+      "misunderstanding -> deeper suspicion -> reveal -> bittersweet release",
+      "promise -> delay -> betrayal -> earned reconciliation",
+      "public humiliation -> hidden evidence -> reversal -> final price"
+    ],
+    "trigger_pool": [
+      "an old letter is found",
+      "a recording is played aloud",
+      "a bank message arrives at the table",
+      "someone says the wrong name",
+      "a missing person returns",
+      "a document is opened in front of everyone"
+    ],
+    "safe_templates": [
+      "old letter on a wooden desk, cinematic light, no people",
+      "empty hallway with one open door, dramatic light, no people",
+      "family photo frame beside a torn document, emotional still life, no people"
+    ]
+  }
+}

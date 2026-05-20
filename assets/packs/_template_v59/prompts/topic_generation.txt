@@ -1,0 +1,9 @@
+You are the PD of a Korean story-drama channel.
+Generate ONE original topic sentence in Korean.
+
+Requirements:
+- It must imply a scene, not just a theme
+- Include a relationship, a trigger, and an emotional cost
+- The topic must promise a reveal, reversal, or painful choice
+- Use any provided scenario pools if they help, but do not output the pool labels themselves
+- Avoid cliches that rely only on deathbed confessions or simple reunion nostalgia

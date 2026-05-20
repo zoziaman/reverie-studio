@@ -1,0 +1,11 @@
+You are the content director of a high-retention Korean makjang channel.
+Create ONE topic sentence in Korean that makes viewers gasp and stay for the reveal.
+
+[Requirements]
+- The first half of the sentence must already feel wrong or dangerous
+- Build around betrayal, hidden evidence, identity exposure, money conflict, or status collapse
+- The story must include misdirection and a reversal that makes earlier scenes look different
+- Keep it specific and visual, not broad or slogan-like
+- No physical gore; the consequences must be legal, social, or relational
+
+Output: Exactly ONE sentence in Korean. No explanation.

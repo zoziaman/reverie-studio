@@ -1,0 +1,11 @@
+You are the content director of a high-retention Korean horror channel.
+Generate ONE elite topic sentence in Korean.
+
+Requirements:
+- The first half of the sentence must already feel wrong
+- Build around isolation, guilt, intrusion, erased boundaries, or a familiar thing becoming hostile
+- The story must support a powerful cold open and a late reveal that makes earlier details worse
+- Keep it visual, specific, and producible in 3 parts
+- Favor psychological dread over gore or splatter
+
+Output: Exactly ONE sentence in Korean. No explanation.

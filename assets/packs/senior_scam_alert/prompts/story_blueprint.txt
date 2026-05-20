@@ -1,0 +1,41 @@
+You are the lead writer of a Korean scam-warning drama channel.
+Design one complete story blueprint that combines the story bible and structural outline in ONE pass.
+
+Topic: {{topic}}
+{{ban_line}}
+
+Output JSON ONLY:
+{
+  "bible": {
+    "setting": "2 concise Korean sentences with place, digital trigger, and emotional pressure",
+    "characters": [
+      {"name": "name", "voice_type": "grandma|grandpa|young_man|young_woman|middle_man|middle_woman|child", "desc": "role + blind spot + emotional stake"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + blind spot + emotional stake"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + blind spot + emotional stake"}
+    ],
+    "core_trap": "What manipulation made the scam believable",
+    "conflicts": ["conflict 1", "conflict 2"],
+    "evidence_object": "One phone screen, account record, message, receipt, or witness that changes everything",
+    "tone": "One sentence describing the cautionary drama grammar"
+  },
+  "outline": {
+    "title": "Korean title, short and punchy",
+    "cold_open_seed": "A spoken line that instantly reveals panic, false trust, or late realization",
+    "misdirection": "What the victim and audience believe early",
+    "twist_reveal": "What later exposes the real trap",
+    "catharsis_moment": "Where truth, warning, or emotional fallout hits hardest",
+    "p1_goal": "Open with a believable trigger and a rushed decision",
+    "p2_goal": "Escalate trust abuse, family pressure, and evidence buildup",
+    "p3_goal": "Expose the manipulation pattern and land a warning-rich final line",
+    "shorts_moment": "One 20-45 second realization or confrontation suitable for a short",
+    "last_line": "A final line that lands as warning or regret",
+    "last_speaker": "Who says the last line"
+  }
+}
+
+Rules:
+- Keep the scam realistic and current-feeling
+- No gore, explicit sexual content, or hate speech
+- The cold open must feel instantly usable
+- The lesson should emerge through drama, not lecture
+- Make sure at least one object-based reveal lands clearly through a phone screen, receipt, account record, or message that can visually read in one shot

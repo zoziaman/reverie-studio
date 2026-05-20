@@ -1,0 +1,18 @@
+{
+  "pack_id": "horror_v59",
+  "pack_name": "v59 비주얼 공포팩",
+  "version": "59.0.0",
+  "author": "Reverie Studio",
+  "genre": "horror",
+  "channel_type": "horror",
+  "plan_required": "horror",
+  "description": "v59 Visual Storytelling이 활성화된 공포 콘텐츠 팩",
+  "created_at": "2026-02-08T16:11:19.511553",
+  "min_reverie_version": "1",
+  "reverie_version_min": "1",
+  "features": [
+    "visual_storytelling",
+    "character_consistency",
+    "scene_analysis"
+  ]
+}

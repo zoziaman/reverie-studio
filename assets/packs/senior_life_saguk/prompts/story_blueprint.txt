@@ -1,0 +1,41 @@
+You are the lead PD of a Korean Joseon slice-of-life drama channel.
+Design one complete story blueprint that combines the story bible and structural outline in ONE pass.
+
+Topic: {{topic}}
+{{ban_line}}
+
+Output JSON ONLY:
+{
+  "bible": {
+    "setting": "2 concise Korean sentences with place, season, and Joseon social pressure",
+    "characters": [
+      {"name": "name", "voice_type": "grandma|grandpa|young_man|young_woman|middle_man|middle_woman|child", "desc": "role + wound + social position"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + wound + social position"},
+      {"name": "name", "voice_type": "same choices", "desc": "role + wound + social position"}
+    ],
+    "core_wound": "What remains unsaid because of duty, class, or shame",
+    "conflicts": ["conflict 1", "conflict 2"],
+    "meaningful_object": "One object or paper record that can carry the past",
+    "tone": "One sentence describing the emotional grammar"
+  },
+  "outline": {
+    "title": "Korean title, short and memorable",
+    "cold_open_seed": "A spoken line that immediately reveals status pressure, shame, or delayed truth",
+    "misdirection": "What the audience assumes early",
+    "twist_reveal": "What later changes the meaning of the wound",
+    "catharsis_moment": "Where dignity, truth, or forgiveness lands hardest",
+    "p1_goal": "Open with tension inside ordinary Joseon life",
+    "p2_goal": "Raise social pressure and emotional debt",
+    "p3_goal": "Reveal the hidden truth and land a lasting final line",
+    "shorts_moment": "One 20-45 second confrontation or reveal suitable for a short",
+    "last_line": "A final line that lingers with sorrow or grace",
+    "last_speaker": "Who says the last line"
+  }
+}
+
+Rules:
+- Focus on everyday life, not palace intrigue
+- No fantasy magic, gore, or explicit sexual content
+- The cold open must feel instantly usable
+- Show class pressure and family feeling through action and dialogue
+- Make one reveal hinge on a readable object such as a letter, ledger, vow paper, cloth bundle, or household possession that can visually carry the scene

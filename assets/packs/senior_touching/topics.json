@@ -1,0 +1,56 @@
+{
+  "templates": [
+    "할머니의 비밀 레시피",
+    "40년 만에 다시 만난 첫사랑",
+    "손주에게 전하는 인생 조언",
+    "고향 마을의 추억",
+    "아버지의 낡은 시계"
+  ],
+  "tags": ["감동", "시니어", "가족", "따뜻한이야기", "인생"],
+  "intro_scripts": [
+    "마음 따뜻한 이야기를 전해드립니다.",
+    "오늘도 감동의 사연을 들려드리겠습니다."
+  ],
+  "scenario": {
+    "tone_pool": [
+      "추억/회상 중심 (과거 장면이 현재 사건의 의미를 바꾸는 구조)",
+      "소품/장소 중심 (물건/공간이 감정을 끌어올리는 구조)",
+      "약속/오해 해소 중심 (미해결 약속이 풀리며 감정 폭발)",
+      "세대 연결 중심 (과거의 사연이 자식/손주에게 이어짐)",
+      "놓아줌/감사 중심 (재회가 아니라 보내주는 결말)"
+    ],
+    "relationship_pool": ["이웃", "형제/자매", "친구", "스승/제자", "라이벌이었던 옛 지인"],
+    "place_pool": ["시골집", "기차역", "바닷가", "시장 골목", "비 오는 버스정류장", "낡은 골목길", "도서관", "우체국"],
+    "arc_pool": [
+      "미스터리 → 진실 발굴 → 감정 폭발 (탐정 구조)",
+      "오해 → 갈등 심화 → 반전 화해 (드라마틱 아이러니)",
+      "상실 → 회상 여행 → 새로운 의미 발견 (치유 서사)",
+      "비밀 → 점진적 노출 → 카타르시스 (양파 껍질 구조)",
+      "대립 → 이해 → 용서 (성장 서사)"
+    ],
+    "trigger_pool": [
+      "잃어버린 물건이 발견되는 순간",
+      "오래된 편지/일기의 내용이 밝혀질 때",
+      "숨겨진 사진 속 진실",
+      "녹음된 목소리/영상의 발견",
+      "뜻밖의 증인이 나타날 때"
+    ],
+    "safe_templates": [
+      "old handwritten letter on weathered wooden table, warm afternoon sunlight",
+      "vintage transistor radio on wooden shelf, soft golden hour light",
+      "rainy bus stop shelter at dusk, empty wooden bench, gentle rain",
+      "aged photo album open on table, sepia-toned photographs visible",
+      "steaming tea cup on windowsill, rain droplets on glass pane",
+      "empty train station platform at sunset, orange sky glow",
+      "old music box on dresser, soft bedroom lighting",
+      "handwritten recipe card propped against mixing bowl, morning light",
+      "wilted flower bouquet in glass vase on table, gentle sunbeam",
+      "wall calendar showing circled date, red pen mark, natural light",
+      "ocean waves at dawn, empty sandy beach, soft pastel sky",
+      "vintage pocket watch on wooden surface, chain coiled beside it",
+      "postcard with handwritten message on table, international stamp",
+      "knitted blanket draped over rocking chair, fireplace glow",
+      "garden gate slightly open, flower path beyond, golden light"
+    ]
+  }
+}

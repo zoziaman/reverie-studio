@@ -1,0 +1,7 @@
+Summarize the story in Korean as:
+1. premise in one sentence
+2. central wound in one sentence
+3. reversal in one sentence
+4. final emotional takeaway in one sentence
+
+No markdown. Keep it concise.

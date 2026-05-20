@@ -1,0 +1,65 @@
+# Part 3 Pacing Guide — 막장 드라마 (Resolution)
+
+## PURPOSE: Final truth. Everyone pays. Bittersweet aftermath. No one wins completely.
+
+## TENSION TARGET: 6 → 8 → 10 → 6 (buildup → final explosion → exhausted aftermath)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Last Stand (turns 1-8): Tension 6-7
+- One character decides to end this — confront, confess, or escape
+- Brief moments of clarity amid chaos
+- ★ CHARACTER ACTION: Gathering evidence, arriving unannounced, making a final call
+- The audience knows this confrontation is inevitable
+
+### Final Truth (turns 9-20): Tension 8-10
+- The REAL secret comes out — everything before was only the surface
+- All foreshadowing from Parts 1-2 clicks into place
+- ★ FORESHADOWING PAYOFF: All 3 elements converge NOW
+- ★★★ THE FINAL TWIST must hit between turns 14-22 ★★★
+- The twist should reframe EVERYTHING — "So THAT'S what was really happening"
+
+### Reckoning (turns 21-30): Tension 8 → 6
+- Consequences land — someone apologizes, someone refuses to forgive
+- The power dynamic finally shifts permanently
+- ★ One line of devastating simplicity from the most powerful character ("끝이야.")
+- Not everyone gets closure — some wounds don't heal
+
+### Exhausted Aftermath (turns 31-35): Tension 6 (hollow calm)
+- The storm has passed, but the house is damaged
+- A small, unexpected moment of humanity (even enemies share a silence)
+- Life will go on, but nothing will be the same
+- ★ CRITICAL: The VERY LAST turn MUST be a character's spoken line (NOT narration).
+  End with a powerful spoken line that lingers in the listener's mind.
+  The second-to-last turn can be narration for atmosphere, but the FINAL turn = character dialogue ALWAYS.
+
+## ENDING OPTIONS (choose what fits the story):
+A) "We can't go back" (irreversible damage, but acceptance)
+B) "The truth freed us, but at what cost" (pyrrhic victory)
+C) "The real villain was the silence" (everyone was complicit)
+D) "One person walks away — and doesn't look back" (clean break)
+
+## 🔴 FORESHADOWING PAYOFF CHECKLIST 🔴
+In Part 3, ALL foreshadowing from Parts 1-2 must pay off:
+- Foreshadowing #1 (Part 1 early): now revealed as the CAUSE of everything
+- Foreshadowing #2 (Part 1 late): now revealed as someone's hidden motive
+- Foreshadowing #3 (Part 2): now revealed as the key to the final twist
+
+The audience should think: "처음부터 이거였어...!" (retrospective shock)
+
+## EMOTION GUIDE (Part 3)
+- turns 1-8: worried(2), angry(2), desperate(2), calm(1), whisper(1) — last stand
+- turns 9-20: angry(4), desperate(3), sad(2), whisper(2), worried(1) — final truth + twist
+- turns 21-30: sad(4), angry(2), desperate(1), calm(1), whisper(2) — reckoning
+- turns 31-35: sad(2), calm(1), whisper(1), worried(1) — exhausted aftermath
+- ★ Part 3에서 happy는 거의 0! angry→sad로 이동하는 것이 핵심!
+
+## RULES
+- Final twist MUST come between turns 14-22 (not before!)
+- Reckoning section is ESSENTIAL — don't skip straight to aftermath
+- Final turn must be a character's spoken line (powerful, lingering). Narration can be second-to-last.
+- DO NOT give everyone a happy ending. Some wounds stay open.
+- At least 1 character must face real consequences (not just emotional — status, relationship, trust)
+- ★ Include 3-5 silence beats (especially before/after the final twist and after the reckoning)
+- ★ At least 1 moment where the "villain" shows humanity
+- ★ At least 1 callback to Part 1's "surface peace" opening (ironic contrast)

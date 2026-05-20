@@ -1,0 +1,53 @@
+# Part 2 Pacing Guide — 막장 드라마 (Crisis)
+
+## PURPOSE: Secrets unravel. Alliances shift. Everyone cornered. Maximum chaos.
+
+## TENSION TARGET: 5 → 7 → 9 → 8 (escalation → peak confrontation → aftermath)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Aftermath & Regrouping (turns 1-8): Tension 5-6
+- Continue from Part 1's explosion — characters deal with the fallout
+- New alliances form, old ones crack
+- ★ CHARACTER ACTION: Secret phone call, hidden meeting, confronting an ally
+- Someone is planning revenge or damage control
+
+### Escalation (turns 9-18): Tension 7-8
+- New information surfaces — worse than Part 1's revelation
+- Plant Foreshadowing #3: the key to the final twist
+- ★ A 2차 반전: what seemed like the truth was only half of it
+- Trust collapses — "Even YOU were lying?"
+
+### Peak Confrontation (turns 19-28): Tension 8-9
+- The biggest clash — two or more characters face off
+- ★ All masks off — raw, ugly truth
+- Hope-despair swing: a brief moment where reconciliation seems possible → crushed
+- ★ CHARACTER ACTION: Evidence revealed (letter, photo, document), door slammed, someone leaves
+
+### The Wreckage (turns 29-35): Tension 7-8
+- The damage is done — the family/relationship is fractured
+- ★ One devastating quiet moment after all the screaming
+- Someone is left alone — the silence is louder than the shouting
+- Cliffhanger: the worst is yet to come (a new secret, a consequence)
+
+## EMOTION GUIDE (Part 2)
+- turns 1-8: worried(3), angry(2), calm(1), whisper(1), sad(1) — aftermath
+- turns 9-18: angry(4), desperate(2), whisper(2), worried(1), sad(1) — escalation
+- turns 19-28: angry(4), desperate(3), sad(1), whisper(1), worried(1) — peak clash
+- turns 29-35: sad(3), desperate(1), whisper(2), calm(1) — wreckage
+- ★ Part 2는 angry+desperate가 60% 이상! calm은 wreckage에서만 잠깐!
+
+## FORESHADOWING
+- Foreshadowing #3 (turns 9-18): 최종 반전을 이해하는 결정적 단서
+- Part 1의 복선 #1: 새로운 맥락에서 재해석
+
+## RULES
+- Must have at least 1 major 반전 (reversal)
+- Must have 1 hope-despair swing (brief hope → crushed)
+- Narration 30% or less
+- Resolve at least 1 foreshadowing from Part 1
+- Final turn must be a character's spoken line
+- ★ Include 3-5 silence beats (after each major revelation)
+- ★ Characters must take at least 4 physical actions
+- ★ At least 2 turns where characters speak in 1-word or 1-sentence bursts
+- ★ At least 1 cold, icy calm line amid the chaos ("나 다 알아.")

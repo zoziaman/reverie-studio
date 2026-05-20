@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "description": "Topic pools for daily-life Joseon human drama.",
+  "templates": [
+    "장터에서 던져진 한마디가 한 집안의 신분과 약속을 뒤흔드는 조선 생활사극",
+    "사라진 혼수 물목 한 장 때문에 며느리와 시어머니의 오래된 오해가 드러나는 생활사극",
+    "한양으로 보내지 못한 편지 한 통이 스무 해 묵은 죄책감을 깨우는 생활사극",
+    "가난한 선비의 거짓말 하나가 사랑과 체면 사이의 균열을 키우는 생활사극",
+    "마을 우물가에서 퍼진 소문이 아무도 말하지 못한 진실을 끌어내는 생활사극"
+  ],
+  "tags": [
+    "생활사극",
+    "조선",
+    "사극드라마",
+    "가족",
+    "신분",
+    "한양"
+  ],
+  "intro_scripts": [
+    "그날 장터에서는 누구도 평소와 다른 바람을 눈치채지 못했습니다.",
+    "한 집안의 체면은 대개 작은 말 한마디에서 무너지기 시작합니다.",
+    "조선의 하루는 조용해 보여도, 속으로는 수많은 약속과 원망이 뒤엉켜 있습니다."
+  ],
+  "scenario": {
+    "tone_pool": [
+      "daily-life warmth hiding a status wound",
+      "quiet dignity under public humiliation",
+      "household duty colliding with private affection",
+      "village rumor turning into moral reversal"
+    ],
+    "relationship_pool": [
+      "mother-in-law and daughter-in-law",
+      "father and daughter",
+      "siblings under family debt",
+      "widow and foster child",
+      "scholar and market woman",
+      "servant and household heir"
+    ],
+    "place_pool": [
+      "hanok courtyard",
+      "market street",
+      "village well",
+      "inn kitchen",
+      "guest room with a paper door",
+      "mountain path to the village"
+    ],
+    "arc_pool": [
+      "rumor -> shame -> hidden truth -> moral reversal",
+      "promise -> delay -> sacrifice revealed -> late reconciliation",
+      "status lie -> household fracture -> evidence -> earned forgiveness",
+      "small theft suspicion -> public humiliation -> truth exposed -> restored honor"
+    ],
+    "trigger_pool": [
+      "a sealed letter appears",
+      "dowry records go missing",
+      "a market rumor spreads",
+      "a child overhears the wrong truth",
+      "a family seal is found in the wrong room"
+    ],
+    "safe_templates": [
+      "hanok courtyard with empty water jar, dawn mist, no people",
+      "traditional market stall with folded fabrics, late afternoon light, no people",
+      "brush pen and sealed letter on low wooden desk, candlelight, no people"
+    ]
+  }
+}

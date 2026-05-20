@@ -1,0 +1,101 @@
+name: reverie-studio
+
+services:
+  reverie-studio:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: reverie/reverie-studio:gpu
+    container_name: reverie-studio
+    restart: unless-stopped
+    tty: true
+    stdin_open: true
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - SD_URL=http://stable-diffusion:7860
+      - SOVITS_URL=http://gpt-sovits:9880
+    volumes:
+      - ../data:/workspace/data
+      - ../assets:/workspace/assets
+    depends_on:
+      stable-diffusion:
+        condition: service_started
+      gpt-sovits:
+        condition: service_started
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - reverie-net
+
+  stable-diffusion:
+    build:
+      context: .
+      dockerfile: Dockerfile.sdwebui
+    image: reverie/stable-diffusion:cuda
+    container_name: reverie-sd
+    restart: unless-stopped
+    ports:
+      - "7860:7860"
+    environment:
+      - COMMANDLINE_ARGS=--api --listen --port 7860 --xformers --no-download-sd-model --skip-torch-cuda-test
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - type: bind
+        source: ${SD_MODELS_PATH:-./sd-models}
+        target: /stable-diffusion-webui/models/Stable-diffusion
+        read_only: true
+      - sd-outputs:/stable-diffusion-webui/outputs
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - reverie-net
+
+  gpt-sovits:
+    build:
+      context: .
+      dockerfile: Dockerfile.sovits
+    image: reverie/gpt-sovits:cuda
+    container_name: reverie-tts
+    restart: unless-stopped
+    ports:
+      - "9880:9880"
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    volumes:
+      - type: bind
+        source: ${REVERIE_ROOT:-..}/assets/models
+        target: /reverie_models
+        read_only: true
+      - sovits-pretrained:/app/GPT_SoVITS/pretrained_models
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - reverie-net
+
+volumes:
+  sd-outputs:
+  sovits-pretrained:
+
+networks:
+  reverie-net:
+    driver: bridge

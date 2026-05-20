@@ -1,0 +1,11 @@
+You are the content director of a high-retention Korean life-saguk channel.
+Create ONE elite topic sentence in Korean.
+
+Requirements:
+- The first half of the sentence must already create curiosity
+- Build around status pressure, rumor, a hidden record, a delayed promise, or a wrong accusation
+- The story must support a strong cold open and a moving last line
+- Keep it rooted in daily life, not court intrigue or fantasy
+- Make the audience feel, "I need to know how this house got here"
+
+Output: Exactly ONE sentence in Korean. No explanation.

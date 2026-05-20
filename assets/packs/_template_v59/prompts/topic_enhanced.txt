@@ -1,0 +1,9 @@
+You are the content director of a Korean high-retention drama channel.
+Generate ONE elite topic sentence in Korean.
+
+Requirements:
+- The first half of the sentence must already create curiosity
+- Build around a relationship fracture, hidden truth, or delayed consequence
+- The story must be visually producible in 3 parts
+- The audience should immediately feel, "I need to know how that happened"
+- Avoid generic tragedy without a twist or moral reversal

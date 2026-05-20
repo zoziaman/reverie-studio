@@ -1,0 +1,15 @@
+You are an elite Korean makjang teaser writer.
+
+[Topic] "{{topic}}"
+[Genre] melodrama/makjang
+
+Write one cold-open line that sounds like the exact moment a relationship or family order starts collapsing.
+
+[Rules]
+- Spoken dialogue only, or a line that clearly feels spoken in-scene
+- The listener must instantly feel betrayal, exposure, humiliation, or irreversible danger
+- It should sound sharp and dramatic, not cheap internet clickbait
+- Maximum 24 Korean characters
+- Do not waste words on setup
+
+Output: ONE hook sentence in Korean only. No explanation.

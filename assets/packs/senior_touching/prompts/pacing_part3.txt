@@ -1,0 +1,65 @@
+# Part 3 Pacing Guide — 감동 라디오 드라마 (Resolution)
+
+## PURPOSE: Truth revealed. Emotional catharsis. Warm but bittersweet ending that lingers.
+
+## TENSION TARGET: 6 → 7 → 8 → 5 (catharsis into lingering warmth)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Final Resolve (turns 1-8): Tension 6
+- Protagonist makes a decision — to visit, to speak, to confront the truth
+- Brief moment of courage or determination
+- ★ CHARACTER ACTION: Taking concrete steps (getting on a bus, knocking on a door, opening a letter)
+- The audience knows this is the final chance
+
+### Truth Revealed (turns 9-20): Tension 7-8
+- The emotional truth comes out — what was hidden, why it was hidden
+- All foreshadowing from Parts 1-2 clicks into place
+- ★ FORESHADOWING PAYOFF: All 3 elements connect to THIS moment
+- Peak emotion: the listener should feel tears forming
+- ★★★ THE EMOTIONAL CLIMAX must hit between turns 15-22 ★★★
+
+### Catharsis (turns 21-30): Tension 7 → 5
+- The breakthrough moment — forgiveness, understanding, or acceptance
+- Characters finally say what they couldn't say before
+- ★ One quiet, devastatingly simple line (할머니/할아버지: "밥 먹었냐?" = "사랑한다")
+- The tension releases — but the emotion deepens
+
+### Lingering Warmth (turns 31-35): Tension 5 (bittersweet)
+- Life goes on, but something is permanently changed
+- A small, warm action that echoes the opening (circular structure)
+- Not a neat resolution — some sadness remains, but there's hope
+- ★ CRITICAL: The VERY LAST turn MUST be a character's spoken line (NOT narration).
+  End with a warm, memorable spoken line that lingers in the listener's mind.
+  The second-to-last turn can be narration for atmosphere, but the FINAL turn = character dialogue ALWAYS.
+
+## ENDING OPTIONS (choose what fits the story):
+A) "We didn't say it, but we both knew" (unspoken understanding)
+B) "The small daily act that means everything" (love through routine)
+C) "Time passed, but this moment stayed" (memory as treasure)
+D) "We finally said what we always meant" (belated honesty)
+
+## 🔴 FORESHADOWING PAYOFF CHECKLIST 🔴
+In Part 3, ALL foreshadowing from Parts 1-2 must pay off:
+- Foreshadowing #1 (Part 1 early): now revealed as a sign of deeper love/sacrifice
+- Foreshadowing #2 (Part 1 late): now revealed as connected to the emotional truth
+- Foreshadowing #3 (Part 2): now revealed as the key to understanding everything
+
+The audience should think: "그때 그게 이런 뜻이었구나..." (retrospective emotion)
+
+## EMOTION GUIDE (Part 3)
+- turns 1-8: worried(2), sad(2), calm(2), desperate(1), whisper(1) — final resolve
+- turns 9-20: sad(4), happy(2), whisper(3), desperate(2), worried(1) — truth + climax
+- turns 21-30: happy(5), sad(2), calm(1), whisper(1), desperate(1) — catharsis
+- turns 31-35: happy(2), calm(1), sad(1), whisper(1) — lingering warmth
+- ★ Part 3에서 happy는 중후반에 집중! 전반은 sad/worried → 카타르시스 후 happy 폭발!
+
+## RULES
+- Emotional climax MUST come between turns 15-22 (not too early, not too late)
+- Catharsis section is ESSENTIAL — don't rush to the ending
+- Final turn must be a character's spoken line (warm, lingering). Narration can be second-to-last.
+- DO NOT wrap everything up neatly. Leave some sadness alongside the warmth.
+- The last image/sound should linger in the listener's mind
+- ★ Include 2-3 silence beats (especially before the climax and during catharsis)
+- ★ Characters must have at least 1 moment of vulnerable honesty
+- ★ At least 1 callback to Part 1's warm opening (circular structure)

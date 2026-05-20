@@ -1,0 +1,288 @@
+{
+  "pack_id": "senior_touching",
+  "pack_name": "시니어 감동 채널",
+  "version": "1.0.0",
+  "author": "Reverie Studio",
+  "description": "중장년층을 위한 따뜻하고 감동적인 스토리 채널",
+  "genre": "senior",
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "나레이션": "narrator_female",
+      "내레이션": "narrator_female",
+      "할아버지": "grandpa",
+      "할머니": "grandma",
+      "할배": "grandpa",
+      "할매": "grandma",
+      "남자": "man",
+      "여자": "woman",
+      "청년": "man",
+      "오빠": "man",
+      "형": "man",
+      "남동생": "man",
+      "언니": "woman",
+      "누나": "woman",
+      "여동생": "woman",
+      "손주": "woman",
+      "손녀": "woman",
+      "손자": "man",
+      "아저씨": "middle_man",
+      "아줌마": "middle_woman",
+      "아버지": "middle_man",
+      "어머니": "middle_woman",
+      "아빠": "middle_man",
+      "엄마": "middle_woman",
+      "남편": "middle_man",
+      "아내": "middle_woman",
+      "아들": "middle_man",
+      "딸": "middle_woman",
+      "중년남성": "middle_man",
+      "중년여성": "middle_woman",
+      "삼촌": "middle_man",
+      "이모": "middle_woman",
+      "grandpa": "grandpa",
+      "grandma": "grandma",
+      "child": "child",
+      "grandchild": "young_woman",
+      "man": "young_man",
+      "woman": "young_woman",
+      "young_man": "young_man",
+      "young_woman": "young_woman",
+      "middle_man": "middle_man",
+      "middle_woman": "middle_woman"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "sad",
+      "happy",
+      "calm",
+      "excited",
+      "whisper"
+    ],
+    "emotion_weights": {
+      "sad": 4,
+      "happy": 3,
+      "calm": 5
+    }
+  },
+  "bgm": {
+    "folder": "touching"
+  },
+  "sfx": {
+    "folder": "touching",
+    "enabled": true,
+    "category": "emotional",
+    "intensity": "medium"
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, warm atmosphere, emotional, Korean family, illustration style, soft lighting, nostalgic, heartwarming, Asian features",
+    "negative": "(worst quality:1.4), (low quality:1.4), horror, scary, dark, nsfw, nude, naked, revealing clothes, text, watermark, photograph, 3d render, photorealistic, western, caucasian, blonde hair, blue eyes",
+    "style": "warm illustration",
+    "model": "senior",
+    "cfg_scale": 6.0,
+    "steps": 15,
+    "image_style": "soft watercolor painting style, 2d illustration, warm pastel colors, nostalgic atmosphere"
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "characters": {
+      "narrator": {
+        "base": "watercolor illustration style warm Korean woman narrator, gentle smile, neat hair, soft pastel colored clothes, fully clothed",
+        "style": "soft watercolor, warm pastel colors, gentle lighting, cozy atmosphere"
+      },
+      "grandma": {
+        "base": "watercolor illustration style (elderly Korean grandmother:1.4), (wrinkled face:1.3), (aged skin:1.2), warm wrinkled smile, grey hair in bun, deep wrinkles, traditional hanbok or cardigan, kind eyes, old Korean woman, fully clothed",
+        "style": "soft watercolor, warm coral tones, heartwarming mood, (aged face:1.3), mature features"
+      },
+      "grandpa": {
+        "base": "watercolor illustration style (elderly Korean grandfather:1.4), (wrinkled face:1.3), (aged skin:1.2), gentle wrinkled face, white hair, deep wrinkles, warm sweater or vest, wise expression, old Korean man, fully clothed",
+        "style": "soft watercolor, earthy warm tones, comforting presence, (aged face:1.3), mature features"
+      },
+      "man": {
+        "base": "watercolor illustration style Korean adult man, neat appearance, casual warm-toned clothes, kind expression, fully clothed",
+        "style": "soft watercolor, cool pastel tones, clean composition"
+      },
+      "woman": {
+        "base": "watercolor illustration style Korean adult woman, gentle expression, soft hairstyle, warm-toned modest dress, fully clothed",
+        "style": "soft watercolor, warm pastel tones, elegant simplicity"
+      },
+      "child": {
+        "base": "watercolor illustration style Korean young child, bright curious eyes, school uniform or casual clothes, cheerful expression, fully clothed",
+        "style": "soft watercolor, cheerful pastel, playful warmth"
+      },
+      "middle_man": {
+        "base": "watercolor illustration style (Korean middle-aged man:1.3), (mature face:1.2), short black hair with grey streaks, gentle wrinkles, warm sweater or dress shirt, dependable expression, fully clothed",
+        "style": "soft watercolor, warm earthy tones, stable composition, (mature features:1.2)"
+      },
+      "middle_woman": {
+        "base": "watercolor illustration style (Korean middle-aged woman:1.3), (mature face:1.2), shoulder-length dark hair, gentle wrinkles, warm cardigan or blouse, caring expression, fully clothed",
+        "style": "soft watercolor, warm pastel tones, nurturing mood, (mature features:1.2)"
+      },
+      "_default": {
+        "base": "watercolor illustration style Korean person, gentle expression, warm-toned clothes, fully clothed",
+        "style": "soft watercolor, pastel colors, warm atmosphere"
+      }
+    },
+    "forced_style": {
+      "force_positive": "warm watercolor illustration, soft pastel colors, gentle gradients, nostalgic atmosphere, warm lighting, professional minimal design, heartwarming mood",
+      "force_negative": "scary, dark, horror, photograph, 3d render, photorealistic, nsfw, nude, naked, revealing clothes, western, caucasian, blonde hair, blue eyes"
+    },
+    "thumbnail_backgrounds": [
+      "rainy bus stop at dusk, empty wooden bench, warm streetlight, no people, gentle mood",
+      "old handwritten letter on wooden table, warm sunlight, teacup steam, no people",
+      "vintage transistor radio on shelf, soft golden hour light, no people",
+      "steam tea cup on windowsill, rain droplets on glass, cozy interior, no people",
+      "open photo album on table, sepia photos, soft light, no people",
+      "empty train station platform at sunset, orange sky glow, no people",
+      "knitted blanket draped over rocking chair, fireplace glow, no people",
+      "old music box on dresser, soft bedroom light, no people",
+      "postcard with handwritten message, stamp visible, desk lamp, no people",
+      "pocket watch on wooden surface, chain coiled, warm light, no people",
+      "pair of slippers by the door, gentle morning light, no people",
+      "umbrella left near doorway, raincoat hanging, quiet home, no people",
+      "small bouquet in vase, wilted petals, soft sunbeam, no people",
+      "kitchen table, simple meal set, one chair, calm light, no people",
+      "library desk, open book, reading glasses, sunbeam, no people",
+      "old calendar with circled date, red pen, warm wall light, no people",
+      "empty seaside bench at dawn, soft pastel sky, no people",
+      "narrow alley in small town, wet stones after rain, no people",
+      "market street early morning, shutters closed, calm mood, no people",
+      "old suitcase in corner, dust, gentle light, no people",
+      "handwritten recipe card beside mixing bowl, morning light, no people",
+      "window lace curtain, rain outside, warm lamp inside, no people",
+      "telephone on small table, note beside it, warm mood, no people",
+      "train ticket on table, tea stain, soft sunlight, no people",
+      "wooden drawer open, old photographs inside, no people",
+      "pair of gloves on chair, quiet room, no people",
+      "old scarf hanging on coat rack, warm hallway light, no people",
+      "garden gate slightly open, flower path, golden light, no people",
+      "laundry line with white cloth, breeze, calm yard, no people",
+      "small shrine corner with candle, gentle glow, no people"
+    ],
+    "safe_fallbacks": [
+      "empty old room, dusty furniture, dim lamp light, cinematic atmosphere",
+      "rainy window with droplets, blurry city lights, melancholic mood, empty interior",
+      "warm sunlight through window, old wooden table, cup of tea, peaceful room, no people",
+      "messy desk with scattered papers, coffee cup, noir lighting, no people",
+      "empty train station platform at dusk, long perspective, solitude"
+    ],
+    "safe_fallback_prompt": "warm sunlight through window, old wooden table, cup of tea, peaceful room, no people, watercolor style"
+  },
+  "prompts": {
+    "pd_system": "시니어 감성 라디오 드라마 PD.\n\n당신이 만드는 이야기의 성공 기준: 시청자가 '다음 영상도 듣고 싶다'고 느끼는 것.\n\n■ 이야기 구조 (100턴 기준)\n1막 (턴 1~12): 구체적 일상 + 첫 5턴 안에 '어? 왜?'를 심어라. 할머니가 갑자기 안 하던 행동을 한다든가, 이상한 물건이 보인다든가. 시청자가 궁금해야 남는다.\n2막 (턴 13~30): 미스터리 확장. 궁금증이 구체화되는 구간.\n3막 (턴 31~60): 과거가 드러나기 시작. 주인공의 인간적인 면을 충분히 보여줘야 나중에 반전이 먹힌다.\n4막 (턴 61~85): 진짜 비밀이 드러남. 최소 2중 반전 — '그게 전부가 아니었다'.\n5막 (턴 86~100): 일상어로 마무리. '밥 먹었어?'가 맥락 속에서 가장 강한 대사가 되는 결말.\n\n■ 핵심\n- 소품(편지/통장/사진/녹음)이 진실을 드러내는 구조. 나레이터 설명 ❌\n- 반전은 현실적으로 — '거액 유산'이 아니라 '매달 3만원 적금' 수준의 가슴 아픈 비밀.\n- 대화 65~80%.",
+    "writer_system": "시니어 감성 라디오 드라마 작가.\n\n당신의 목표: 40~60대 시청자가 끝까지 듣고, '다음 영상'도 클릭하게 만드는 것.\n\n■ 좋은 글 vs 나쁜 글\n\n나쁜 글: '할머니는 손주를 무척 사랑했습니다.'\n좋은 글: 찬장 뒤에서 적금 통장이 나온다. 매달 3만원씩, 손주 이름으로, 15년.\n\n나쁜 글: '그 사실을 알고 모두 감동했습니다.' / '하염없이 눈물을 흘렸다.'\n좋은 글: 아들이 편지를 읽다 말을 멈춘다. 한참 뒤에야, '엄마... 이거 언제 쓴 거야?'\n\n나쁜 글: '할머니는 슬펐다.' / '가슴이 먹먹해졌다.'\n좋은 글: 할머니는 아무 말 없이 손등의 검버섯을 긁었다.\n\n→ '감동적이었다', '눈물을 흘렸다', '눈시울이 붉어지며', '오열하며'는 쉬운 표현이다. 하지만 소품/행동/침묵으로 보여주면 10배 더 강하다.\n예: '오열하며' 대신 → 민준은 녹음기를 멈추고 한참을 아무 말 없이 앉아있었다.\n예: '눈시울이 붉어지며' 대신 → 할머니는 고개를 돌리고 앞치마로 손을 닦았다.\n더 강한 표현을 선택해라.\n\n■ 반전의 기술\n시청자가 끝까지 듣는 이유는 '다음에 뭐가 나올지' 궁금하기 때문이다.\n\n약한 반전: '할머니의 비결은 사랑이었습니다.' / '첫사랑이 죽었습니다.' → 예상 가능하고 감상적.\n강한 반전: 1차 — 할머니가 새벽마다 나간 이유는 폐지수집. 2차 — 그런데 그 통장 명의는 돌아가신 할아버지. 할머니는 유언을 지키고 있었을 뿐.\n→ 반전의 핵심은 '예상 못 한 방향'이다. '사랑/그리움/첫사랑' 같은 감상적 이유보다, '빚/약속/책임' 같은 현실적 이유가 반전으로 더 강하다.\n→ 2차 반전이 1차의 의미를 완전히 바꿔야 한다. 반전이 소품/증거로 드러나야 강하다 (대사 설명 ❌).\n★ 반전을 캐릭터가 말로 설명하면 안 된다. 편지/통장/사진/녹음 같은 물증이 진실을 보여줘야 한다.\n\n■ 결말의 호흡 (★중요★)\n반전 이후 급속 마무리는 최악이다. 시청자가 감정을 느낄 시간이 없다.\n× 반전 → 2턴만에 '모두 이해했습니다' → 사망 → 끝 (급속 마무리)\n✓ 반전 → 캐릭터가 소화하는 시간(각자의 반응) → 어색한 침묵 → 작은 행동으로 화해의 실마리 → 일상어 마무리\n마지막 3턴은 평범한 일상어: '밥 먹었어?', '조심해서 가', '김치 좀 담갔다.'\n\n■ 캐릭터\n- 4인 이상, 이름+나이+관계 필수\n- 할머니/할아버지: 짧은 문장, 말보다 행동, 사투리 OK. 비밀을 캐물으면 최소 3회 거부 후 고백.\n- 손주: 존댓말\n- 이웃: 과거를 아는 증인 역할\n\n■ 기술 사항\n- 대화 비율 65~80%, 나레이션은 장면전환/분위기에만\n- 나레이션 연속 2턴 이하\n- 감정 태그: [calm] [sad] [happy] [warm] [whisper]\n- '~했던 것이다' / '~살아왔던 것이다' / '~숨겨왔던 비밀을 간직한 채' 형태의 설명체 나레이션 절대 금지. 소품/대화로 진실 드러내기.\n- 나레이션이 캐릭터의 감정/동기를 요약하면 안 된다. 시청자가 직접 느끼게 해라.\n× '할머니는 평생 동안 숨겨왔던 비밀을 간직한 채 살아왔다.'\n✓ (나레이션 없이 대화/행동으로 보여주기)\n\n■ 장치 과잉 주의\n반전 소품은 1~2개면 충분하다. 편지+통장+녹음기+사진 전부 동원하면 인위적이다.\n핵심 소품 1개 + 보조 소품 1개. 그 안에서 2중 반전을 만들어라."
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 60,
+    "max_turns": 120,
+    "image_style": "warm illustration"
+  },
+  "video": {
+    "pause_duration": 0.5,
+    "zoom_speed": 1.0
+  },
+  "hook_style": {
+    "top_label": "【 오늘의 이야기 】",
+    "top_color": "#87CEEB",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      10,
+      10,
+      20
+    ],
+    "duration": 4.0
+  },
+  "thumbnail": {
+    "text_default": "감동실화",
+    "style_guide": "감동/눈물 자극하는 제목. 예시: \"엄마의 마지막 선물\", \"50년 만의 재회\". 가족/시간/이별 관련 단어 사용. 따뜻하면서 궁금증 유발."
+  },
+  "scenario": {
+    "tone_pool": [
+      "추억/회상 중심 (과거 장면이 현재 사건의 의미를 바꾸는 구조)",
+      "소품/장소 중심 (물건/공간이 감정을 끌어올리는 구조)",
+      "약속/오해 해소 중심 (미해결 약속이 풀리며 감정 폭발)",
+      "세대 연결 중심 (과거의 사연이 자식/손주에게 이어짐)",
+      "놓아줌/감사 중심 (재회가 아니라 보내주는 결말)"
+    ],
+    "relationship_pool": [
+      "이웃",
+      "형제/자매",
+      "친구",
+      "스승/제자",
+      "라이벌이었던 옛 지인"
+    ],
+    "place_pool": [
+      "시골집",
+      "기차역",
+      "바닷가",
+      "시장 골목",
+      "비 오는 버스정류장",
+      "낡은 골목길",
+      "도서관",
+      "우체국"
+    ],
+    "arc_pool": [
+      "미스터리 → 진실 발굴 → 감정 폭발 (탐정 구조)",
+      "오해 → 갈등 심화 → 반전 화해 (드라마틱 아이러니)",
+      "상실 → 회상 여행 → 새로운 의미 발견 (치유 서사)",
+      "비밀 → 점진적 노출 → 카타르시스 (양파 껍질 구조)",
+      "대립 → 이해 → 용서 (성장 서사)"
+    ],
+    "trigger_pool": [
+      "잃어버린 물건이 발견되는 순간",
+      "오래된 편지/일기의 내용이 밝혀질 때",
+      "숨겨진 사진 속 진실",
+      "녹음된 목소리/영상의 발견",
+      "뜻밖의 증인이 나타날 때"
+    ],
+    "safe_templates": [
+      "old handwritten letter on weathered wooden table, warm afternoon sunlight",
+      "vintage transistor radio on wooden shelf, soft golden hour light",
+      "rainy bus stop shelter at dusk, empty wooden bench, gentle rain",
+      "aged photo album open on table, sepia-toned photographs visible",
+      "steaming tea cup on windowsill, rain droplets on glass pane",
+      "empty train station platform at sunset, orange sky glow",
+      "old music box on dresser, soft bedroom lighting",
+      "handwritten recipe card propped against mixing bowl, morning light",
+      "wilted flower bouquet in glass vase on table, gentle sunbeam",
+      "wall calendar showing circled date, red pen mark, natural light",
+      "ocean waves at dawn, empty sandy beach, soft pastel sky",
+      "vintage pocket watch on wooden surface, chain coiled beside it",
+      "postcard with handwritten message on table, international stamp",
+      "knitted blanket draped over rocking chair, fireplace glow",
+      "garden gate slightly open, flower path beyond, golden light"
+    ]
+  },
+  "topic_templates": [
+    "할머니의 비밀 레시피",
+    "40년 만에 다시 만난 첫사랑",
+    "손주에게 전하는 인생 조언",
+    "고향 마을의 추억",
+    "아버지의 낡은 시계"
+  ],
+  "tags": [
+    "감동",
+    "시니어",
+    "가족",
+    "따뜻한이야기",
+    "인생"
+  ],
+  "intro_scripts": [
+    "마음 따뜻한 이야기를 전해드립니다.",
+    "오늘도 감동의 사연을 들려드리겠습니다."
+  ],
+  "scene_analyzer": {
+    "art_style_prefix": "warm watercolor illustration, soft pastel colors, Korean characters, Asian features,",
+    "art_style_description": "따뜻한 수채화 일러스트레이션, 파스텔 톤 감성 그림",
+    "texture_keywords": "soft edges, warm gradient, watercolor wash, gentle blending, nostalgic glow",
+    "forbidden_styles": "horror, dark, scary, monochrome, manga, ink, gore, blood, 3d render, photorealistic",
+    "good_examples": [
+      "warm watercolor illustration, soft pastel colors, solo elderly Korean grandmother reading old letter, warm sunlight through window, teacup nearby, nostalgic, medium shot",
+      "warm watercolor illustration, soft pastel colors, solo elderly Korean man waiting at train station, sunset, orange sky glow, gentle atmosphere, wide shot",
+      "warm watercolor illustration, soft pastel colors, solo young Korean woman visiting grandmother, warm kitchen, steaming food, heartwarming, bust shot",
+      "warm watercolor illustration, soft pastel colors, old handwritten letter on wooden table, warm sunlight, teacup steam, nostalgic, close-up"
+    ]
+  }
+}

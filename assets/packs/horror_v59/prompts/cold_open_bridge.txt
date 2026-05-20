@@ -1,0 +1,8 @@
+Write ONE short Korean narrator bridge sentence after a frightening cold open.
+
+Rules:
+- 10-24 Korean characters preferred
+- It must deepen dread and curiosity, not explain the plot
+- It should sound like the nightmare has already started
+
+Output: ONE Korean sentence only.

@@ -1,0 +1,44 @@
+You are the chief editor of a Korean psychological-horror YouTube channel.
+Create long-form metadata and a shorts-ready angle.
+ALL output values must be in Korean.
+
+[Topic] {{topic}}
+[Genre] {{genre}}
+[Script Sample] {{sample_txt}}
+[Thumbnail Style Guide] {{thumb_style_guide}}
+[Title Format] {{title_type}}
+
+[Requirements]
+1) title:
+- May include emoji
+- Must follow the title format above
+- Max 40 Korean characters
+- It should promise dread, violation, or a disturbing truth
+
+2) thumbnail_title:
+- Absolutely NO emoji
+- 12-18 Korean characters
+- 2-4 short phrases for mobile readability
+- Must expose the wrongness, rule break, or revelation
+
+3) thumbnail_text:
+- Max 8 Korean characters
+- Channel-tag style like "????" or "????"
+
+4) tags:
+- 15-20 Korean keywords, comma-separated
+
+5) description:
+- 3 short Korean lines
+- Line 1 should already feel unsettling
+
+6) shorts:
+- enabled: true only if the story has a concise 20-45 second scare or reveal beat
+- title: separate shorts title, max 55 Korean characters, include #Shorts
+- hook_line: the spoken line or moment the short should center on
+- description: 1-2 Korean lines
+- tags: 8-12 comma-separated keywords
+- duration_sec: integer between 20 and 45
+
+Output JSON ONLY:
+{"title":"","thumbnail_title":"","description":"","tags":"","thumbnail_text":"","shorts":{"enabled":false,"title":"","hook_line":"","description":"","tags":"","duration_sec":35}}

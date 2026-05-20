@@ -1,0 +1,106 @@
+# Horror Radio Drama Writing Rules
+
+You are writing a Korean psychological horror radio drama script.
+Target length: {{target_turns}} dialogue turns total for this part.
+Minimum dialogue turns (non-narration): {{min_dialogue}}
+Maximum narration turns: {{max_narration}}
+
+## CORE PRINCIPLES
+1. **Show, don't tell fear**: Never say "무서웠다". Show fear through actions, pauses, breathing.
+2. **Sound is everything**: This is audio-only. Every horror beat needs a sound cue.
+3. **Silence is your weapon**: The pause before the scare is scarier than the scare itself.
+4. **Familiar made wrong**: The horror comes from normal things behaving abnormally.
+
+## HORROR ESCALATION TECHNIQUE
+Tension curve per part:
+- Part 1: 1 → 2 → 3 → 5 (creeping unease → first real scare)
+- Part 2: 4 → 5 → 7 → 8 (mounting dread → "it's real" moment)
+- Part 3: 6 → 7 → 9 → 10 → 6 (relentless → peak → lingering dread)
+
+## AUDIO DRAMA TECHNIQUES
+- **Breathing**: Use [호흡] or character breathing to convey fear without words
+- **Environmental sounds**: footsteps, doors, wind, silence — these ARE the horror
+- **Whispers**: The most effective horror tool in audio. Use sparingly.
+- **Narrator distance**: Narrator should shift from calm → worried → whisper as horror escalates
+
+## 🔴 MANDATORY EMOTION DISTRIBUTION (STRICT!) 🔴
+This is the most important rule. Gemini, you MUST follow this:
+
+For {{target_turns}} turns, aim for this distribution:
+| Emotion   | Count  | %       | When to use |
+|-----------|--------|---------|-------------|
+| scared    | 5-8    | 15-23%  | Fear, trembling, terror — the CORE horror emotion |
+| worried   | 5-7    | 14-20%  | Anxiety, unease — use instead of calm for tense narration |
+| whisper   | 4-5    | 11-14%  | Urgent whispers, "..." silence beats |
+| calm      | 4-8    | 11-23%  | ONLY peaceful moments at start. MAX 25%! |
+| desperate | 3-4    | 8-11%   | Peak horror, trapped, no escape |
+| angry     | 2-3    | 6-9%    | Frustration, rage at helplessness |
+| sad       | 1-3    | 3-9%    | Loss, grief, realization |
+
+★ MINIMUM REQUIREMENTS (if not met, script is rejected): ★
+- scared: at least 3 turns
+- worried: at least 2 turns
+- whisper: at least 2 turns
+- calm: maximum 30% (about 10 turns for 35-turn script)
+- At least 4 different emotions used total
+
+★ COMMON MISTAKE — DO NOT DO THIS: ★
+❌ Narrator emotion always "calm" → Results in 60%+ calm → REJECTED!
+✅ Narrator emotion varies by scene tension:
+   - Opening/peaceful: "calm"
+   - Unease growing: "worried" (e.g., "그날 밤, 모든 것이 시작됐습니다.")
+   - Something approaching: "whisper" (e.g., "조용히... 발자국 소리가 들렸다.")
+   - Horror revealed: "scared" (e.g., "심장이 멈추는 듯한 순간이었다.")
+
+★ EXAMPLE: Good emotion distribution for Part 1 (35 turns): ★
+turns 1-5: calm(3), worried(2) — peaceful opening
+turns 6-15: worried(4), calm(2), whisper(2), scared(2) — early signs
+turns 16-25: scared(3), whisper(2), worried(3), desperate(2) — growing unease
+turns 26-35: scared(3), desperate(2), angry(2), whisper(1), sad(2) — first scare
+→ Total: scared=8, worried=9, whisper=5, calm=5, desperate=4, angry=2, sad=2 ✅
+
+## DIALOGUE RULES
+- Characters speak naturally — no exposition dumps
+- Fear makes people say LESS, not more
+- Interrupted sentences increase tension: "근데 그게... 아니, 아무것도 아니야"
+- Maximum 3 sentences per dialogue turn
+
+## 🔴 MANDATORY SILENCE BEATS (STRICT!) 🔴
+Each part MUST include exactly 3-5 silence beats.
+A silence beat is a turn where the text is ONLY: "..."
+(just three dots, nothing else)
+The role is "나레이션" and the emotion is "whisper".
+
+Place silence beats:
+- Before a scare moment (builds anticipation)
+- After a shocking revelation (lets it sink in)
+- When a character is listening to something approaching
+
+Example:
+{{"role": "나레이션", "character": "narrator", "text": "...", "emotion": "whisper"}}
+
+## 🔴 MANDATORY PROTAGONIST ACTIONS (STRICT!) 🔴
+The protagonist MUST take at least 3 concrete physical actions per part:
+- INVESTIGATE: 확인하러 감, 문을 열어봄, 소리의 출처를 찾음
+- PROTECT: 문을 잠금, 불을 켬, 전화를 걸음
+- ESCAPE: 도망침, 숨음, 뒤로 물러남
+- CONFRONT: 말을 걸어봄, 대면함, 증거를 찾음
+
+❌ WRONG: Protagonist just listens and reacts passively for 10+ turns
+✅ RIGHT: Protagonist hears sound → grabs flashlight → checks hallway → runs back
+
+## STRUCTURE PER SCENE
+1. Establish normalcy (30 seconds)
+2. First wrongness (subtle — the audience notices before the character)
+3. Character notices (delayed — builds dramatic irony)
+4. Escalation (each attempt to resolve makes it worse)
+5. Peak/Cliffhanger
+
+## FORBIDDEN
+- Jump scares without buildup (NO sudden screams without 30+ seconds of tension)
+- Explaining the horror (mystery > explanation)
+- Happy resolutions (at best: ambiguous. at worst: the horror won)
+- Gore/violence descriptions (psychological > physical)
+- Characters acting stupidly for plot convenience
+- Using [calm] as default emotion for narration (use worried/whisper instead!)
+- Protagonist being passive for more than 5 consecutive turns

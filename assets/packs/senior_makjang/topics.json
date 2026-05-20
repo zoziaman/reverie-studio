@@ -1,0 +1,47 @@
+{
+  "templates": [
+    "유산을 둘러싼 형제들의 다툼",
+    "며느리에게 배신당한 시어머니",
+    "40년 숨겨온 출생의 비밀",
+    "효도 계약서를 쓴 자식들",
+    "가짜 손주의 정체가 밝혀지다"
+  ],
+  "tags": ["막장", "드라마", "시니어", "가족갈등", "반전"],
+  "intro_scripts": [
+    "믿기 힘든 이야기, 지금 시작합니다.",
+    "세상엔 정말 별일이 다 있습니다."
+  ],
+  "scenario": {
+    "twist_pool": [
+      "오해가 진실로 드러나며 관계가 붕괴",
+      "문서/기록이 모든 것을 뒤집는 반전",
+      "거짓말이 연쇄로 폭발하는 구조",
+      "복수는 하지만 유혈/폭력 없이 '사회적 응징'으로 끝",
+      "가족이 아닌 제3자의 증언이 결정타"
+    ],
+    "conflict_pool": [
+      "유산/재산 분쟁",
+      "불륜/외도 발각",
+      "출생의 비밀",
+      "가업 승계 갈등",
+      "효도 vs 자식 인생"
+    ],
+    "safe_templates": [
+      "torn contract document on wooden desk, rain droplets on window glass, dim desk lamp light",
+      "broken picture frame lying on floor, scattered papers everywhere, dramatic shadows",
+      "empty courthouse hallway, fluorescent ceiling lights, long corridor perspective",
+      "wedding ring on table surface, cracked wine glass beside it, city lights reflection",
+      "sealed legal envelope on desk, red wax stamp visible, antique desk lamp",
+      "dining table set for two, one plate untouched, spilled wine stain",
+      "smartphone screen showing unread message notification, dark bedroom, blue glow",
+      "closed wooden door, light beam underneath, empty hallway beyond",
+      "bank statement papers spread on desk, calculator nearby, harsh overhead light",
+      "abandoned umbrella in rainy alley, neon signs reflecting in puddles",
+      "locked drawer slightly ajar, documents peeking out, dusty attic lighting",
+      "wall calendar with dates crossed out, red marker, bare wall",
+      "empty courtroom interior, judge's bench vacant, solemn architectural lighting",
+      "car keys on kitchen counter, packed suitcase beside door",
+      "broken mirror shards on floor, makeup items scattered, bathroom tile"
+    ]
+  }
+}

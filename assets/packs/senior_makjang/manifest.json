@@ -1,0 +1,14 @@
+{
+  "pack_name": "시니어 막장 채널",
+  "pack_id": "senior_makjang",
+  "version": "2.0.0",
+  "author": "Reverie Studio",
+  "description": "중장년층을 위한 자극적인 막장 드라마 스토리 채널",
+  "genre": "senior",
+  "channel_type": "senior",
+  "plan_required": "senior",
+  "created_at": "2026-02-04",
+  "updated_at": "2026-02-16",
+  "format_version": "2.0",
+  "reverie_version_min": "1"
+}

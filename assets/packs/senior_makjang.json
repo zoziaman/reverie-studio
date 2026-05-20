@@ -1,0 +1,263 @@
+{
+  "pack_id": "senior_makjang",
+  "pack_name": "시니어 막장 채널",
+  "version": "1.0.0",
+  "author": "Reverie Studio",
+  "description": "중장년층을 위한 자극적인 막장 드라마 스토리 채널",
+  "genre": "senior",
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "나레이션": "narrator_female",
+      "내레이션": "narrator_female",
+      "할아버지": "grandpa",
+      "할머니": "grandma",
+      "할배": "grandpa",
+      "할매": "grandma",
+      "남자": "man",
+      "여자": "woman",
+      "청년": "man",
+      "오빠": "man",
+      "형": "man",
+      "남동생": "man",
+      "언니": "woman",
+      "누나": "woman",
+      "여동생": "woman",
+      "손주": "woman",
+      "손녀": "woman",
+      "손자": "man",
+      "아저씨": "middle_man",
+      "아줌마": "middle_woman",
+      "아버지": "middle_man",
+      "어머니": "middle_woman",
+      "아빠": "middle_man",
+      "엄마": "middle_woman",
+      "남편": "middle_man",
+      "아내": "middle_woman",
+      "아들": "middle_man",
+      "딸": "middle_woman",
+      "중년남성": "middle_man",
+      "중년여성": "middle_woman",
+      "삼촌": "middle_man",
+      "이모": "middle_woman",
+      "grandpa": "grandpa",
+      "grandma": "grandma",
+      "man": "young_man",
+      "woman": "young_woman",
+      "young_man": "young_man",
+      "young_woman": "young_woman",
+      "antagonist": "middle_man",
+      "middle_man": "middle_man",
+      "middle_woman": "middle_woman"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "angry",
+      "sad",
+      "happy",
+      "calm",
+      "desperate",
+      "whisper"
+    ],
+    "emotion_weights": {
+      "angry": 4,
+      "sad": 3,
+      "desperate": 2,
+      "calm": 3
+    }
+  },
+  "bgm": {
+    "folder": "makjang"
+  },
+  "sfx": {
+    "folder": "makjang",
+    "enabled": true,
+    "category": "emotional",
+    "intensity": "medium"
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, dramatic atmosphere, emotional, Korean family drama, illustration style, intense lighting, confrontation, Asian features",
+    "negative": "(worst quality:1.4), (low quality:1.4), horror, scary, nsfw, nude, naked, revealing clothes, text, watermark, photograph, 3d render, photorealistic, gore, blood, western, caucasian, blonde hair, blue eyes",
+    "style": "drama illustration",
+    "model": "senior",
+    "cfg_scale": 6.0,
+    "steps": 15,
+    "image_style": "dramatic webtoon illustration style, 2d art, high contrast shadows, emotional atmosphere"
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "characters": {
+      "narrator": {
+        "base": "webtoon illustration style Korean female narrator, composed expression, professional attire, neat hair, fully clothed",
+        "style": "dramatic webtoon art, muted dramatic tones, cinematic lighting"
+      },
+      "grandma": {
+        "base": "webtoon illustration style (elderly Korean grandmother:1.4), (wrinkled face:1.3), (aged skin:1.2), stern or tearful expression, traditional hanbok, tense posture, deep wrinkles, sunken cheeks, old Korean woman, fully clothed",
+        "style": "dramatic webtoon art, emotional weight, intense lighting, (aged face:1.3), mature features"
+      },
+      "grandpa": {
+        "base": "webtoon illustration style (elderly Korean grandfather:1.4), (wrinkled face:1.3), (aged skin:1.2), stern or worried expression, traditional vest, rigid posture, deep wrinkles, sunken cheeks, old Korean man, fully clothed",
+        "style": "dramatic webtoon art, somber tones, dramatic mood, (aged face:1.3), mature features"
+      },
+      "man": {
+        "base": "webtoon illustration style Korean adult man, sharp features, business suit or casual wear, tense expression, fully clothed",
+        "style": "dramatic webtoon art, high contrast, sharp shadows"
+      },
+      "woman": {
+        "base": "webtoon illustration style Korean adult woman, emotional expression, modest dress or blouse, determined or distressed face, fully clothed",
+        "style": "dramatic webtoon art, dramatic pastel tones, cinematic feel"
+      },
+      "antagonist": {
+        "base": "webtoon illustration style Korean scheming person, cold smirk, expensive dark clothing, imposing posture, fully clothed",
+        "style": "dramatic webtoon art, high contrast, dramatic shadows"
+      },
+      "middle_man": {
+        "base": "webtoon illustration style (Korean middle-aged man:1.3), (mature face:1.2), short black hair with grey streaks, slight wrinkles, business suit or polo shirt, conflicted or stern expression, fully clothed",
+        "style": "dramatic webtoon art, high contrast, dramatic shadows, (mature features:1.2)"
+      },
+      "middle_woman": {
+        "base": "webtoon illustration style (Korean middle-aged woman:1.3), (mature face:1.2), styled dark hair, slight wrinkles, elegant blouse or dress, emotional or determined expression, fully clothed",
+        "style": "dramatic webtoon art, dramatic pastel tones, cinematic feel, (mature features:1.2)"
+      },
+      "_default": {
+        "base": "webtoon illustration style Korean person, expressive face, formal or casual clothing, fully clothed",
+        "style": "dramatic webtoon art, dramatic tones, webtoon aesthetic"
+      }
+    },
+    "forced_style": {
+      "force_positive": "dramatic webtoon illustration, intense cinematic lighting, sharp shadows, tense atmosphere, professional minimal design, cinematic composition",
+      "force_negative": "photograph, 3d render, photorealistic, gore, blood, nsfw, nude, naked, revealing clothes, western, caucasian, blonde hair, blue eyes"
+    },
+    "thumbnail_backgrounds": [
+      "torn contract papers on desk, harsh overhead light, rain on window, no people, dramatic",
+      "broken picture frame on floor, scattered documents, sharp shadows, no people",
+      "sealed legal envelope with red stamp on desk, desk lamp glow, no people",
+      "smartphone screen with unread messages, dark bedroom, blue glow, no people",
+      "wedding ring on table, cracked wine glass, city lights reflection, no people",
+      "bank statement papers spread out, calculator, tense lighting, no people",
+      "kitchen counter, car keys, abandoned luggage near door, no people",
+      "empty courthouse hallway, fluorescent lights, long corridor, no people",
+      "closed wooden door, light beam underneath, empty corridor, no people",
+      "dining table with untouched meal, spilled wine stain, one chair pushed back, no people",
+      "makeup items scattered on bathroom tile, broken mirror shards, no people",
+      "calendar with many dates crossed out, red marker, cold light, no people",
+      "empty meeting room, chairs aligned, single file folder on table, no people",
+      "opened drawer with documents peeking out, dusty attic light, no people",
+      "parking lot at night, one car door ajar, streetlight, no people",
+      "stairwell landing, echoing light, dropped glove, no people",
+      "apartment hallway, door number plate, harsh shadows, no people",
+      "desk with resignation letter, pen, coffee stain, no people",
+      "kitchen sink with overflowing water, dim light, no people",
+      "phone receiver off-hook, silent room, no people",
+      "laptop open to email screen (blurred), dark room, no people",
+      "trash bin with shredded papers, office corner, no people",
+      "curtain slightly open, streetlight stripes on wall, no people",
+      "high heel shoe left behind near sofa, dramatic shadow, no people",
+      "jewelry box open, empty slot, cold light, no people",
+      "messy bed, folded suit on chair, tense mood, no people",
+      "door chain lock broken, scratch marks, hallway light, no people",
+      "kitchen table, two cups, one overturned, no people",
+      "elevator lobby mirror reflections, empty space, no people",
+      "staircase with torn photo pieces on steps, no people"
+    ],
+    "safe_fallbacks": [
+      "dramatic shadows on empty room, rain on window, scattered documents on desk, no people, webtoon style",
+      "empty old room, dusty furniture, dim lamp light, cinematic atmosphere",
+      "rainy window with droplets, blurry city lights, melancholic mood, empty interior"
+    ],
+    "safe_fallback_prompt": "dramatic shadows on empty room, rain on window, scattered documents on desk, no people, webtoon style"
+  },
+  "prompts": {
+    "pd_system": "막장 가족 드라마 PD.\n\n성공 기준: 시청자가 '저런 인간이 진짜 있어?!'라고 외치다가, 마지막에 '아... 이유가 있었구나'로 돌아서는 것.\n\n■ 이야기 구조 (100턴 기준)\n★ 100턴 중 나레이션은 최대 8턴. 나머지 92턴은 반드시 캐릭터 대화여야 한다.\n★ 나레이션 턴은 장소 이동/물리적 묘사에만. 정보 전달/감정 요약/과거 설명은 대화로.\n\n1막 (턴 1~15): 대화로 시작. 나레이션 1턴만(장소). 가족 대화로 인물 소개. 불안 조짐도 대화 속 뉘앙스로.\n2막 (턴 16~35): 물증 발견을 대화+SFX로. 나레이션 1턴 이하. 발견하는 인물이 대사로 반응.\n3막 (턴 36~65): 모두 모인 자리에서 대사 싸움. 나레이션 2턴 이하. 비밀 체인은 캐릭터 폭로 대사로.\n4막 (턴 66~88): 반전은 캐릭터 고백/물증 제시로. 나레이션 2턴 이하.\n5막 (턴 89~100): 반전이 터진 그날, 그 장소에서 끝난다. 시간 점프 없음.\n- 턴 89~92: 반전 직후 충격. 각 인물이 한마디씩 반응. 침묵, 한숨, 짧은 대사.\n- 턴 93~96: 갈등의 잔여물. 완전 화해 아님. 어색한 대화, 서로 눈 못 마주침.\n- 턴 97~98: 가장 조용한 인물이 한마디. 일상어('밥 먹어라', '추우니 들어가').\n- 턴 99~100: 마무리. 나레이션은 물리적 묘사만(수저 소리, 문 닫히는 소리 등).\n★ 5막 12턴 전체가 '그날 그 장소'에서 벌어진다. 다음 날조차 가지 마라.\n\n■ 핵심\n- 악역이 '진짜 악역'이면 재미없다. 모든 인물에게 숨은 이유가 있어야.\n- 물증(유언장/통장/편지/녹음)이 판도를 뒤집는 구조.\n- 대화 70~85%. 막장은 대사 싸움이 재미.\n- 반전 소재: 재산 횡령 / 비밀 통장 / 위조 유언장 / 숨긴 빚 / 보험 사기 / 부동산 명의 위조 / 비자금 / 배신 녹음 등.",
+    "writer_system": "막장 가족 드라마 전문 작가.\n\n당신의 목표: 시청자가 '다음 영상'을 클릭하게 만드는 중독성.\n\n■ 좋은 글 vs 나쁜 글\n막장의 핵심은 '대사 싸움'과 '반전 연쇄'다.\n\n약한 대사: '어머니, 당신이 어떻게 그럴 수가 있어요?!' → 소리만 크다.\n강한 대사: '어머니... 그 돈, 원래 제 건데요.' → 차분할수록 파괴력.\n\n약한 나레이션: '며느리는 사실 돈을 빼돌리고 있었습니다.' / '모두가 경악했다.'\n강한 나레이션: 찬장 뒤에서 셋째 며느리 명의 통장이 나온다. 잔액 2억 3천. 입금일은 전부 시아버지 병원 입원일과 같다.\n\n약한 감정: '충격에 휩싸였다.' / '분노가 폭발했다.' / '모두: (shocked) 네?!'\n강한 감정: 서류를 던지자 바닥에 10장이 흩어졌다. 아무도 줍지 않았다.\n\n→ 감정 직접 서술은 쉬운 길이다. 행동/소품/침묵으로 보여주면 10배 강하다. 더 강한 표현을 선택해라.\n\n■ 반전의 기술\n약한 반전: '며느리가 돈을 훔쳤습니다.' → 1차원 악역.\n강한 반전: 1차 — 며느리 재산 빼돌림. 2차 — 시아버지가 먼저 보증금 빼감. 3차 — 손주 수술비 마련 중.\n→ 누가 악인인지 끝까지 모호. 반전은 물증(유언장/통장/편지/녹음)으로.\n★ 반전은 현실적이어야 한다.\n절대 금지 소재: 치매 연기 / 치매를 앓고 있었다 / 첫사랑의 여동생·형제 / 쌍둥이 바꿔치기 / DNA검사 친자확인 / 출생의 비밀. 비현실적 관계는 시청자가 이탈한다.\n대신 강력한 소재: 비밀 통장/위조 서류/숨긴 빚/보험사기/횡령/비자금/부동산 명의 위조. 돈과 서류가 만드는 반전이 가장 현실적이고 강력하다.\n\n■ 할머니/할아버지의 동기 (★핵심★)\n할머니가 '진실을 알고 있었다'는 반전을 쓸 때, 그 동기는 반드시 분노·배신감·슬픔이어야 한다.\n✓ '알고도 참았다' = 차마 자식을 신고할 수 없어서. 가족이 무너질까 봐. 자존심 때문에.\n✓ 침묵의 이유 = 고통. '내가 키운 자식이 이런 짓을 하다니' 하는 절망.\n× '싸우는 걸 보는 게 재미있다', '지켜보고 있었다 너희가 어디까지 가는지' = 유희/관전 동기는 사이코패스다. 시청자는 이 할머니를 공감할 수 없다.\n할머니의 폭발은 '분노의 폭발'이지 '유희의 폭발'이 아니다. 할머니가 진실을 밝히는 순간, 시청자는 할머니의 고통에 공감해야 한다.\n\n■ 막장 3대 기법\n① 비밀 체인: A가 B의 비밀을 알고, B가 C의 비밀을 알고, C가 A의 비밀을 안다.\n② 공개 처형: 가족 모임/명절/장례식 — 모두 모인 자리에서 터지는 폭로.\n③ 침묵의 무기: 할머니의 긴 침묵 후 단 한마디가 가장 강력.\n\n■ 결말의 호흡 (★핵심★) — 5막 비트 지시\n반전이 터진 직후, 그 자리에서 끝내라. 아래 비트를 따라라:\n\n비트1 (턴 89~91): 충격파. 각 인물이 반전을 소화한다. 짧은 대사와 침묵.\n- 예: '형, 이게 진짜야?' / (침묵) / '어머니...' / [SFX: 의자 끄는 소리]\n비트2 (턴 92~95): 잔여 갈등. 완전 화해 없음. 어색하게 시선 피하기, 짧은 변명, 작은 사과.\n- 예: '미안하다는 말은 아니야. 그냥... 내가 틀렸어.' / '그래서 어쩔 건데?'\n비트3 (턴 96~98): 가장 조용한 인물의 한마디. 일상어.\n- 예: '밥이나 먹자.' / '추우니까 들어가.' / '차 한 잔 줄까.'\n비트4 (턴 99~100): 물리적 묘사 + 마무리. 나레이션은 소리/풍경만.\n- 예: [SFX: 수저 부딪히는 소리] / 나레이션: 아무도 말이 없었다. 숟가락 소리만 거실을 채웠다.\n\n★ '시간이 흘러', 'X개월 후', 'X년 후', '각자의 자리로 돌아갔다' — 이런 표현이 나오면 결말이 실패한 것이다. 마지막 턴까지 같은 장소, 같은 시간이다.\n\n■ 캐릭터 (5인 이상, 3세대 필수)\n- 할머니/할아버지: 권위와 한, 침묵 후 폭발. 질문하면 최소 3회 거부.\n- 중년 남녀: 변명/억울함/현실적 욕망\n- 며느리/사위: 약자이지만 반격\n- 젊은 세대: 충격과 반항\n각자 이름+나이+관계 필수.\n\n■ 기술 사항\n- 대화 85~92%. 막장은 대사 싸움이 생명. 100턴 중 나레이션은 최대 8턴.\n- 나레이션은 장면전환과 물리적 묘사에만. 연속 2턴 이하.\n- 나레이션이 캐릭터의 내면/동기/과거를 설명하면 안 된다. 대화와 행동으로 보여줘라.\n× '사실 김말례 여사는 오래전부터 모든 걸 알고 있었다.' → 나레이션이 반전을 먹어버린다.\n✓ 김말례가 서랍에서 서류를 꺼낸다. 날짜는 3년 전. → 물증이 보여준다.\n× '시간이 흐르고 가족들은 각자의 자리로 돌아갔다.' → 5막에서 시간 점프.\n✓ [SFX: 수저 소리] 박창식: 어머니, 식사하세요. → 그 자리에서 끝.\n- 감정 태그: [angry] [sad] [desperate] [calm] [whisper] [happy]\n- SFX: [SFX:door] [SFX:glass] [SFX:paper]\n- 나레이션이 '비밀 체인이 풀린다', '충격적인 고백', '모두가 경악', '충격에 휩싸인다' 같은 메타 설명을 하면 안 된다"
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 80,
+    "max_turns": 150,
+    "image_style": "drama illustration"
+  },
+  "video": {
+    "pause_duration": 0.5,
+    "zoom_speed": 1.0
+  },
+  "hook_style": {
+    "top_label": "【 막 장 】",
+    "top_color": "#FFD700",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      10,
+      10,
+      20
+    ],
+    "duration": 4.0
+  },
+  "thumbnail": {
+    "text_default": "충격",
+    "style_guide": "충격/반전 느낌의 자극적 제목. 예시: \"그 돈의 진실\", \"숨겨왔던 비밀\", \"드러난 정체\". 배신/돈/비밀/정체 관련 단어. 궁금증 폭발."
+  },
+  "scenario": {
+    "twist_pool": [
+      "오해가 진실로 드러나며 관계가 붕괴",
+      "문서/기록이 모든 것을 뒤집는 반전",
+      "거짓말이 연쇄로 폭발하는 구조",
+      "복수는 하지만 유혈/폭력 없이 '사회적 응징'으로 끝",
+      "가족이 아닌 제3자의 증언이 결정타"
+    ],
+    "conflict_pool": [
+      "유산/재산 분쟁",
+      "불륜/외도 발각",
+      "출생의 비밀",
+      "가업 승계 갈등",
+      "효도 vs 자식 인생"
+    ],
+    "safe_templates": [
+      "torn contract document on wooden desk, rain droplets on window glass, dim desk lamp light",
+      "broken picture frame lying on floor, scattered papers everywhere, dramatic shadows",
+      "empty courthouse hallway, fluorescent ceiling lights, long corridor perspective",
+      "wedding ring on table surface, cracked wine glass beside it, city lights reflection",
+      "sealed legal envelope on desk, red wax stamp visible, antique desk lamp",
+      "dining table set for two, one plate untouched, spilled wine stain",
+      "smartphone screen showing unread message notification, dark bedroom, blue glow",
+      "closed wooden door, light beam underneath, empty hallway beyond",
+      "bank statement papers spread on desk, calculator nearby, harsh overhead light",
+      "abandoned umbrella in rainy alley, neon signs reflecting in puddles",
+      "locked drawer slightly ajar, documents peeking out, dusty attic lighting",
+      "wall calendar with dates crossed out, red marker, bare wall",
+      "empty courtroom interior, judge's bench vacant, solemn architectural lighting",
+      "car keys on kitchen counter, packed suitcase beside door",
+      "broken mirror shards on floor, makeup items scattered, bathroom tile"
+    ]
+  },
+  "topic_templates": [
+    "유산을 둘러싼 형제들의 다툼",
+    "며느리에게 배신당한 시어머니",
+    "40년 숨겨온 출생의 비밀",
+    "효도 계약서를 쓴 자식들",
+    "가짜 손주의 정체가 밝혀지다"
+  ],
+  "tags": [
+    "막장",
+    "드라마",
+    "시니어",
+    "가족갈등",
+    "반전"
+  ],
+  "intro_scripts": [
+    "믿기 힘든 이야기, 지금 시작합니다.",
+    "세상엔 정말 별일이 다 있습니다."
+  ],
+  "scene_analyzer": {
+    "art_style_prefix": "dramatic webtoon illustration, intense cinematic lighting, Korean characters, Asian features,",
+    "art_style_description": "자극적인 웹툰 스타일 드라마 일러스트, 강렬한 조명과 그림자",
+    "texture_keywords": "sharp shadows, tense atmosphere, webtoon aesthetic, dramatic pastel, cinematic composition",
+    "forbidden_styles": "horror, gore, blood, cute, childish, monochrome, photograph, 3d render, anime",
+    "good_examples": [
+      "dramatic webtoon illustration, intense cinematic lighting, solo angry Korean grandmother confronting, tense expression, dramatic shadows, medium shot",
+      "dramatic webtoon illustration, intense cinematic lighting, solo Korean man holding torn contract, shocked expression, rain on window, close-up",
+      "dramatic webtoon illustration, intense cinematic lighting, solo Korean woman crying, dramatic tears, dim room, emotional, bust shot",
+      "dramatic webtoon illustration, intense cinematic lighting, wedding ring on table, cracked wine glass, city lights reflection, close-up"
+    ]
+  }
+}

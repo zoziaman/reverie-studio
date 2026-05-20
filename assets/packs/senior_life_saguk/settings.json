@@ -1,0 +1,764 @@
+{
+  "style": {
+    "image_style": "joseon daily-life motiontoon, thick outlines, flat cel shading, cinematic panel composition, lived-in hanok atmosphere",
+    "model": "senior"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "narration": "narrator_female",
+      "grandma": "grandma",
+      "grandpa": "grandpa",
+      "man": "young_man",
+      "woman": "young_woman",
+      "child": "child",
+      "아씨": "young_woman",
+      "낭자": "young_woman",
+      "도령": "young_man",
+      "서방": "middle_man",
+      "마님": "middle_woman",
+      "대감": "middle_man",
+      "사또": "middle_man",
+      "포졸": "young_man",
+      "막동": "young_man",
+      "훈장": "middle_man",
+      "유모": "middle_woman",
+      "어멈": "middle_woman",
+      "사내": "young_man",
+      "부인": "middle_woman",
+      "계집아이": "child",
+      "사내아이": "child"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "calm",
+      "sad",
+      "happy",
+      "angry",
+      "worried",
+      "desperate",
+      "whisper"
+    ],
+    "emotion_weights": {
+      "calm": 3,
+      "sad": 3,
+      "worried": 2,
+      "desperate": 2
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 70,
+    "max_turns": 130
+  },
+  "assets": {
+    "bgm_folder": "touching",
+    "sfx_folder": "touching",
+    "sfx_enabled": true,
+    "sfx_category": "emotional",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "forced_style": {
+      "force_positive": "joseon daily-life motiontoon, thick outlines, flat cel shading, hanok interiors, market props, readable hanbok folds, emotionally clear composition",
+      "force_negative": "modern objects, neon city, photorealistic portrait, painterly texture, 3d render, gore, fantasy magic"
+    },
+    "thumbnail_backgrounds": [
+      "hanok courtyard at dawn, empty water jar, soft mist, no people",
+      "traditional market alley, fabric stall, late afternoon light, no people",
+      "wooden desk with sealed letter and brush pen, lamplight, no people"
+    ],
+    "safe_fallbacks": [
+      "hanok room with one meaningful object, warm lamp light, no people",
+      "joseon market lane after rain, muted dusk, no people",
+      "old letter on wooden floor, candlelight, no people"
+    ],
+    "safe_fallback_prompt": "joseon daily-life motiontoon, thick outlines, emotional object focus, warm flat lamp light, no people"
+  },
+  "thumbnail": {
+    "text_default": "생활사극",
+    "style_guide": "Use 2-4 short Korean phrases that expose status pressure, hidden truth, or a painful vow in a Joseon daily-life drama.",
+    "title_hooks": [
+      "사또도 몰랐다",
+      "끝내 못한 말",
+      "그날의 장터",
+      "감춘 신분",
+      "뒤늦은 진심",
+      "한양의 소문"
+    ]
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, joseon daily-life motiontoon, thick clean outlines, flat cel shading, hanok, natural fabrics, candlelight, market props, emotional cinematic composition, simple readable faces",
+    "negative": "(worst quality:1.4), (low quality:1.4), modern city, electric light, photorealistic, painterly texture, 3d render, gore, text, watermark",
+    "cfg_scale": 7.0,
+    "steps": 20,
+    "sampler": "DPM++ 2M Karras",
+    "width": 1024,
+    "height": 576
+  },
+  "video": {
+    "pause_duration": 0.4,
+    "zoom_speed": 1.0,
+    "fps": 30
+  },
+  "hook_style": {
+    "top_label": "생활사극",
+    "top_color": "#E4C07B",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      24,
+      16,
+      10
+    ],
+    "duration": 4.0
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "gishini",
+    "character_layer_mode": "simple_sprite",
+    "overlay_theme": "life_saguk",
+    "default_scene_type": "dialogue",
+    "blink_enabled": false,
+    "mouth_flap_enabled": false,
+    "layered_cutout_enabled": true,
+    "layered_cutout_strength": 0.78,
+    "cast_slots": {
+      "protagonist": {
+        "character_id": "young_woman",
+        "aliases": [
+          "주인공",
+          "여주",
+          "낭자",
+          "마님",
+          "아씨",
+          "부인",
+          "woman"
+        ]
+      },
+      "deuteragonist": {
+        "character_id": "young_man",
+        "aliases": [
+          "남주",
+          "도령",
+          "사내",
+          "사또",
+          "young_man",
+          "man"
+        ]
+      },
+      "child": {
+        "character_id": "child",
+        "aliases": [
+          "아이",
+          "사내아이",
+          "계집아이",
+          "소년",
+          "소녀",
+          "동자",
+          "돌이",
+          "child"
+        ]
+      },
+      "elder": {
+        "character_id": "grandma",
+        "aliases": [
+          "할머니",
+          "어멈",
+          "노모",
+          "grandma"
+        ]
+      },
+      "support": {
+        "character_id": "grandpa",
+        "aliases": [
+          "노인",
+          "훈장",
+          "어른",
+          "grandpa"
+        ]
+      }
+    },
+    "puppet_profiles": {
+      "protagonist": {
+        "face_anchor_x": 0.5,
+        "face_anchor_y": 0.318,
+        "face_scale": 0.98,
+        "bob_strength": 0.82
+      },
+      "deuteragonist": {
+        "face_anchor_x": 0.49,
+        "face_anchor_y": 0.323,
+        "face_scale": 0.95,
+        "bob_strength": 0.78
+      },
+      "elder": {
+        "face_anchor_x": 0.5,
+        "face_anchor_y": 0.298,
+        "face_scale": 0.88,
+        "bob_strength": 0.6
+      },
+      "support": {
+        "face_anchor_x": 0.5,
+        "face_anchor_y": 0.304,
+        "face_scale": 0.9,
+        "bob_strength": 0.64
+      }
+    },
+    "prop_overlay_enabled": true,
+    "dialogue_panel_enabled": true,
+    "idle_drift_enabled": true,
+    "impact_shake_enabled": true,
+    "snap_zoom_enabled": true,
+    "subtitle_pulse_enabled": true,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "prop_keywords": [
+      "봉투",
+      "장부",
+      "혼서",
+      "패물",
+      "족자",
+      "붓",
+      "문서",
+      "편지",
+      "서찰",
+      "약조",
+      "쌀독"
+    ],
+    "scene_motion_rules": {
+      "prop_reveal": [
+        "snap_zoom",
+        "slow_push"
+      ],
+      "shock_entry": [
+        "impact_shake",
+        "snap_zoom"
+      ],
+      "reveal": [
+        "snap_zoom",
+        "subtitle_pulse"
+      ],
+      "memory_object": [
+        "slow_push",
+        "idle_drift"
+      ],
+      "confrontation": [
+        "subtitle_pulse",
+        "impact_shake"
+      ]
+    }
+  },
+  "script_quality": {
+    "min_non_narrator_roles": 3,
+    "max_narration_ratio": 0.46,
+    "min_turns_for_gate": 20,
+    "max_ellipsis_ratio": 0.12,
+    "warn_topic_overlap_ratio": 0.25
+  },
+  "shorts": {
+    "enabled": true,
+    "duration_sec": 35,
+    "upload_with_main": true,
+    "title_suffix": "#Shorts"
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "version": "v59.2.0",
+    "prompt_strategy": "panel_card",
+    "llm_hint_tag_limit": 4,
+    "characters": {
+      "narrator": {
+        "id": "narrator",
+        "name": "Narrator",
+        "base": "joseon environment-first motiontoon scene, emotionally charged space, no direct face focus, readable silhouette",
+        "style": "joseon daily-life motiontoon, thick outlines, cinematic historical framing"
+      },
+      "grandma": {
+        "id": "grandma",
+        "name": "Grandma",
+        "base": "(single elderly korean woman:1.6), grandmother, senior female, (age 70 to 80:1.5), (visibly old face:1.7), (deep wrinkles:1.6), (gray hair in neat bun:1.6), (sagging cheeks:1.4), (aged hands:1.4), plain joseon hanbok, modest posture, one person only, readable single-character sprite, solo full-body historical sprite",
+        "style": "historical motiontoon, thick outlines, flat cel shading, warm flat light, clear elderly silhouette, no glamour, no beauty makeup, visibly old woman, plain solid backdrop",
+        "gender_negative": "(male:1.7), (man:1.7), beard, mustache, masculine jaw, broad shoulders, male hanbok, second person, duplicate body",
+        "age_negative": "(young woman:1.9), (girl:1.9), (teenager:1.9), (child:1.8), smooth skin, baby face, (20s:1.9), (30s:1.8), school-age proportions, youthful face, slim teenager, idol face, pretty young woman, cute girl, long flowing youthful hair",
+        "expressions": {
+          "sad": "sorrowful elderly face, tired eyes, downturned mouth, visibly old cheeks, restrained grief, realistic emotional read, not cute, not chibi"
+        },
+        "poses": {
+          "sitting": "upright seated pose, full body fully visible, torso vertical, readable hanbok silhouette, hands resting naturally, not curled up, not fetal pose, not kneeling, not crouching, not chibi"
+        }
+      },
+      "grandpa": {
+        "id": "grandpa",
+        "name": "Grandpa",
+        "base": "(single elderly korean man:1.6), grandfather, senior male, (age 70 to 80:1.5), (weathered face:1.6), (deep wrinkles:1.6), gray hair, aged hands, simple joseon attire, restrained posture, one person only, readable single-character sprite, solo full-body historical sprite",
+        "style": "historical motiontoon, thick outlines, earthy flat palette, readable silhouette, single character sprite, visibly old man, plain solid backdrop",
+        "gender_negative": "(female:1.6), (woman:1.6), long hair, dress, skirt, feminine face, second person, duplicate body",
+        "age_negative": "(young man:1.8), (teenager:1.7), (child:1.7), smooth skin, baby face, (20s:1.8), (30s:1.7), school-age proportions, youthful face, idol face, pretty boy"
+      },
+      "young_man": {
+        "id": "young_man",
+        "name": "Young Man",
+        "base": "single korean adult man, male, 20s or 30s, black hair, joseon scholar or commoner attire, traditional korean hairstyle, hanbok top and trousers, realistic adult proportions, normal head ratio, emotionally legible posture, one person only",
+        "style": "historical motiontoon, thick outlines, warm cool flat contrast, readable silhouette, single character sprite, joseon costume",
+        "gender_negative": "(female:1.6), (woman:1.6), long hair, skirt, feminine face, second person, duplicate body",
+        "age_negative": "(elderly:1.5), wrinkled skin, gray hair, (70s:1.5), (80s:1.5), (child:1.7), baby face, chibi proportions, oversized head, doll face, modern hoodie, modern shirt, action hero, combat pose, sword, weapon, armor, cropped body, close-up portrait",
+        "expressions": {
+          "neutral": "calm composed adult male face, mouth closed, ordinary joseon man, grounded expression, no battle intensity, no smile",
+          "blink": "same adult male face, both eyes gently closed, mouth closed, no expression change",
+          "talking": "same adult male face, mouth slightly open for speech, calm speaking expression, no shouting"
+        },
+        "poses": {
+          "standing": "upright standing pose, full body fully inside frame, both feet visible, arms relaxed at sides, grounded posture, no running, no fighting, no crouching, no dramatic action, no cropped limbs",
+          "walking": "readable walking pose, full body fully inside frame, both legs visible, modest stride, adult male scholar posture, no action scene, no running, no cropped limbs"
+        }
+      },
+      "young_woman": {
+        "id": "young_woman",
+        "name": "Young Woman",
+        "base": "single korean adult woman, female, 20s, black hair, neat joseon hairstyle, same identifiable adult woman, oval face, soft adult features, visible eyelashes, joseon hanbok, practical silhouette, realistic adult proportions, normal head ratio, medium head size, one person only, solo full-body sprite",
+        "style": "historical motiontoon, clean anime illustration, detailed adult face, thick clean outlines, flat cel shading, readable hanbok folds, consistent character design sheet, single character sprite, joseon costume, adult proportions",
+        "gender_negative": "(male:1.6), (man:1.6), beard, mustache, masculine jaw, broad shoulders, second person, duplicate body",
+        "age_negative": "(elderly:1.5), wrinkled skin, gray hair, (70s:1.5), (80s:1.5), (child:1.7), baby face, chibi proportions, super deformed, mascot proportions, oversized head, doll face, flat simple face, toy-like face, button eyes, tiny body, blonde hair, dyed hair, modern fashion, cropped hair, cropped hand, cropped arm, cut-off limb, wind-blown hair, action pose, battle pose, sword, weapon, extreme close-up portrait",
+        "expressions": {
+          "neutral": "same adult korean woman, calm composed adult face, same face shape, same eye shape, neat joseon hairstyle, controlled hair silhouette, no panic, no exaggerated motion hair, no simplification",
+          "blink": "same adult korean woman, identical face shape, both eyes gently closed, mouth closed, neat hairstyle unchanged, no hair flying, no style simplification",
+          "talking": "same adult korean woman, identical face shape, mouth slightly open for speech, calm speaking expression, neat hairstyle unchanged, no simplification, no chibi face",
+          "happy": "same adult korean woman, gentle warm smile, adult face, neat hairstyle, no exaggerated motion hair, no simplification, no chibi face",
+          "sad": "same adult korean woman, sorrowful adult face, tired eyes, downturned mouth, restrained grief, neat hairstyle unchanged, no simplification, no chibi face"
+        },
+        "poses": {
+          "standing": "upright standing pose, full body fully inside frame, both arms visible, both hands visible, hair fully inside frame, clean silhouette, adult heroine proportions, normal head-to-body ratio, readable hanbok silhouette, no cut-off limbs, no dramatic gesture, no wind-blown hair, no running, no fighting, no super-deformed proportions",
+          "sitting": "modest upright seated pose, full body fully visible, same adult woman seated naturally, hanbok skirt and underlayers fully covering both legs, no exposed thighs, no bare legs, no reclining, no glamour pose, no curled-up pose, no fetal pose, no kneeling toward camera, both arms visible, readable hanbok silhouette, controlled hair silhouette, adult heroine proportions, no cut-off limbs, no chibi"
+        }
+      },
+      "child": {
+        "id": "child",
+        "name": "Child",
+        "base": "(single child only:1.8), (single korean boy:1.6), (male child age 8 to 10:1.8), joseon-era child, traditional joseon hanbok, white jeogori, simple blue baji, traditional collar, cloth belt, child-sized hanbok silhouette, bare ankles covered by hanbok trousers, simple black traditional shoes or beoseon, no modern styling, short height, black hair, simple traditional hairstyle, lively posture, readable silhouette, one person only, solo full-body historical sprite",
+        "style": "historical motiontoon, thick outlines, gentle flat color blocks, clean character sprite, joseon daily-life tone, child-sized proportions, traditional hanbok folds, plain solid backdrop, no modern styling",
+        "gender_negative": "(female:1.6), woman, adult woman, mother, grandmother, long feminine hair, dress, second person, duplicate body",
+        "age_negative": "(adult man:1.8), (adult woman:1.8), (elderly:1.8), beard, gray hair, office-like authority, mature face, second person, duplicate body, oversized head, doll face, tall adult proportions, (two children:1.9), duplicate child, twin child, holding hands, modern clothes, shorts, short pants, sneakers, socks, running shoes, school uniform, hoodie, t-shirt, modern fashion"
+      },
+      "_default": {
+        "base": "single person or object-centered historical motiontoon scene, readable silhouette",
+        "style": "joseon daily-life motiontoon, cinematic panel composition"
+      }
+    },
+    "image_generation": {
+      "target_images": 105,
+      "min_images": 85,
+      "max_images": 125,
+      "reuse_threshold": 0.85,
+      "quality_threshold": 0.7,
+      "max_consecutive_reuse": 2
+    },
+    "character_library": {
+      "enabled": true,
+      "library_path": "assets/characters/senior_life_saguk",
+      "auto_generate": true,
+      "auto_generate_count": 1,
+      "min_quality_score": 0.55,
+      "max_retries": 3,
+      "use_fixed_seed": true,
+      "face_detection_required": true,
+      "checkpoint_override": "mistoonAnime_v10Noobai.safetensors",
+      "preferred_slots": [
+        "protagonist",
+        "deuteragonist",
+        "child",
+        "elder",
+        "support"
+      ],
+      "preferred_expressions": [
+        "neutral",
+        "blink",
+        "talking",
+        "sad",
+        "fear",
+        "happy"
+      ],
+      "preferred_poses": [
+        "standing",
+        "sitting",
+        "walking"
+      ],
+      "required_variant_keys": [
+        "neutral_standing",
+        "blink_standing",
+        "neutral_sitting",
+        "talking_standing",
+        "sad_sitting",
+        "fear_standing",
+        "happy_standing"
+      ],
+      "required_variant_keys_by_slot": {
+        "protagonist": [
+          "neutral_standing",
+          "blink_standing",
+          "neutral_sitting",
+          "talking_standing",
+          "sad_sitting",
+          "happy_standing"
+        ],
+        "deuteragonist": [
+          "neutral_standing",
+          "blink_standing",
+          "talking_standing",
+          "neutral_walking"
+        ],
+        "child": [
+          "neutral_standing",
+          "neutral_sitting",
+          "fear_standing",
+          "sad_sitting"
+        ],
+        "elder": [
+          "blink_standing",
+          "neutral_sitting",
+          "sad_sitting",
+          "talking_sitting"
+        ],
+        "support": [
+          "neutral_standing",
+          "fear_standing",
+          "talking_standing"
+        ]
+      },
+      "face_part_boxes_by_character": {
+        "young_woman": {
+          "face": [
+            0.22,
+            0.07,
+            0.54,
+            0.33
+          ],
+          "eyes": [
+            0.25,
+            0.19,
+            0.48,
+            0.27
+          ],
+          "mouth": [
+            0.31,
+            0.31,
+            0.42,
+            0.36
+          ]
+        },
+        "young_man": {
+          "face": [
+            0.05,
+            0.11,
+            0.34,
+            0.34
+          ],
+          "eyes": [
+            0.09,
+            0.18,
+            0.27,
+            0.24
+          ],
+          "mouth": [
+            0.15,
+            0.27,
+            0.25,
+            0.32
+          ]
+        },
+        "grandma": {
+          "face": [
+            0.29,
+            0.06,
+            0.54,
+            0.27
+          ],
+          "eyes": [
+            0.34,
+            0.12,
+            0.5,
+            0.18
+          ],
+          "mouth": [
+            0.4,
+            0.2,
+            0.49,
+            0.24
+          ]
+        },
+        "grandpa": {
+          "face": [
+            0.3,
+            0.06,
+            0.56,
+            0.28
+          ],
+          "eyes": [
+            0.35,
+            0.13,
+            0.51,
+            0.18
+          ],
+          "mouth": [
+            0.41,
+            0.21,
+            0.5,
+            0.25
+          ]
+        },
+        "child": {
+          "face": [
+            0.02,
+            0.13,
+            0.27,
+            0.34
+          ],
+          "eyes": [
+            0.05,
+            0.19,
+            0.22,
+            0.25
+          ],
+          "mouth": [
+            0.11,
+            0.27,
+            0.2,
+            0.32
+          ]
+        }
+      },
+      "sheet_style": "cutout_sheet",
+      "prioritize_sheet_generation": true
+    },
+    "scene_analysis": {
+      "use_gemini": true,
+      "context_window": 5,
+      "emotion_detection": true,
+      "action_detection": true
+    },
+    "character_consistency": {
+      "enabled": true,
+      "similarity_threshold": 0.8,
+      "expression_swap": true,
+      "pose_library": false
+    },
+    "sd_model": {
+      "checkpoint": "flat2DAnimerge_v45Sharp.safetensors",
+      "vae": "Automatic",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "Normal",
+      "steps": 28,
+      "cfg_scale": 6.0,
+      "width": 1024,
+      "height": 576,
+      "clip_skip": 2,
+      "positive_base": "masterpiece, best quality, joseon daily-life motiontoon, thick lineart, flat cel shading, hanok, market props, warm/cool emotional contrast, readable silhouettes, simplified forms, crisp panel readability, clean webtoon finish, controlled texture, no pixelation",
+      "negative_base": "worst quality, low quality, modern city, electric light, photorealistic, painterly texture, glossy skin, complex realistic lighting, 3d render, gore, text, watermark, pixelated, oversharpened, halftone noise, speckled texture, muddy details",
+      "lora_models": []
+    },
+    "subtitle_style": {
+      "font_family": "NanumSquareRoundEB",
+      "font_size": 42,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#2E2016",
+      "stroke_width": 3,
+      "shadow_color": "rgba(0,0,0,0.7)",
+      "shadow_blur": 8,
+      "background_enabled": true,
+      "background_color": "rgba(46,32,22,0.55)",
+      "background_padding": 12,
+      "background_radius": 8,
+      "position": "bottom",
+      "margin_bottom": 60
+    },
+    "visual_effects": {
+      "vignette_enabled": true,
+      "vignette_intensity": 0.2,
+      "vignette_color": "#1A120B",
+      "color_filter_enabled": true,
+      "color_filter": "warm",
+      "color_filter_intensity": 0.18,
+      "ken_burns_enabled": true,
+      "ken_burns_zoom_range": [
+        1.0,
+        1.08
+      ],
+      "ken_burns_pan_enabled": true,
+      "film_grain_enabled": false,
+      "film_grain_intensity": 0.0
+    },
+    "transitions": {
+      "default": "crossfade",
+      "duration": 0.5,
+      "scene_change": "fade_black",
+      "scene_change_duration": 0.7
+    }
+  },
+  "scene_analyzer": {
+    "art_style_prefix": "joseon daily-life motiontoon, thick clean outlines, flat cel shading, readable hanbok folds,",
+    "prompt_examples": [
+      "joseon daily-life motiontoon, thick clean outlines, flat cel shading, readable hanbok folds, (wide hanok courtyard with one child at the gate:1.2), warm dusk, medium-wide shot, clean panel composition",
+      "joseon daily-life motiontoon, thick clean outlines, flat cel shading, readable hanbok folds, (young woman holding a sealed letter:1.3), interior lamplight, medium shot, emotionally clear face",
+      "joseon daily-life motiontoon, thick clean outlines, flat cel shading, readable hanbok folds, (elderly woman seated by a wooden chest:1.2), quiet room, side angle, readable silhouette"
+    ],
+    "object_focus_bias": 1.2,
+    "emotion_visibility_bias": 1.15
+  },
+  "background_library": {
+    "profile": "yadam",
+    "style_prompt": "joseon daily-life motiontoon, thick clean outlines, flat cel shading, empty historical background plate, readable hanok architecture, stable environment layout",
+    "negative_prompt": "modern objects, neon sign, photorealistic lighting, close-up person, portrait, people, character, mascot, speech bubble, panel border",
+    "auto_generate": true,
+    "images_per_location": 2,
+    "location_templates": {
+      "집": {
+        "id": "hanok_home",
+        "name_ko": "집",
+        "name_en": "hanok home",
+        "base_prompt": "joseon era hanok interior or courtyard, wooden pillars, paper doors, low table, clay jars, calm lived-in atmosphere, empty background plate, no people",
+        "negative_prompt": "modern furniture, apartment, sofa, electric lamp",
+        "keywords": [
+          "한옥",
+          "한옥 마당",
+          "사랑방",
+          "안채",
+          "대문",
+          "마당",
+          "뒤뜰",
+          "툇마루",
+          "집안",
+          "hanok",
+          "courtyard",
+          "sarangbang",
+          "paper doors",
+          "wooden porch"
+        ]
+      },
+      "마을": {
+        "id": "village",
+        "name_ko": "마을",
+        "name_en": "village",
+        "base_prompt": "joseon village lane, stone wall, tiled roof houses, dirt road, quiet daily-life atmosphere, empty background plate, no people",
+        "negative_prompt": "modern road, car, power line, urban street",
+        "keywords": [
+          "마을길",
+          "골목",
+          "골목길",
+          "동네",
+          "시골길",
+          "village",
+          "alley",
+          "stone wall lane"
+        ]
+      },
+      "시장": {
+        "id": "market",
+        "name_ko": "시장",
+        "name_en": "market",
+        "base_prompt": "wide joseon market lane background plate, empty merchant stalls only, folded fabric bolts, baskets, jars, low wooden counters, clear center walkway, environment shot, no people, no character, no signboard, no lettering, no banners, no shopkeeper",
+        "negative_prompt": "modern shop, neon sign, supermarket, crowd close-up, text, letters, calligraphy signboard, banner, poster, person, human, face, merchant portrait, close-up figure",
+        "keywords": [
+          "장터",
+          "시장 골목",
+          "시장 입구",
+          "저자거리",
+          "난전",
+          "market",
+          "market alley",
+          "merchant street",
+          "bazaar"
+        ]
+      },
+      "논밭": {
+        "id": "field",
+        "name_ko": "논밭",
+        "name_en": "field",
+        "base_prompt": "joseon rice field and farm path, low hills, water paddies, rural landscape, empty background plate, no people",
+        "negative_prompt": "tractor, asphalt road, modern machinery",
+        "keywords": [
+          "들판",
+          "논",
+          "밭",
+          "논두렁",
+          "과수원",
+          "field",
+          "farm path",
+          "rice paddy",
+          "hill path"
+        ]
+      },
+      "서재": {
+        "id": "study",
+        "name_ko": "서재",
+        "name_en": "study",
+        "base_prompt": "wide joseon study room background plate, empty scholar room interior, bookshelves, inkstone, calligraphy desk, folded paper, brush holder, paper doors, environment shot, no people, no reader, no hands, no seated figure, no portrait",
+        "negative_prompt": "modern desk, computer, office chair, person, human, face, reading character, seated woman, scholar portrait, hands holding paper",
+        "keywords": [
+          "글방",
+          "책방",
+          "사랑방",
+          "서당",
+          "study room",
+          "scholar room",
+          "calligraphy desk"
+        ]
+      },
+      "길": {
+        "id": "road",
+        "name_ko": "길",
+        "name_en": "road",
+        "base_prompt": "joseon dirt lane between low stone walls and hanok fences, open walking path, clear vanishing point, a few trees only, empty background plate, no people",
+        "negative_prompt": "modern street, crosswalk, traffic light, house facade close-up, shrine, gate filling frame, centered building",
+        "keywords": [
+          "산길",
+          "마을길",
+          "언덕길",
+          "길목",
+          "road",
+          "path",
+          "mountain path",
+          "village road",
+          "lane",
+          "dirt road"
+        ]
+      },
+      "강": {
+        "id": "river",
+        "name_ko": "강",
+        "name_en": "river",
+        "base_prompt": "wide joseon riverside landscape background plate, reed grass, stepping stones, mist over water, shallow stream, empty environment shot, no people, no swimmer, no body in water, no rescue scene, no character close-up",
+        "negative_prompt": "modern bridge, city skyline, concrete embankment, person, human, swimmer, falling person, body in water, action scene, close-up figure",
+        "keywords": [
+          "강가",
+          "냇가",
+          "물가",
+          "개울",
+          "riverbank",
+          "riverside",
+          "stream"
+        ]
+      },
+      "다리": {
+        "id": "bridge",
+        "name_ko": "다리",
+        "name_en": "bridge",
+        "base_prompt": "simple narrow wooden footbridge crossing a shallow stream in joseon countryside, visible bridge deck and railings, stepping stones and reeds nearby, empty background plate, no people",
+        "negative_prompt": "modern bridge, metal railing, car road, riverside house, pavilion, palace, giant building, waterfront house",
+        "keywords": [
+          "다리 위",
+          "나무다리",
+          "bridge",
+          "wooden bridge",
+          "stream bridge",
+          "footbridge"
+        ]
+      }
+    }
+  }
+}

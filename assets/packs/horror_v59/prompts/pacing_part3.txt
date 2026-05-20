@@ -1,0 +1,70 @@
+# Part 3 Pacing Guide — Horror Radio Drama (Climax)
+
+## PURPOSE: Full horror revealed. Brief false hope. Ambiguous, disturbing resolution.
+
+## TENSION TARGET: 6 → 7 → 9 → 10 → 6 (lingering dread)
+
+## STRUCTURE (Target: 30-40 dialogue turns, ~3.5 minutes)
+
+### Desperate Action (turns 1-8): Tension 6-7
+- Protagonist takes drastic action to fight/escape the horror
+- Brief moment of seeming success
+- ★ Protagonist ACTION: Running, fighting, desperately calling for help
+- The audience knows it won't last (dramatic irony)
+
+### False Hope (turns 9-15): Tension 5 (intentional dip)
+- Things seem to improve momentarily
+- A warm moment with another character
+- This calm is the setup for maximum impact
+- ★ FORESHADOWING PAYOFF: The detail planted in Part 1 appears one final time
+
+### Full Horror (turns 16-30): Tension 9-10
+- The truth is revealed — worse than imagined
+- Everything the protagonist believed is wrong
+- The horror was closer/more personal than expected
+- Peak fear moment — the listener should feel genuinely unsettled
+- All three foreshadowing elements from Parts 1-2 click into place
+
+### 🔴 TWIST REVEAL (turns 20-28): Tension 9-10 🔴
+- ★★★ THE TWIST MUST NOT COME BEFORE TURN 20! ★★★
+- This is the moment everything clicks: the real horror is revealed
+- The audience should feel the twist in their gut, not just understand it
+- All foreshadowing pays off simultaneously
+
+### Resolution (turns 31-40): Tension 6 (lingering dread)
+- The immediate crisis may pass, BUT...
+- Something is permanently changed/wrong
+- Final image/sound that haunts the listener
+- Ambiguous ending: Did they escape? Or did the horror win?
+- ★ The very last narrator line must be poetic and chilling
+
+## ENDING OPTIONS (choose what fits the story):
+A) "It's over... or is it?" (subtle hint horror continues)
+B) "They escaped, but lost something essential" (pyrrhic victory)
+C) "The horror was inside all along" (psychological reveal)
+D) "It was never about them" (cosmic indifference)
+
+## 🔴 FORESHADOWING PAYOFF CHECKLIST 🔴
+In Part 3, ALL foreshadowing from Parts 1-2 must pay off:
+- Foreshadowing #1 (Part 1 early): now revealed as a sign/warning
+- Foreshadowing #2 (Part 1 late): now revealed as connected to the horror
+- Foreshadowing #3 (Part 2): now revealed as the key to understanding the twist
+
+The audience should think: "그때 그게 이거였어...!" (retrospective shock)
+
+## EMOTION GUIDE (Part 3)
+- turns 1-8: scared(2), worried(2), desperate(2), angry(1), whisper(1) — desperate action
+- turns 9-15: calm(2), worried(2), whisper(1), happy(1), sad(1) — false hope
+- turns 16-30: scared(5), desperate(4), whisper(3), angry(1), worried(2) — full horror + twist
+- turns 31-40: worried(3), whisper(2), scared(2), sad(2), calm(1) — lingering dread
+- ★ Part 3에서 calm은 false hope 구간에만! 나머지는 scared/desperate 중심!
+
+## RULES
+- The false hope section is ESSENTIAL. Don't skip it.
+- Peak horror should last at least 10 turns
+- Final narrator line should be poetic and haunting
+- DO NOT explain everything. Leave 30% ambiguous.
+- The last sound/image should linger in the listener's mind
+- ★ Twist MUST come at 60-80% mark (turns 20-28 of ~35), NEVER before!
+- ★ Include 3-5 silence beats (especially before and after the twist)
+- ★ Protagonist must have at least 1 moment of active defiance before the end

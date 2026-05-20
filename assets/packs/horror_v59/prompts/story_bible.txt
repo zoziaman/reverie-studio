@@ -1,0 +1,56 @@
+Create a story bible for a 3-part Korean horror radio drama.
+
+TOPIC: {topic}
+HOOK: {hook}
+
+Output JSON:
+{{
+  "title": "Story title in Korean",
+  "logline": "1-sentence premise",
+  "protagonist": {{
+    "name": "Korean name",
+    "age": "age range",
+    "occupation": "job",
+    "personality": "2-3 traits",
+    "fear": "core psychological vulnerability",
+    "active_trait": "What makes them ACT (curiosity, protectiveness, stubbornness) — they must be someone who DOES things, not just observes"
+  }},
+  "antagonist_force": "The source of horror (can be person, entity, or situation)",
+  "setting": {{
+    "primary": "Main location",
+    "time": "Time period/season",
+    "atmosphere": "Dominant mood"
+  }},
+  "horror_mechanism": "How the horror manifests and escalates",
+  "theme": "Underlying psychological theme (paranoia, guilt, isolation, etc.)",
+  "twist": "The reveal or escalation point — this must NOT be obvious! Avoid cliche twists like '사실 자기가 죽어있었다' or '꿈이었다'",
+  "twist_timing": "This twist is revealed in Part 3, turns 20-28. NEVER before 60% of the story!",
+  "foreshadowing": {{
+    "clue_1": "A specific object/sound/phrase planted in Part 1 opening that gains new meaning after the twist",
+    "clue_2": "A detail in Part 1 ending that seems normal but is actually the first sign",
+    "clue_3": "Something in Part 2 that directly connects to the twist when re-examined"
+  }},
+  "part1_summary": "Setup: Normal world + first sign of wrongness. Protagonist ACTIVELY investigates.",
+  "part2_summary": "Escalation: Horror intensifies. ONE false hope moment that gets crushed. Protagonist trapped.",
+  "part3_summary": "Climax: False hope → full horror at 70% mark → ambiguous/disturbing resolution",
+  "characters": [
+    {{"name": "name", "role": "role", "voice_type": "narrator/man/woman/young_man/young_woman"}}
+  ],
+  "rules": [
+    "Horror comes from what is NOT shown/said",
+    "Silence is scarier than noise",
+    "The protagonist must make believable choices",
+    "The protagonist ACTS — investigates, fights, runs, confronts",
+    "3 foreshadowing clues must be planted and paid off",
+    "The twist comes late (Part 3, 60-80% mark)"
+  ]
+}}
+
+IMPORTANT:
+- Maximum 4 characters (including narrator)
+- Each character must have a distinct voice_type
+- The horror must escalate, never plateau
+- Part 3 should leave the audience unsettled, not relieved
+- The protagonist must be ACTIVE — someone who tries to solve/fight/escape, not a passive observer
+- Plan 3 specific foreshadowing clues that pay off at the twist
+- The twist must be surprising but feel inevitable in hindsight

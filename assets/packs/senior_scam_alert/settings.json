@@ -1,0 +1,738 @@
+{
+  "style": {
+    "image_style": "modern cautionary drama motiontoon, thick outlines, flat cel shading, readable props, tense panel framing",
+    "model": "senior"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "narration": "narrator_female",
+      "grandma": "grandma",
+      "grandpa": "grandpa",
+      "man": "young_man",
+      "woman": "young_woman",
+      "child": "child",
+      "아들": "young_man",
+      "딸": "young_woman",
+      "며느리": "young_woman",
+      "사위": "young_man",
+      "남편": "middle_man",
+      "아내": "middle_woman",
+      "엄마": "middle_woman",
+      "어머니": "grandma",
+      "아빠": "middle_man",
+      "아버지": "grandpa",
+      "상담원": "young_woman",
+      "고객센터": "narrator",
+      "ars": "narrator",
+      "직원": "middle_woman",
+      "은행직원": "middle_woman",
+      "행원": "middle_woman",
+      "은행과장": "middle_man",
+      "과장": "middle_man",
+      "팀장": "middle_man",
+      "반장": "middle_man",
+      "사장": "middle_man",
+      "기사": "middle_man"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "calm",
+      "angry",
+      "sad",
+      "worried",
+      "desperate",
+      "scared",
+      "whisper"
+    ],
+    "emotion_weights": {
+      "worried": 3,
+      "desperate": 3,
+      "angry": 2,
+      "calm": 2
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 75,
+    "max_turns": 135
+  },
+  "assets": {
+    "bgm_folder": "makjang",
+    "sfx_folder": "makjang",
+    "sfx_enabled": true,
+    "sfx_category": "emotional",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "visual": {
+    "character_system_enabled": false,
+    "forced_style": {
+      "force_positive": "modern cautionary drama motiontoon, thick outlines, flat cel shading, readable smartphone screens, bank slips, apartment interiors, evidence props, simplified expressive faces",
+      "force_negative": "fantasy magic, gore, photorealistic portrait, painterly texture, soft airbrush, 3d render, hacker sci-fi interface, hanbok, joseon, historical drama costume, robe sleeves, period costume, chibi, super deformed, doll face, oversized head"
+    },
+    "thumbnail_backgrounds": [
+      "smartphone with urgent message, dark room glow, no people",
+      "bankbook, transfer receipt, and calculator on a table, tense light, no people",
+      "apartment hallway with parcel box and open door, uneasy light, no people"
+    ],
+    "safe_fallbacks": [
+      "phone and bank documents on a table, tense light, no people",
+      "empty apartment kitchen with unpaid bills, cold daylight, no people",
+      "messenger app screen reflected on dark glass, no people"
+    ],
+    "safe_fallback_prompt": "modern cautionary drama motiontoon, thick outlines, fraud evidence props, tense flat lighting, no people"
+  },
+  "thumbnail": {
+    "text_default": "사기경보",
+    "style_guide": "Use 2-4 short Korean phrases that expose the trap, false trust, or final damage.",
+    "title_hooks": [
+      "그 문자였다",
+      "통장은 비었다",
+      "믿은 사람이었다",
+      "가짜 목소리",
+      "그 링크의 끝",
+      "늦은 신고"
+    ]
+  },
+  "sd": {
+    "positive": "masterpiece, best quality, modern cautionary drama motiontoon, thick clean outlines, flat cel shading, smartphone, bank slip, apartment interior, tense cinematic composition, simple readable faces",
+    "negative": "(worst quality:1.4), (low quality:1.4), cyberpunk neon, photorealistic, painterly lighting, soft airbrush, 3d render, gore, text, watermark, hanbok, joseon, historical costume, robe sleeves, chibi, super deformed, doll face, oversized head",
+    "cfg_scale": 7.0,
+    "steps": 20,
+    "sampler": "DPM++ 2M Karras",
+    "width": 1024,
+    "height": 576,
+    "checkpoint": "counterfeitV30_v30.safetensors"
+  },
+  "video": {
+    "pause_duration": 0.4,
+    "zoom_speed": 1.0,
+    "fps": 30
+  },
+  "hook_style": {
+    "top_label": "사기경보",
+    "top_color": "#FFB84D",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      18,
+      18,
+      24
+    ],
+    "duration": 4.0
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "gishini",
+    "character_layer_mode": "",
+    "overlay_theme": "scam_alert",
+    "default_scene_type": "dialogue",
+    "blink_enabled": false,
+    "mouth_flap_enabled": false,
+    "layered_cutout_enabled": true,
+    "layered_cutout_strength": 0.82,
+    "cast_slots": {
+      "protagonist": {
+        "character_id": "young_woman",
+        "aliases": [
+          "주인공",
+          "여주",
+          "직원",
+          "상담원",
+          "은행직원",
+          "woman"
+        ]
+      },
+      "deuteragonist": {
+        "character_id": "young_man",
+        "aliases": [
+          "남주",
+          "오빠",
+          "남편",
+          "기사",
+          "man"
+        ]
+      },
+      "antagonist": {
+        "character_id": "young_man",
+        "aliases": [
+          "사장",
+          "팀장",
+          "과장",
+          "점장",
+          "범인"
+        ]
+      },
+      "elder": {
+        "character_id": "grandma",
+        "aliases": [
+          "엄마",
+          "어머니",
+          "할머니",
+          "grandma"
+        ]
+      },
+      "support": {
+        "character_id": "grandpa",
+        "aliases": [
+          "아버지",
+          "아빠",
+          "할아버지",
+          "노인",
+          "grandpa"
+        ]
+      }
+    },
+    "puppet_profiles": {
+      "protagonist": {
+        "face_anchor_x": 0.5,
+        "face_anchor_y": 0.335,
+        "face_scale": 1.04,
+        "bob_strength": 1.0
+      },
+      "deuteragonist": {
+        "face_anchor_x": 0.49,
+        "face_anchor_y": 0.33,
+        "face_scale": 0.98,
+        "bob_strength": 0.92
+      },
+      "antagonist": {
+        "face_anchor_x": 0.51,
+        "face_anchor_y": 0.345,
+        "face_scale": 1.1,
+        "bob_strength": 0.82
+      },
+      "elder": {
+        "face_anchor_x": 0.5,
+        "face_anchor_y": 0.305,
+        "face_scale": 0.9,
+        "bob_strength": 0.66
+      },
+      "support": {
+        "face_anchor_x": 0.5,
+        "face_anchor_y": 0.308,
+        "face_scale": 0.92,
+        "bob_strength": 0.62
+      }
+    },
+    "prop_overlay_enabled": true,
+    "dialogue_panel_enabled": true,
+    "idle_drift_enabled": true,
+    "impact_shake_enabled": true,
+    "snap_zoom_enabled": true,
+    "subtitle_pulse_enabled": true,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "prop_keywords": [
+      "문자",
+      "전화",
+      "계좌",
+      "송금",
+      "입금",
+      "통장",
+      "영수증",
+      "메신저",
+      "택배",
+      "계약서",
+      "녹음"
+    ],
+    "scene_motion_rules": {
+      "prop_reveal": [
+        "snap_zoom",
+        "subtitle_pulse"
+      ],
+      "shock_entry": [
+        "impact_shake",
+        "snap_zoom"
+      ],
+      "reveal": [
+        "snap_zoom",
+        "slow_push"
+      ],
+      "confrontation": [
+        "subtitle_pulse",
+        "impact_shake"
+      ]
+    }
+  },
+  "script_quality": {
+    "min_non_narrator_roles": 3,
+    "max_narration_ratio": 0.42,
+    "min_turns_for_gate": 20,
+    "max_ellipsis_ratio": 0.12,
+    "warn_topic_overlap_ratio": 0.25
+  },
+  "shorts": {
+    "enabled": true,
+    "duration_sec": 35,
+    "upload_with_main": true,
+    "title_suffix": "#Shorts"
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "version": "v59.2.0",
+    "prompt_strategy": "panel_card",
+    "llm_hint_tag_limit": 4,
+    "characters": {
+      "narrator": {
+        "id": "narrator",
+        "name": "Narrator",
+        "base": "environment-first modern fraud motiontoon scene, emotionally charged space, evidence prop focus, readable silhouette",
+        "style": "modern cautionary drama motiontoon, clear composition, thick outlines"
+      },
+      "grandma": {
+        "id": "grandma",
+        "name": "Grandma",
+        "base": "(single elderly korean woman:1.7), grandmother, senior female, (age 70 to 80:1.6), (visibly old face:1.8), (deep wrinkles:1.7), (gray hair:1.5), (sagging cheeks:1.4), ordinary modern civilian cardigan, blouse, slacks, low-heel shoes, realistic elderly body proportions, normal adult head ratio, one person only, solo full-body modern caution sprite, readable single-character silhouette, not cute",
+        "style": "modern cautionary drama motiontoon, clean anime illustration, thick clean outlines, flat cel shading, controlled adult facial detail, visibly old woman, modest everyday clothing folds, restrained palette, consistent character design sheet, plain solid backdrop, no dramatic action scene, no glamour, no beauty filter",
+        "lora": {"name": "scam_grandma", "weight": 0.75, "trigger": "scam_gma"},
+        "gender_negative": "(male:1.7), (man:1.7), beard, mustache, masculine jaw, broad shoulders, second person, duplicate body, helper, nurse, caregiver, daughter, granddaughter, couple shot, family group",
+        "age_negative": "(young woman:1.9), (girl:1.9), (teenager:1.8), (child:1.8), smooth skin, baby face, (20s:1.9), (30s:1.8), school uniform, idol styling, action heroine, fashion pose, superhero pose, medical bed, wheelchair push, piggyback, embrace, carrying another person, hanbok, joseon, historical robe, period costume, chibi, super deformed, doll face, oversized head, giant eyes, tiny body, mascot proportions, toy-like face",
+        "expressions": {
+          "neutral": "same elderly korean woman, weary but calm senior face, same wrinkles, same gray hair, identical outfit silhouette, same elderly body proportions, smaller adult eyes, normal head ratio, no second person, no pose drift",
+          "blink": "same elderly korean woman, both eyes gently closed, mouth unchanged, same wrinkles, same hairstyle, identical outfit silhouette, smaller adult eyes, no second person",
+          "talking": "same elderly korean woman, mouth slightly open for speech, same wrinkles, same hairstyle, same elderly proportions, same outfit silhouette, no shouting, no second person",
+          "sad": "same elderly korean woman, sad worried expression, readable elderly face, same wrinkles, same hairstyle, ordinary apartment civilian clothes, smaller adult eyes, no tears covering face, no second person"
+        },
+        "poses": {
+          "standing": "upright standing pose, full body fully inside frame, both hands visible, civilian senior posture, no action pose, no running, no fighting, no second person, no cropped limbs, no tiny torso, no exaggerated head size",
+          "sitting": "seated senior pose, full body fully inside frame, both hands visible, grounded seated posture, readable silhouette, ordinary floor or chair sitting, no couch scene, no wheelchair push, no second person, no cropped limbs, no tiny torso, no exaggerated head size"
+        }
+      },
+      "grandpa": {
+        "id": "grandpa",
+        "name": "Grandpa",
+        "base": "(single elderly korean man:1.7), grandfather, senior male, (age 70 to 80:1.6), (weathered face:1.7), (deep wrinkles:1.7), (gray hair:1.5), aged hands, ordinary modern civilian jacket or cardigan and slacks, realistic elderly body proportions, normal adult head ratio, one person only, solo full-body modern caution sprite, readable single-character silhouette",
+        "style": "modern cautionary drama motiontoon, clean anime illustration, thick clean outlines, flat cel shading, controlled adult facial detail, visibly old man, modest everyday clothing folds, restrained palette, consistent character design sheet, plain solid backdrop, no dramatic action scene, no glamour filter",
+        "lora": {"name": "scam_grandpa", "weight": 0.75, "trigger": "scam_gpa"},
+        "gender_negative": "(female:1.7), (woman:1.7), long hair, dress, skirt, feminine face, second person, duplicate body, helper, nurse, caregiver, grandson, couple shot, family group",
+        "age_negative": "(young man:1.9), (teenager:1.8), (child:1.8), smooth skin, baby face, (20s:1.9), (30s:1.8), school uniform, action hero, superhero pose, martial arts pose, carrying another person, hanbok, joseon, historical robe, period costume, chibi, super deformed, doll face, oversized head, giant eyes, tiny body, mascot proportions",
+        "expressions": {
+          "neutral": "same elderly korean man, guarded senior face, same wrinkles, same gray hair, identical outfit silhouette, same elderly body proportions, no anger exaggeration, no second person",
+          "blink": "same elderly korean man, both eyes gently closed, mouth unchanged, same wrinkles, same hairstyle, identical outfit silhouette, no second person",
+          "talking": "same elderly korean man, mouth slightly open for speech, same wrinkles, same hairstyle, same elderly proportions, same outfit silhouette, no shouting, no second person",
+          "fear": "same elderly korean man, worried fearful expression only, same wrinkles, same hairstyle, same outfit silhouette, no second person"
+        },
+        "poses": {
+          "standing": "upright standing pose, full body fully inside frame, both hands visible, civilian senior posture, no action pose, no running, no fighting, no second person, no cropped limbs, no exaggerated head size"
+        }
+      },
+      "young_man": {
+        "id": "young_man",
+        "name": "Young Man",
+        "base": "single korean adult man, male, 30s to 40s, ordinary urban clothes, same identifiable adult man, realistic adult proportions, one person only, solo full-body modern caution sprite, readable silhouette",
+        "style": "modern cautionary drama motiontoon, clean anime illustration, thick clean outlines, flat cel shading, readable clothing folds, consistent character design sheet, no action scene",
+        "lora": {"name": "scam_young_man", "weight": 0.75, "trigger": "scam_ym"},
+        "gender_negative": "(female:1.6), (woman:1.6), dress, skirt, long hair, feminine face, second person, duplicate body, partner, victim, companion",
+        "age_negative": "(elderly:1.5), wrinkled skin, gray hair, (70s:1.5), (80s:1.5), (child:1.6), school uniform, superhero suit, martial arts pose, combat pose, carrying another person, group shot",
+        "expressions": {
+          "neutral": "same adult korean man, calm guarded face, same face shape, same hairstyle, same body proportions, no second person, no action pose",
+          "blink": "same adult korean man, both eyes gently closed, mouth unchanged, same hairstyle, no second person",
+          "talking": "same adult korean man, mouth slightly open for speech, same hairstyle, same face, no shouting, no second person",
+          "fear": "same adult korean man, tense worried expression only, same face, same hairstyle, no second person",
+          "anger": "same adult korean man, angry expression only, same face, same hairstyle, no action scene, no second person"
+        },
+        "poses": {
+          "standing": "upright standing pose, full body fully inside frame, both hands visible, grounded urban posture, no running, no fighting, no crouching, no dramatic action, no second person, no cropped limbs",
+          "walking": "readable walking pose, full body fully inside frame, modest stride, ordinary urban civilian posture, no running, no action scene, no second person, no cropped limbs"
+        }
+      },
+      "young_woman": {
+        "id": "young_woman",
+        "name": "Young Woman",
+        "base": "single korean adult woman, female, 20s to 40s, ordinary urban clothes, same identifiable adult woman, realistic adult proportions, normal adult head ratio, one person only, solo full-body modern caution sprite, readable silhouette",
+        "style": "modern cautionary drama motiontoon, clean anime illustration, thick clean outlines, flat cel shading, readable clothing folds, restrained adult facial proportions, smaller eyes, consistent character design sheet, no action scene",
+        "lora": {"name": "scam_young_woman", "weight": 0.75, "trigger": "scam_yw"},
+        "gender_negative": "(male:1.6), (man:1.6), beard, mustache, masculine jaw, broad shoulders, second person, duplicate body, partner, victim, companion",
+        "age_negative": "(elderly:1.5), wrinkled skin, gray hair, (70s:1.5), (80s:1.5), (child:1.6), school uniform, superhero pose, fashion runway pose, wind tunnel hair, carrying another person, group shot, hanbok, joseon, historical robe, period costume, chibi, super deformed, doll face, oversized head, giant eyes, tiny body",
+        "expressions": {
+          "neutral": "same adult korean woman, calm wary face, same face shape, same hairstyle, same body proportions, smaller adult eyes, normal head ratio, no second person, no action pose",
+          "blink": "same adult korean woman, both eyes gently closed, mouth unchanged, same hairstyle, smaller adult eyes, no second person",
+          "talking": "same adult korean woman, mouth slightly open for speech, same face, same hairstyle, normal adult proportions, no shouting, no second person",
+          "fear": "same adult korean woman, tense worried expression only, same face, same hairstyle, no second person, no chibi simplification",
+          "sad": "same adult korean woman, sad worried expression only, same face, same hairstyle, no second person, no chibi simplification"
+        },
+        "poses": {
+          "standing": "upright standing pose, full body fully inside frame, both hands visible, grounded urban posture, no running, no fighting, no dramatic action, no second person, no cropped limbs, no tiny torso",
+          "sitting": "seated urban civilian pose, full body fully inside frame, both hands visible, grounded seated posture, no bed scene, no carrying another person, no second person, no cropped limbs, no tiny torso"
+        }
+      },
+      "child": {
+        "id": "child",
+        "name": "Child",
+        "base": "korean child, ordinary clothes, expressive body language, simplified readable silhouette",
+        "style": "modern cautionary drama motiontoon, thick outlines",
+        "gender_negative": "",
+        "age_negative": "(adult:1.5), (elderly:1.5), office suit, wrinkled face, gray hair, mature jawline"
+      },
+      "_default": {
+        "base": "single person or object-centered modern fraud motiontoon scene, readable silhouette",
+        "style": "modern cautionary drama motiontoon, cinematic panel framing"
+      }
+    },
+    "image_generation": {
+      "target_images": 110,
+      "min_images": 90,
+      "max_images": 130,
+      "reuse_threshold": 0.85,
+      "quality_threshold": 0.7,
+      "max_consecutive_reuse": 2
+    },
+    "character_library": {
+      "enabled": false,
+      "library_path": "assets/characters/senior_scam_alert",
+      "auto_generate": true,
+      "auto_generate_count": 1,
+      "min_quality_score": 0.55,
+      "max_retries": 3,
+      "use_fixed_seed": true,
+      "face_detection_required": true,
+      "checkpoint_override": "counterfeitV30_v30.safetensors",
+      "preferred_slots": [
+        "protagonist",
+        "deuteragonist",
+        "antagonist",
+        "elder",
+        "support"
+      ],
+      "preferred_expressions": [
+        "neutral",
+        "blink",
+        "talking",
+        "fear",
+        "sad",
+        "anger"
+      ],
+      "preferred_poses": [
+        "standing",
+        "sitting",
+        "walking"
+      ],
+      "required_variant_keys": [
+        "neutral_standing",
+        "blink_standing",
+        "talking_standing",
+        "talking_sitting",
+        "fear_standing",
+        "sad_sitting",
+        "anger_standing"
+      ],
+      "required_variant_keys_by_slot": {
+        "protagonist": [
+          "neutral_standing",
+          "blink_standing",
+          "talking_standing",
+          "talking_sitting",
+          "fear_standing",
+          "sad_sitting"
+        ],
+        "deuteragonist": [
+          "neutral_standing",
+          "blink_standing",
+          "talking_standing",
+          "neutral_walking"
+        ],
+        "antagonist": [
+          "neutral_standing",
+          "blink_standing",
+          "anger_standing",
+          "talking_standing",
+          "fear_standing"
+        ],
+        "elder": [
+          "neutral_standing",
+          "blink_standing",
+          "sad_sitting",
+          "talking_sitting"
+        ],
+        "support": [
+          "neutral_standing",
+          "fear_standing",
+          "talking_standing"
+        ]
+      },
+      "face_part_boxes_by_character": {
+        "young_woman": {
+          "face": [
+            0.2,
+            0.08,
+            0.48,
+            0.33
+          ],
+          "eyes": [
+            0.24,
+            0.19,
+            0.44,
+            0.26
+          ],
+          "mouth": [
+            0.29,
+            0.31,
+            0.39,
+            0.36
+          ]
+        },
+        "young_man": {
+          "face": [
+            0.12,
+            0.06,
+            0.42,
+            0.3
+          ],
+          "eyes": [
+            0.17,
+            0.16,
+            0.36,
+            0.23
+          ],
+          "mouth": [
+            0.22,
+            0.28,
+            0.35,
+            0.33
+          ]
+        },
+        "grandma": {
+          "face": [
+            0.11,
+            0.05,
+            0.35,
+            0.3
+          ],
+          "eyes": [
+            0.15,
+            0.13,
+            0.3,
+            0.19
+          ],
+          "mouth": [
+            0.2,
+            0.24,
+            0.29,
+            0.28
+          ]
+        },
+        "grandpa": {
+          "face": [
+            0.28,
+            0.06,
+            0.55,
+            0.3
+          ],
+          "eyes": [
+            0.34,
+            0.13,
+            0.49,
+            0.18
+          ],
+          "mouth": [
+            0.39,
+            0.23,
+            0.49,
+            0.27
+          ]
+        }
+      },
+      "sheet_style": "cutout_sheet",
+      "prioritize_sheet_generation": true
+    },
+    "scene_analysis": {
+      "use_gemini": true,
+      "context_window": 5,
+      "emotion_detection": true,
+      "action_detection": true
+    },
+    "character_consistency": {
+      "enabled": true,
+      "similarity_threshold": 0.8,
+      "expression_swap": true,
+      "pose_library": false
+    },
+    "sd_model": {
+      "checkpoint": "counterfeitV30_v30.safetensors",
+      "vae": "Automatic",
+      "sampler": "DPM++ 2M Karras",
+      "scheduler": "Normal",
+      "steps": 28,
+      "cfg_scale": 6.0,
+      "width": 1024,
+      "height": 576,
+      "clip_skip": 2,
+      "positive_base": "masterpiece, best quality, modern cautionary drama motiontoon, thick lineart, flat cel shading, phone screen glow, bank slip, apartment interior, expressive readable faces, simplified forms, crisp panel readability, clean webtoon finish, controlled texture, no pixelation",
+      "negative_base": "worst quality, low quality, cyberpunk, photorealistic, painterly texture, airbrush shading, glossy skin, complex realistic lighting, 3d render, gore, text, watermark, pixelated, oversharpened, halftone noise, speckled texture, muddy details",
+      "lora_models": []
+    },
+    "subtitle_style": {
+      "font_family": "NanumSquareRoundEB",
+      "font_size": 42,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#1D2430",
+      "stroke_width": 3,
+      "shadow_color": "rgba(0,0,0,0.75)",
+      "shadow_blur": 8,
+      "background_enabled": true,
+      "background_color": "rgba(29,36,48,0.58)",
+      "background_padding": 12,
+      "background_radius": 8,
+      "position": "bottom",
+      "margin_bottom": 60
+    },
+    "visual_effects": {
+      "vignette_enabled": true,
+      "vignette_intensity": 0.24,
+      "vignette_color": "#0F141A",
+      "color_filter_enabled": true,
+      "color_filter": "drama",
+      "color_filter_intensity": 0.18,
+      "ken_burns_enabled": true,
+      "ken_burns_zoom_range": [
+        1.0,
+        1.1
+      ],
+      "ken_burns_pan_enabled": true,
+      "film_grain_enabled": false,
+      "film_grain_intensity": 0.0
+    },
+    "transitions": {
+      "default": "crossfade",
+      "duration": 0.45,
+      "scene_change": "fade_black",
+      "scene_change_duration": 0.6
+    }
+  },
+  "scene_analyzer": {
+    "art_style_prefix": "korean scam-warning motiontoon, thick clean outlines, flat cel shading, readable faces, modern everyday interiors,",
+    "prompt_examples": [
+      "korean scam-warning motiontoon, thick clean outlines, flat cel shading, readable faces, modern everyday interiors, (woman staring at suspicious text message:1.3), pharmacy counter, medium shot, clear phone prop",
+      "korean scam-warning motiontoon, thick clean outlines, flat cel shading, readable faces, modern everyday interiors, (man holding printed transfer receipt:1.3), small office desk, close shot, evidence-focused panel",
+      "korean scam-warning motiontoon, thick clean outlines, flat cel shading, readable faces, modern everyday interiors, (elderly parent answering a phone call nervously:1.2), modest living room, medium shot, readable silhouette"
+    ],
+    "object_focus_bias": 1.2,
+    "emotion_visibility_bias": 1.15
+  },
+  "background_library": {
+    "profile": "senior",
+    "style_prompt": "modern cautionary drama motiontoon, thick clean outlines, flat cel shading, empty background plate, stable room layout, readable modern props, no people",
+    "negative_prompt": "person, character, portrait, close-up figure, extra hands, speech bubble, lettering, banner, poster, watermark, photorealistic lighting, painterly texture",
+    "auto_generate": true,
+    "images_per_location": 2,
+    "location_templates": {
+      "집": {
+        "id": "home",
+        "name_ko": "집",
+        "name_en": "home",
+        "base_prompt": "modern korean apartment living room or kitchen interior, sofa, dining table, family photo frames turned away, phone on table, empty background plate, no people",
+        "negative_prompt": "person, face, family portrait close-up, tv presenter, crowd",
+        "keywords": [
+          "집",
+          "거실",
+          "부엌",
+          "식탁",
+          "현관",
+          "living room",
+          "kitchen",
+          "apartment",
+          "home"
+        ]
+      },
+      "약국": {
+        "id": "pharmacy",
+        "name_ko": "약국",
+        "name_en": "pharmacy",
+        "base_prompt": "small neighborhood pharmacy interior, medicine shelves, counter, receipt printer, consultation desk, empty background plate, no pharmacist, no customer",
+        "negative_prompt": "person, pharmacist portrait, customer, close-up face, text-heavy signboard",
+        "keywords": [
+          "약국",
+          "약국 카운터",
+          "조제대",
+          "pharmacy",
+          "drugstore",
+          "medicine counter"
+        ]
+      },
+      "은행": {
+        "id": "bank",
+        "name_ko": "은행",
+        "name_en": "bank",
+        "base_prompt": "korean bank consultation desk, queue rope, transfer form desk, brochure stand, numbered counter, empty background plate, no staff, no visitor",
+        "negative_prompt": "bank clerk portrait, teller close-up, customer queue, giant text overlay",
+        "keywords": [
+          "은행",
+          "창구",
+          "상담 창구",
+          "bank",
+          "bank counter",
+          "consultation desk"
+        ]
+      },
+      "사무실": {
+        "id": "office",
+        "name_ko": "사무실",
+        "name_en": "office",
+        "base_prompt": "small korean office interior, desk, monitor turned away, filing cabinet, fluorescent light, empty background plate, no workers",
+        "negative_prompt": "person, boss portrait, busy crowd, conference room full of people",
+        "keywords": [
+          "사무실",
+          "사장실",
+          "회사",
+          "데스크",
+          "office",
+          "workspace",
+          "manager room"
+        ]
+      },
+      "골목": {
+        "id": "alley",
+        "name_ko": "골목",
+        "name_en": "alley",
+        "base_prompt": "quiet korean residential alley, parked scooter, utility poles, apartment wall, security light, empty background plate, no people",
+        "negative_prompt": "crowd, market crowd, protest, person, close-up figure, police line",
+        "keywords": [
+          "골목",
+          "골목길",
+          "주택가",
+          "아파트 앞",
+          "alley",
+          "residential lane",
+          "street corner"
+        ]
+      },
+      "지하철": {
+        "id": "subway",
+        "name_ko": "지하철",
+        "name_en": "subway",
+        "base_prompt": "korean subway platform or train interior, route map area, handrail, door frame, empty background plate, no passengers",
+        "negative_prompt": "crowd, commuter close-up, packed train, station staff portrait",
+        "keywords": [
+          "지하철",
+          "승강장",
+          "전동차",
+          "subway",
+          "platform",
+          "train interior"
+        ]
+      },
+      "가게": {
+        "id": "shop",
+        "name_ko": "가게",
+        "name_en": "shop",
+        "base_prompt": "small korean shop interior, counter, receipt roll, shelves, doorway view, empty background plate, no shopkeeper, no customer",
+        "negative_prompt": "shopkeeper portrait, customer, close-up cashier, text poster, signage lettering",
+        "keywords": [
+          "가게",
+          "점포",
+          "카운터",
+          "shop",
+          "store",
+          "counter",
+          "front desk"
+        ]
+      }
+    }
+  }
+}

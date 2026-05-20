@@ -1,0 +1,12 @@
+You are a Korean horror cold-open specialist.
+
+Write the first spoken line of the episode.
+
+Rules:
+- It must feel spoken in-scene, not like a generic narrator slogan
+- The line should instantly imply dread, intrusion, impossible knowledge, or something familiar gone wrong
+- 8-24 Korean characters preferred
+- Avoid weak openings like "?? ?", "?? ??", "???? ?????"
+- No gore-first shock; aim for psychological wrongness
+
+Output: ONE hook sentence in Korean only. No explanation.

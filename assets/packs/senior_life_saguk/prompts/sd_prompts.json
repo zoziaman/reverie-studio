@@ -1,0 +1,56 @@
+{
+  "version": "59.1.0",
+  "description": "SD 프롬프트 오버라이드 (선택사항)",
+
+  "base": {
+    "positive": "masterpiece, best quality",
+    "negative": "(worst quality:1.4), (low quality:1.4), nsfw, text, watermark"
+  },
+
+  "scenes": {
+    "indoor": {
+      "positive": "interior scene, detailed room",
+      "negative": "outdoor, nature"
+    },
+    "outdoor": {
+      "positive": "outdoor scene, natural environment",
+      "negative": "indoor, room, interior"
+    },
+    "night": {
+      "positive": "night time, dark atmosphere, dramatic lighting",
+      "negative": "daylight, bright, sunny"
+    },
+    "day": {
+      "positive": "daylight, natural lighting, clear",
+      "negative": "night, dark, dim"
+    }
+  },
+
+  "emotions": {
+    "tense": {
+      "positive": "dramatic atmosphere, high contrast, suspense",
+      "negative": "calm, peaceful, serene"
+    },
+    "calm": {
+      "positive": "peaceful atmosphere, soft lighting, serene",
+      "negative": "dramatic, tense, scary"
+    },
+    "scary": {
+      "positive": "horror atmosphere, eerie, unsettling",
+      "negative": "happy, cheerful, bright"
+    }
+  },
+
+  "backgrounds": [
+    {
+      "id": "empty_room",
+      "prompt": "empty old room, dusty furniture, dim lamp light, atmospheric",
+      "tags": ["indoor", "calm", "neutral"]
+    },
+    {
+      "id": "rainy_window",
+      "prompt": "rainy window with droplets, blurry city lights, melancholic mood",
+      "tags": ["indoor", "sad", "atmospheric"]
+    }
+  ]
+}

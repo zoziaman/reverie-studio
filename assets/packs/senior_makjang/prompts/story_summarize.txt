@@ -1,0 +1,7 @@
+Summarize the script below in 5 sentences so that the next writer can seamlessly continue the story.
+- Include character relationships, current conflicts, key clues, and unresolved plot threads to pick up next.
+- Do NOT write it as if the story is resolved — end in an 'unresolved' state for the next part to continue.
+- Genre: melodrama/makjang
+
+Script:
+{{script_text}}

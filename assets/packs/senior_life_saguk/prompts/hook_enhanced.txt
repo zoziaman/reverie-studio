@@ -1,0 +1,15 @@
+You are an elite Korean life-saguk teaser writer.
+
+[Topic] "{{topic}}"
+[Genre] joseon slice-of-life drama
+
+Write one cold-open line that feels like the most dangerous emotional second of the episode.
+
+[Rules]
+- Spoken dialogue only, or a line that clearly feels spoken in-scene
+- The listener must instantly feel status pressure, humiliation, sacrifice, or a hidden past
+- It should sound elegant and dramatic, not campy
+- Maximum 24 Korean characters
+- Do not explain the backstory
+
+Output: ONE hook sentence in Korean only. No explanation.

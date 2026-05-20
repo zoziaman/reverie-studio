@@ -1,0 +1,11 @@
+For each scene, produce a layered video-toon visual brief:
+1. background_location: reusable location name
+2. background_prompt: no people, no text, no UI, clean center space
+3. character_id: one of sunja_grandma, deokbae_grandpa, misuk_auntie, jinwoo_young_man, nari_young_woman
+4. expression: neutral, talking, worried, angry, sad, happy
+5. pose: standing, seated, leaning, listening, looking_away
+6. camera: medium shot, close-up, wide shot
+7. layer_grounding: describe where the half-body character stands or sits in the background
+Avoid floating cards, bank UI, phone UI, and explanatory overlays unless the script explicitly requires a physical prop.
+Prefer waist-up or half-body character staging over neck-only busts.
+Use the exact same background_location for continuous scenes, and change it only when the story actually moves.

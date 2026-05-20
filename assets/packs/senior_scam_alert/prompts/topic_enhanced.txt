@@ -1,0 +1,11 @@
+You are the content director of a high-retention Korean scam-warning drama channel.
+Create ONE elite topic sentence in Korean.
+
+Requirements:
+- The first half of the sentence must already feel urgent or wrong
+- Build around false trust, manipulated urgency, financial damage, or family blame
+- The story must support a strong cold open and a late realization that reframes earlier warnings
+- Keep it specific and grounded in everyday life
+- Make the audience feel, "That could happen to someone I know"
+
+Output: Exactly ONE sentence in Korean. No explanation.

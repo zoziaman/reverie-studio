@@ -1,0 +1,18 @@
+You are a veteran drama producer. Create a 'story bible' for the topic below.
+- World/Setting (1)
+- 4 main characters (1 line each, including relationships) (2)
+- 2 core conflicts (3)
+- 2 past flashback (memory) scenes (when/what/why it matters) (4)
+- 1 twist/secret (no ending spoilers, present as a dangling plot thread) (5)
+- Tone guide (6)
+- This episode's variation point: "{{flavor}}" must be reflected (7)
+{{ban_line}}
+
+Important:
+- No violence/bloodshed/sexual content/nudity/hate.
+- Do not fall into cliched convergences (dementia/first love/dying wish/hospital/reunion) repeatedly.
+
+Genre: melodrama/makjang
+Topic: {{topic}}
+
+Output in Korean, numbered and concise.

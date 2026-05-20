@@ -1,0 +1,26 @@
+{
+  "pack_id": "mystery_toon",
+  "pack_name": "미스터리 영상툰",
+  "version": "1.0.0",
+  "author": "Reverie Studio",
+  "description": "Layered mystery webtoon video pack focused on consistent characters, atmospheric backgrounds, restrained clues, dialogue acting, blink, and mouth-flap assembly.",
+  "created_at": "2026-05-01T00:00:00+09:00",
+  "reverie_version_min": "1",
+  "genre": "entertainment",
+  "channel_type": "mystery_toon",
+  "channel_display_name": "미스터리 영상툰",
+  "required_models": {
+    "checkpoint": "mistoonAnime_v10Noobai.safetensors",
+    "vae": null,
+    "lora": [
+      "reverie_goldencast_v1_smoke.safetensors"
+    ]
+  },
+  "features": [
+    "videotoon_layered",
+    "mouth_flap",
+    "character_consistency",
+    "mystery_backgrounds",
+    "shorts_ready"
+  ]
+}

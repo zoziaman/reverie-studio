@@ -1,0 +1,63 @@
+# ============================================================
+# Reverie Studio v60.1.0 - 필수 패키지
+# ============================================================
+
+# 기본 유틸리티
+python-dotenv>=1.0.0,<2.0.0
+requests>=2.28.0,<3.0.0
+numpy>=1.24.0,<2.0.0
+pyperclip>=1.8.0,<2.0.0
+
+# GUI
+customtkinter>=5.2.0,<6.0.0
+
+# AI/LLM
+google-generativeai>=0.3.0,<1.0.0
+
+# 이미지 처리
+pillow>=10.0.0,<12.0.0
+
+# 설정 (Pydantic v2)
+pydantic>=2.0.0,<3.0.0
+pydantic-settings>=2.0.0,<3.0.0
+
+# TTS ASR: openai-whisper는 더 이상 직접 import하지 않음
+# GPT-SoVITS가 내부적으로 faster-whisper 사용 (별도 설치)
+# openai-whisper>=20231117  # REMOVED: 미사용 (1GB+ 낭비)
+
+# YouTube API
+google-auth-oauthlib>=1.0.0,<2.0.0
+google-api-python-client>=2.100.0,<3.0.0
+
+# v50 premium video (ComfyUI 연동)
+websocket-client>=1.6.0,<2.0.0
+
+# 암호화 (팩 .revpack 처리)
+cryptography>=41.0.0,<44.0.0
+
+# PyTorch (GPU 가속) - CUDA 버전은 환경에 맞게 설치
+# pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.0.0,<3.0.0
+
+# 오디오 처리 (TTS 파이프라인: AudioFileClip, concatenate_audioclips)
+# v58.4.0: 영상 조립은 Remotion으로 이관, 오디오 접합만 moviepy 사용 중
+moviepy>=1.0.3,<2.0.0
+
+# ============================================================
+# 선택적 패키지 (try/except 보호, 없어도 기본 동작에 영향 없음)
+# ============================================================
+
+# Qwen3 TTS 어댑터용 오디오 I/O
+# soundfile>=0.12.0,<1.0.0
+
+# Supertonic 3 local TTS backend (optional; enables TTS_ENGINE=supertonic)
+# supertonic>=1.3.1
+
+# Firebase 라이선스 검증 (프로덕션 배포 시에만 필요)
+# firebase-admin>=6.0.0,<7.0.0
+
+# Gemini 신규 SDK (google-generativeai에서 마이그레이션 예정)
+# google-genai>=1.0.0,<2.0.0
+
+# Council 도구 — 웹 검색 (insight 모듈)
+# duckduckgo-search>=4.0.0,<7.0.0

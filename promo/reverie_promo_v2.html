@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reverie Studio — AI 영상 자동화</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#06080c;--surface:#0d1117;--surface2:#151b25;--mint:#00d4aa;--mint-dim:#00d4aa33;--mint-glow:#00d4aa66;--orange:#ff6b35;--orange-glow:#ff6b3566;--red:#ff4757;--blue:#4a9eff;--purple:#a78bfa;--pink:#ec4899;--yellow:#f59e0b;--text:#e8edf3;--text-dim:#8b95a5;--text-muted:#4a5568;--glass-border:rgba(0,212,170,0.15)}
+html{scroll-behavior:smooth}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+#bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.slide{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:60px 40px;z-index:1}
+.slide-inner{max-width:1200px;width:100%;opacity:0;transform:translateY(60px);transition:all 1s cubic-bezier(0.16,1,0.3,1)}
+.slide-inner.visible{opacity:1;transform:translateY(0)}
+
+/* ===== COMMON ===== */
+.section-title{font-size:clamp(28px,4vw,52px);font-weight:900;text-align:center;margin-bottom:48px;line-height:1.3}
+.mint{color:var(--mint)}.red{color:var(--red)}.orange{color:var(--orange)}.purple{color:var(--purple)}.blue{color:var(--blue)}
+.card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:32px 24px;opacity:0;transform:translateY(30px);transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
+.card.visible{opacity:1;transform:translateY(0)}
+.card:hover{border-color:var(--mint-dim);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.subtitle-overlay{position:absolute;bottom:0;left:0;right:0;padding:16px 20px;background:linear-gradient(transparent,rgba(0,0,0,0.9))}
+.subtitle-role{display:inline-block;padding:2px 10px;border-radius:4px;font-size:12px;font-weight:700;margin-bottom:6px}
+.subtitle-text{font-size:16px;font-weight:500;line-height:1.5;text-shadow:0 2px 8px rgba(0,0,0,0.8)}
+.num-highlight{font-family:'JetBrains Mono',monospace;font-weight:900}
+
+/* ===== SLIDE 1: HOOK ===== */
+.hook-title{font-size:clamp(36px,6vw,80px);font-weight:900;line-height:1.15;letter-spacing:-2px;margin-bottom:32px}
+.hook-title .highlight{background:linear-gradient(135deg,var(--mint),#00f5c8,var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hook-subtitle{font-size:clamp(16px,2.2vw,24px);color:var(--text-dim);font-weight:300;letter-spacing:1px}
+.hook-subtitle .arrow{color:var(--mint);margin:0 8px;font-weight:700}
+.hook-badge{display:inline-block;margin-top:48px;padding:12px 28px;border:1px solid var(--mint-dim);border-radius:100px;font-size:14px;color:var(--mint);background:var(--mint-dim);animation:pulse-glow 3s ease-in-out infinite}
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 20px var(--mint-dim)}50%{box-shadow:0 0 40px var(--mint-glow)}}
+
+/* ===== SLIDE 2: PROBLEM ===== */
+.pain-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px;margin-bottom:48px}
+.pain-card{background:var(--surface);border:1px solid rgba(255,71,87,0.2);border-radius:16px;padding:32px 24px;text-align:center;position:relative;opacity:0;transform:translateY(30px);transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
+.pain-card.visible{opacity:1;transform:translateY(0)}
+.pain-card .hours{font-size:48px;font-weight:900;color:var(--red);font-family:'JetBrains Mono',monospace}
+.pain-card .label{font-size:16px;color:var(--text-dim);margin-top:8px}
+.pain-card .x-mark{position:absolute;top:-10px;right:-10px;width:36px;height:36px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;opacity:0;transform:scale(0);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+.pain-card.visible .x-mark{opacity:1;transform:scale(1);transition-delay:0.5s}
+.total-time{text-align:center;font-size:20px;color:var(--text-dim)}
+.total-time strong{color:var(--red);font-size:32px;font-weight:900}
+.strikethrough{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:3px}
+.replacement{color:var(--mint);font-size:32px;font-weight:900;margin-left:16px}
+
+/* ===== SLIDE 3: ONE BUTTON ===== */
+.big-button-demo{text-align:center;margin:40px 0}
+.fake-btn{display:inline-flex;align-items:center;gap:12px;padding:24px 64px;background:linear-gradient(135deg,#1a8a5e,#0d6b48);border-radius:20px;font-size:28px;font-weight:900;color:white;box-shadow:0 12px 48px rgba(0,212,170,0.3);animation:btn-breathe 3s ease-in-out infinite;cursor:default}
+@keyframes btn-breathe{0%,100%{transform:scale(1);box-shadow:0 12px 48px rgba(0,212,170,0.3)}50%{transform:scale(1.03);box-shadow:0 16px 64px rgba(0,212,170,0.5)}}
+.then-text{font-size:24px;color:var(--text-dim);margin-top:32px;text-align:center}
+.then-text strong{color:var(--mint);font-size:28px}
+.time-compare{display:flex;justify-content:center;gap:48px;margin-top:40px;flex-wrap:wrap}
+.time-box{text-align:center;padding:24px 32px;background:var(--surface);border-radius:16px;border:1px solid rgba(255,255,255,0.06);min-width:200px}
+.time-box .val{font-size:48px;font-weight:900;font-family:'JetBrains Mono',monospace}
+.time-box .desc{font-size:14px;color:var(--text-dim);margin-top:8px}
+.time-box.old .val{color:var(--red);text-decoration:line-through;text-decoration-thickness:3px}
+.time-box.new .val{color:var(--mint)}
+.time-box.new{border-color:var(--mint-dim);box-shadow:0 0 30px var(--mint-dim)}
+.vs-text{font-size:48px;font-weight:900;color:var(--text-muted);display:flex;align-items:center}
+
+/* ===== GUI MOCKUP ===== */
+.gui-mockup{background:var(--surface);border:1px solid var(--glass-border);border-radius:16px;overflow:hidden;box-shadow:0 40px 120px rgba(0,0,0,0.6),0 0 60px var(--mint-dim);opacity:0;transform:translateY(40px) scale(0.95);transition:all 1s cubic-bezier(0.16,1,0.3,1)}
+.gui-mockup.visible{opacity:1;transform:translateY(0) scale(1)}
+.gui-titlebar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#0a0e14;border-bottom:1px solid rgba(255,255,255,0.06)}
+.gui-titlebar-left{display:flex;align-items:center;gap:12px}
+.gui-titlebar-btns{display:flex;gap:6px}
+.gui-titlebar-btns span{width:12px;height:12px;border-radius:50%;display:inline-block}
+.gui-serverbar{display:flex;align-items:center;gap:24px;padding:8px 20px;background:rgba(0,0,0,0.3);border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.server-dot{display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.green{background:#2ecc71;box-shadow:0 0 8px #2ecc7188}
+.dot.red{background:var(--red);box-shadow:0 0 8px #ff475788}
+.gui-tabs{display:flex;padding:0 20px;background:rgba(0,0,0,0.15);border-bottom:1px solid rgba(255,255,255,0.04)}
+.gui-tab{padding:10px 20px;font-size:13px;color:var(--text-muted);border-bottom:2px solid transparent}
+.gui-tab.active{color:var(--mint);border-bottom-color:var(--mint)}
+.gui-body{display:grid;grid-template-columns:260px 1fr 320px;min-height:380px}
+.gui-left{padding:20px;border-right:1px solid rgba(255,255,255,0.04);font-size:13px}
+.gui-section-title{font-size:14px;font-weight:700;margin-bottom:12px}
+.gui-select{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text);font-size:12px;margin-bottom:8px}
+.gui-model-ok{color:var(--mint);font-size:11px;margin-bottom:20px}
+.gui-radio-group{display:flex;gap:16px;margin:8px 0 16px}
+.gui-radio{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-dim)}
+.gui-radio .circle{width:14px;height:14px;border-radius:50%;border:2px solid var(--text-muted)}
+.gui-radio.active .circle{border-color:var(--mint);background:radial-gradient(circle,var(--mint) 40%,transparent 41%)}
+.gui-checkbox{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-dim);margin-bottom:8px}
+.gui-checkbox .box{width:16px;height:16px;border-radius:4px;border:1px solid var(--text-muted);display:flex;align-items:center;justify-content:center;font-size:10px}
+.gui-checkbox .box.checked{background:var(--mint);border-color:var(--mint);color:#000}
+.gui-center{padding:24px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.gui-status{font-size:18px;font-weight:700;margin-bottom:8px}
+.gui-progress-bar{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:4px}
+.gui-progress-fill{height:100%;width:5%;background:linear-gradient(90deg,var(--mint),var(--blue));border-radius:3px;animation:pg 8s ease-out forwards}
+@keyframes pg{0%{width:5%}100%{width:72%}}
+.gui-progress-text{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text-dim)}
+.gui-btn{width:80%;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.gui-btn.start{background:#1a8a5e;color:white}
+.gui-btn.preview{background:#2563a8;color:white}
+.gui-btn.stop{background:#c0392b;color:white}
+.gui-btn.queue{background:var(--orange);color:white}
+.gui-right{padding:16px;border-left:1px solid rgba(255,255,255,0.04);font-size:12px}
+.gui-log-title{font-size:13px;font-weight:700;margin-bottom:12px;display:flex;justify-content:space-between}
+.gui-log-box{background:#080b10;border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8;color:var(--text-dim);height:280px;overflow:hidden}
+.log-line{opacity:0;animation:la 0.3s ease forwards}
+.log-line .tag{font-weight:700}
+.log-line .tag.start{color:var(--mint)}.log-line .tag.pack{color:var(--blue)}.log-line .tag.auto{color:var(--orange)}.log-line .tag.plan{color:#a78bfa}.log-line .tag.tts{color:#f59e0b}.log-line .tag.img{color:#ec4899}.log-line .tag.done{color:var(--mint)}
+@keyframes la{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+
+/* ===== RESULTS ===== */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.result-card{border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);opacity:0;transform:translateY(40px);transition:all 0.8s cubic-bezier(0.16,1,0.3,1)}
+.result-card.visible{opacity:1;transform:translateY(0)}
+.result-card:nth-child(2){transition-delay:0.2s}
+.result-image-area{height:260px;position:relative;overflow:hidden}
+.scene-visual{position:absolute;inset:0}
+.warm-scene{width:100%;height:100%;background:linear-gradient(180deg,#2a1f16,#1a1410,#0f0d0b);position:relative;overflow:hidden}
+.warm-scene .figure{position:absolute;bottom:10%;left:50%;transform:translateX(-50%);width:100px;height:170px;background:linear-gradient(180deg,#4a3828,#2a1f15);border-radius:50px 50px 16px 16px;opacity:0.7}
+.warm-scene .figure::before{content:'';position:absolute;top:-28px;left:50%;transform:translateX(-50%);width:46px;height:46px;background:#5a4838;border-radius:50%}
+.warm-scene .figure::after{content:'';position:absolute;top:-36px;left:50%;transform:translateX(-50%);width:52px;height:22px;background:linear-gradient(180deg,#999,#777);border-radius:50% 50% 0 0;opacity:0.6}
+.dark-scene{width:100%;height:100%;background:linear-gradient(180deg,#1a1a1a,#0d0d0d,#050505);position:relative;overflow:hidden}
+.dark-scene .figures{position:absolute;bottom:15%;left:50%;transform:translateX(-50%);display:flex;gap:12px}
+.ghost-fig{width:46px;height:110px;background:linear-gradient(180deg,#2a2a2a,#111);border-radius:23px 23px 8px 8px;opacity:0.6;position:relative}
+.ghost-fig::before{content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);width:28px;height:10px;background:#1a1a1a;border-radius:0 0 50% 50%}
+.result-info{padding:20px 24px;background:var(--surface)}
+.result-genre{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:8px}
+.result-card.touching .result-genre{background:rgba(255,180,80,0.15);color:#ffb450}
+.result-card.horror .result-genre{background:rgba(255,71,87,0.15);color:var(--red)}
+.result-desc{font-size:14px;color:var(--text-dim);line-height:1.6}
+
+/* ===== SCREENSHOT GALLERY ===== */
+.gallery-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:32px}
+.gallery-frame{border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);aspect-ratio:16/9;position:relative}
+.gallery-frame .flabel{position:absolute;bottom:8px;left:8px;padding:3px 8px;background:rgba(0,0,0,0.75);border-radius:4px;font-size:10px;color:var(--mint);font-weight:600;z-index:2}
+
+/* ===== PIPELINE ===== */
+.pipeline-flow{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.pipeline-step{display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0;transform:translateY(20px);transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
+.pipeline-step.visible{opacity:1;transform:translateY(0)}
+.step-icon{width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px}
+.step-icon.s1{background:linear-gradient(135deg,#1a2a3a,#0d1a2a);border:1px solid rgba(74,158,255,0.3)}
+.step-icon.s2{background:linear-gradient(135deg,#2a1a3a,#1a0d2a);border:1px solid rgba(167,139,250,0.3)}
+.step-icon.s3{background:linear-gradient(135deg,#3a1a2a,#2a0d1a);border:1px solid rgba(236,72,153,0.3)}
+.step-icon.s4{background:linear-gradient(135deg,#2a3a1a,#1a2a0d);border:1px solid rgba(245,158,11,0.3)}
+.step-icon.s5{background:linear-gradient(135deg,#1a3a2a,#0d2a1a);border:1px solid rgba(0,212,170,0.3)}
+.step-icon.s6{background:linear-gradient(135deg,#3a2a1a,#2a1a0d);border:1px solid rgba(255,107,53,0.3)}
+.step-label{font-size:13px;font-weight:600;color:var(--text-dim);white-space:nowrap}
+.pipeline-arrow{font-size:24px;color:var(--text-muted);margin:0 8px;opacity:0;transition:all 0.4s ease}
+.pipeline-arrow.visible{opacity:1}
+
+/* ===== FEATURES GRID ===== */
+.features-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.feature-card{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:32px 24px;opacity:0;transform:scale(0.9);transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
+.feature-card.visible{opacity:1;transform:scale(1)}
+.feature-card:hover{border-color:var(--mint-dim);transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,0.4)}
+.feature-emoji{font-size:36px;margin-bottom:12px}
+.feature-name{font-size:18px;font-weight:700;margin-bottom:6px}
+.feature-desc{font-size:13px;color:var(--text-dim);line-height:1.6}
+
+/* ===== QUALITY PROOF ===== */
+.quality-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.quality-item{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:28px;opacity:0;transform:translateY(20px);transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
+.quality-item.visible{opacity:1;transform:translateY(0)}
+.quality-item .qi-label{font-size:13px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px}
+.quality-item .qi-value{font-size:18px;font-weight:700;margin-bottom:4px}
+.quality-item .qi-desc{font-size:13px;color:var(--text-dim);line-height:1.5}
+
+/* ===== PACK COMPARISON ===== */
+.pack-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.pack-card{background:var(--surface);border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);opacity:0;transform:translateY(30px);transition:all 0.6s cubic-bezier(0.16,1,0.3,1)}
+.pack-card.visible{opacity:1;transform:translateY(0)}
+.pack-header{padding:20px 24px;position:relative}
+.pack-header .pack-emoji{font-size:32px}
+.pack-header .pack-name{font-size:18px;font-weight:700;margin-top:8px}
+.pack-body{padding:0 24px 24px}
+.pack-stat{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px}
+.pack-stat .stat-label{color:var(--text-dim)}
+.pack-stat .stat-value{font-weight:600}
+
+/* ===== COMPARISON TABLE ===== */
+.compare-table{width:100%;border-collapse:collapse;margin-top:32px}
+.compare-table th,.compare-table td{padding:16px 20px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.06)}
+.compare-table th{color:var(--text-muted);font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px}
+.compare-table td{font-size:15px}
+.compare-table .them{color:var(--text-muted)}
+.compare-table .us{color:var(--mint);font-weight:700}
+.compare-table tr:hover td{background:rgba(0,212,170,0.03)}
+
+/* ===== TECH STACK ===== */
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.tech-item{background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;text-align:center;opacity:0;transform:scale(0.9);transition:all 0.5s cubic-bezier(0.16,1,0.3,1)}
+.tech-item.visible{opacity:1;transform:scale(1)}
+.tech-item .tech-icon{font-size:32px;margin-bottom:8px}
+.tech-item .tech-name{font-size:14px;font-weight:700;margin-bottom:4px}
+.tech-item .tech-role{font-size:12px;color:var(--text-dim)}
+
+/* ===== CTA ===== */
+#slide-cta{background:radial-gradient(ellipse at center,rgba(0,212,170,0.08),transparent 70%)}
+.cta-title{font-size:clamp(32px,5vw,64px);font-weight:900;text-align:center;margin-bottom:16px}
+.cta-title .count{color:var(--orange)}
+.cta-subtitle{text-align:center;font-size:20px;color:var(--text-dim);margin-bottom:48px}
+.cta-button{display:block;margin:0 auto 24px;padding:20px 60px;background:linear-gradient(135deg,var(--orange),#e55a2d);border:none;border-radius:16px;color:white;font-size:20px;font-weight:700;font-family:'Noto Sans KR',sans-serif;cursor:pointer;box-shadow:0 8px 40px var(--orange-glow);animation:cta-pulse 2s ease-in-out infinite;transition:transform 0.2s}
+.cta-button:hover{transform:scale(1.05)}
+@keyframes cta-pulse{0%,100%{box-shadow:0 8px 40px var(--orange-glow)}50%{box-shadow:0 12px 60px rgba(255,107,53,0.5)}}
+.cta-footer{text-align:center;font-size:14px;color:var(--text-muted);margin-top:32px}
+.cta-benefits{display:flex;justify-content:center;gap:32px;margin-bottom:40px;flex-wrap:wrap}
+.cta-benefit{display:flex;align-items:center;gap:8px;font-size:15px;color:var(--text-dim)}
+.cta-benefit .check{color:var(--mint);font-weight:900;font-size:18px}
+
+/* ===== PROGRESS ===== */
+.progress-track{position:fixed;bottom:0;left:0;width:100%;height:3px;background:rgba(255,255,255,0.05);z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--mint),var(--blue));width:0%;transition:width 0.3s ease}
+.slide-indicators{position:fixed;right:20px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:100}
+.slide-dot{width:6px;height:6px;border-radius:50%;background:var(--text-muted);cursor:pointer;transition:all 0.3s}
+.slide-dot.active{background:var(--mint);box-shadow:0 0 12px var(--mint-glow);transform:scale(1.6)}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:900px){
+.gui-body{grid-template-columns:1fr}.gui-left,.gui-right{display:none}
+.results-grid,.features-grid,.quality-grid,.screenshot-grid{grid-template-columns:1fr}
+.pack-grid{grid-template-columns:1fr}.tech-grid{grid-template-columns:1fr 1fr}
+.gallery-grid{grid-template-columns:1fr 1fr}
+.time-compare{flex-direction:column;align-items:center;gap:16px}
+.compare-table{font-size:13px}
+.slide{padding:40px 20px}
+}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+<div class="slide-indicators" id="slideIndicators"></div>
+
+<!-- ========== 1. HOOK ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="hook-title"><span class="highlight">AI</span>가<br>유튜브 영상을<br>만든다면?</div>
+    <div class="hook-subtitle">대본<span class="arrow">→</span>이미지<span class="arrow">→</span>음성<span class="arrow">→</span>편집<span class="arrow">→</span>업로드</div>
+    <div class="hook-badge">버튼 하나. 사람 개입 0.</div>
+  </div>
+</section>
+
+<!-- ========== 2. PROBLEM ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">영상 하나 만드는 데<br><span class="red">8시간</span></div>
+    <div class="pain-grid">
+      <div class="pain-card" data-delay="0"><div class="x-mark">✕</div><div class="hours">2h</div><div class="label">대본 쓰기</div></div>
+      <div class="pain-card" data-delay="150"><div class="x-mark">✕</div><div class="hours">3h</div><div class="label">이미지 제작</div></div>
+      <div class="pain-card" data-delay="300"><div class="x-mark">✕</div><div class="hours">1h</div><div class="label">음성 녹음</div></div>
+      <div class="pain-card" data-delay="450"><div class="x-mark">✕</div><div class="hours">2h</div><div class="label">편집 + 업로드</div></div>
+    </div>
+    <div class="total-time">합계: <strong class="strikethrough">8시간</strong><span class="replacement">→ 1시간</span></div>
+  </div>
+</section>
+
+<!-- ========== 3. ONE BUTTON ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">버튼 <span class="mint">하나</span>만 누르세요</div>
+    <div class="big-button-demo">
+      <div class="fake-btn">▶ 생산 시작</div>
+    </div>
+    <div class="then-text">누르면 <strong>1시간 후</strong> 완성된 영상이 나옵니다</div>
+    <div class="time-compare">
+      <div class="time-box old"><div class="val">8h</div><div class="desc">수동 제작</div></div>
+      <div class="vs-text">→</div>
+      <div class="time-box new"><div class="val">1h</div><div class="desc">레베리 자동</div></div>
+    </div>
+    <p style="text-align:center;color:var(--text-muted);margin-top:24px;font-size:14px">대본 생성 ~15분 + 이미지 ~20분 + 음성 ~10분 + 편집 ~10분<br>그 사이에 커피 한 잔 하세요 ☕</p>
+  </div>
+</section>
+
+<!-- ========== 4. GUI ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">🎬 <span class="mint">실제 프로그램</span> 화면</div>
+    <div class="gui-mockup">
+      <div class="gui-titlebar">
+        <div class="gui-titlebar-left"><span style="font-size:14px;font-weight:700">🎬 Reverie Studio</span><span style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace">v60.1.0</span></div>
+        <div class="gui-titlebar-btns"><span style="background:#f59e0b"></span><span style="background:#2ecc71"></span><span style="background:#ff4757"></span></div>
+      </div>
+      <div class="gui-serverbar">
+        <span style="color:var(--text-muted)">서버:</span>
+        <div class="server-dot"><span class="dot green"></span> SD WebUI</div>
+        <div class="server-dot"><span class="dot red"></span> TTS</div>
+        <div class="server-dot"><span class="dot green"></span> Claude CLI</div>
+      </div>
+      <div class="gui-tabs"><div class="gui-tab active">🎬 생산</div><div class="gui-tab">📝 자막</div><div class="gui-tab">🖼️ 썸네일</div><div class="gui-tab">⚙️ 시스템</div></div>
+      <div class="gui-body">
+        <div class="gui-left">
+          <div class="gui-section-title">⚙️ 설정</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px">🎬 채널</div>
+          <div class="gui-select">🎭 사기 경보 드라마 채널 ▾</div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:4px;margin-top:12px">🔗 SD 모델</div>
+          <div class="gui-select">meinamix_v12Final.safetensors ▾</div>
+          <div class="gui-model-ok">✅ 권장 모델 설치됨: Meinamix V12Final</div>
+          <div class="gui-section-title" style="margin-top:16px">🎬 생산 설정</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:12px;color:var(--text-dim)">수량</span><div class="gui-select" style="width:60px;text-align:center">1</div><span style="font-size:12px;color:var(--text-dim)">개</span></div>
+          <div class="gui-radio-group"><div class="gui-radio active"><span class="circle"></span> 자동</div><div class="gui-radio"><span class="circle"></span> 수동</div></div>
+          <div style="margin-top:12px">
+            <div class="gui-section-title">🔧 옵션</div>
+            <div class="gui-checkbox"><span class="box"></span> 유튜브 자동 업로드</div>
+            <div class="gui-checkbox"><span class="box checked">✓</span> 썸네일 팝업 건너뛰기</div>
+            <div class="gui-checkbox"><span class="box checked">✓</span> 실패 시 체크포인트부터 재개</div>
+          </div>
+        </div>
+        <div class="gui-center">
+          <div class="gui-status">주제 생성 완료</div>
+          <div class="gui-progress-bar"><div class="gui-progress-fill"></div></div>
+          <div class="gui-progress-text">5% 예상 시간: --</div>
+          <div style="height:16px"></div>
+          <button class="gui-btn start">▶ 생산 시작</button>
+          <button class="gui-btn preview">👁️ 대본 미리보기</button>
+          <button class="gui-btn stop">⬛ 중단</button>
+          <button class="gui-btn queue">+ 큐에 추가</button>
+        </div>
+        <div class="gui-right">
+          <div class="gui-log-title">📋 로그 <span style="font-size:11px;color:var(--text-muted)">지우기</span></div>
+          <div class="gui-log-box" id="logBox">
+            <div class="log-line" style="animation-delay:0.5s"><span class="tag start">[START]</span> 제작 시작: senior / scam_alert / 1개</div>
+            <div class="log-line" style="animation-delay:1s"><span class="tag pack">[PACK]</span> 팩 활성화: 사기 경보 드라마 채널</div>
+            <div class="log-line" style="animation-delay:1.5s">━━━━━━━━━━━━━━━━━━━━</div>
+            <div class="log-line" style="animation-delay:2s">&nbsp;&nbsp;[1/1] 영상 제작 시작</div>
+            <div class="log-line" style="animation-delay:2.5s"><span class="tag auto">[AUTO]</span> 자동 주제: 어머니 유산을 나누러 동네 약국에서...</div>
+            <div class="log-line" style="animation-delay:3s"><span class="tag plan">[PLAN]</span> 스토리 바이블 생성 완료</div>
+            <div class="log-line" style="animation-delay:3.5s"><span class="tag tts">[TTS]</span> 음성 합성 시작 (45턴)...</div>
+            <div class="log-line" style="animation-delay:4s"><span class="tag img">[IMG]</span> SD 이미지 생성 중 (35/45)...</div>
+            <div class="log-line" style="animation-delay:4.5s"><span class="tag done">[DONE]</span> ✅ 영상 생성 완료!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 5. PIPELINE ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">내부에서 일어나는 일</div>
+    <div class="pipeline-flow">
+      <div class="pipeline-step" data-delay="0"><div class="step-icon s1">📝</div><div class="step-label">주제 생성</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step" data-delay="200"><div class="step-icon s2">🤖</div><div class="step-label">AI 대본</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step" data-delay="400"><div class="step-icon s3">🎨</div><div class="step-label">AI 이미지</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step" data-delay="600"><div class="step-icon s4">🔊</div><div class="step-label">AI 음성</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step" data-delay="800"><div class="step-icon s5">🎬</div><div class="step-label">자동 편집</div></div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step" data-delay="1000"><div class="step-icon s6">📺</div><div class="step-label">YouTube</div></div>
+    </div>
+    <p style="text-align:center;color:var(--text-dim);font-size:16px;line-height:1.8;max-width:700px;margin:0 auto">
+      주제를 자동 생성하고, AI가 3파트 대본을 쓰고,<br>
+      장면마다 이미지를 그리고, 캐릭터별 목소리를 입히고,<br>
+      BGM + 효과음 + 자막까지 붙여서 영상으로 조립합니다.<br>
+      <span style="color:var(--mint);font-weight:700">당신은 버튼만 누르면 됩니다.</span>
+    </p>
+  </div>
+</section>
+
+<!-- ========== 6. RESULTS - 감동 ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">결과물: <span style="color:#ffb450">감동 드라마</span></div>
+    <div class="results-grid">
+      <div class="result-card touching">
+        <div class="result-image-area">
+          <div class="scene-visual"><div class="warm-scene">
+            <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 40%,rgba(180,140,80,0.1),transparent 60%)"></div>
+            <div class="figure"></div>
+            <div class="subtitle-overlay"><div class="subtitle-role" style="background:#c8a800;color:#000">아버지</div><div class="subtitle-text">형한테도, 너한테도, 잘못했다.</div></div>
+          </div></div>
+        </div>
+        <div class="result-info"><div class="result-genre" style="background:rgba(255,180,80,0.15);color:#ffb450">🎭 감동 드라마</div><div class="result-desc">따뜻한 세피아 톤, 감정 곡선이 설계된 대본, AI 음성 자동 동기화</div></div>
+      </div>
+      <div class="result-card touching">
+        <div class="result-image-area">
+          <div class="scene-visual"><div style="width:100%;height:100%;background:linear-gradient(180deg,#7a9ab8,#c8a880 35%,#e8c090 45%,#6a8898 65%,#4a6878);position:relative">
+            <div style="position:absolute;top:28%;right:30%;width:36px;height:36px;background:radial-gradient(circle,#ffe0a0,#e8b060);border-radius:50%;filter:blur(3px)"></div>
+            <div class="subtitle-overlay"><div class="subtitle-role" style="background:#c8a800;color:#000">나레이터</div><div class="subtitle-text">바다는 여전히, 그날의 약속을 기억하고 있었다.</div></div>
+          </div></div>
+        </div>
+        <div class="result-info"><div class="result-genre" style="background:rgba(255,180,80,0.15);color:#ffb450">🌅 감동 — 노을 바다</div><div class="result-desc">수채화풍 배경, 골든아워 조명, 잔잔한 BGM이 자동 선택됩니다</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 7. RESULTS - 공포 ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">결과물: <span class="red">공포</span></div>
+    <div class="results-grid">
+      <div class="result-card horror">
+        <div class="result-image-area">
+          <div class="scene-visual"><div class="dark-scene">
+            <div style="position:absolute;top:0;left:0;right:0;height:30%;background:linear-gradient(180deg,rgba(255,255,255,0.03),transparent)"></div>
+            <div class="figures"><div class="ghost-fig"></div><div class="ghost-fig"></div><div class="ghost-fig"></div><div class="ghost-fig"></div></div>
+            <div class="subtitle-overlay"><div class="subtitle-role" style="background:#c0392b;color:#fff">진호</div><div class="subtitle-text">뭐? 당신이 그걸 어떻게 알아,<br>말도 안 돼!</div></div>
+          </div></div>
+        </div>
+        <div class="result-info"><div class="result-genre" style="background:rgba(255,71,87,0.15);color:var(--red)">👻 공포</div><div class="result-desc">모노크롬 톤, 시네마틱 명암, 긴장감 있는 카메라 워크</div></div>
+      </div>
+      <div class="result-card horror">
+        <div class="result-image-area">
+          <div class="scene-visual"><div style="width:100%;height:100%;background:linear-gradient(180deg,#1a1a1a,#0d0d0d,#080808);position:relative">
+            <div style="position:absolute;top:20%;left:50%;transform:translateX(-50%);width:4px;height:60%;background:linear-gradient(180deg,rgba(255,255,255,0.06),transparent)"></div>
+            <div style="position:absolute;top:15%;left:28%;width:45px;height:65%;background:rgba(18,18,18,0.9);border:1px solid rgba(35,35,35,0.5)"></div>
+            <div style="position:absolute;top:15%;right:28%;width:45px;height:65%;background:rgba(18,18,18,0.9);border:1px solid rgba(35,35,35,0.5)"></div>
+            <div class="subtitle-overlay"><div class="subtitle-role" style="background:#c0392b;color:#fff">나레이터</div><div class="subtitle-text">그 복도의 끝에서, 무언가가 기다리고 있었다.</div></div>
+          </div></div>
+        </div>
+        <div class="result-info"><div class="result-genre" style="background:rgba(255,71,87,0.15);color:var(--red)">🌑 공포 — 어둠의 복도</div><div class="result-desc">같은 엔진, 팩만 바꾸면 완전히 다른 분위기의 채널</div></div>
+      </div>
+    </div>
+    <p style="text-align:center;color:var(--text-dim);margin-top:32px;font-size:15px">팩을 바꾸면 그림체, 대본 스타일, 음성, BGM, 효과음이 <span style="color:var(--mint);font-weight:700">전부 자동으로 바뀝니다</span></p>
+  </div>
+</section>
+
+<!-- ========== 8. QUALITY PROOF ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">퀄리티의 <span class="mint">비밀</span></div>
+    <div class="quality-grid">
+      <div class="quality-item" data-delay="0"><div class="qi-label">대본 품질</div><div class="qi-value">📊 포인트 채점 시스템</div><div class="qi-desc">구체적 배경 3개 이상 = 12점, 2중 반전 = 15점, 증거물 활용 = +2점. 점수 미달이면 자동으로 다시 씁니다.</div></div>
+      <div class="quality-item" data-delay="150"><div class="qi-label">감정 분배</div><div class="qi-value">🎭 장르별 감정 비율 강제</div><div class="qi-desc">감동: 슬픔 30~40% + 행복 15~20%. 막장: 분노 17~26% + 절박함 11~17%. calm이 20% 넘으면 거부합니다.</div></div>
+      <div class="quality-item" data-delay="300"><div class="qi-label">캐릭터 일관성</div><div class="qi-value">🧬 Stable Seed + 소품 추적</div><div class="qi-desc">같은 캐릭터는 같은 시드로 그려서 얼굴이 유지됩니다. 이전 컷의 옷과 소품도 기억합니다.</div></div>
+      <div class="quality-item" data-delay="450"><div class="qi-label">글쓰기 규칙</div><div class="qi-value">📝 소설 수준의 구조</div><div class="qi-desc">"밥은 먹었냐?" 같은 대사가 후반에 다른 의미로 재등장. 편지/수첩/사진이 클라이맥스에서 폭발합니다.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 9. PACK SYSTEM ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">🎭 <span class="mint">팩 시스템</span></div>
+    <p style="text-align:center;color:var(--text-dim);margin:-32px 0 40px;font-size:16px">팩 하나 = 채널 하나. 코드 수정 0줄로 새 장르 추가.</p>
+    <div class="pack-grid">
+      <div class="pack-card" data-delay="0">
+        <div class="pack-header" style="background:linear-gradient(135deg,rgba(255,180,80,0.1),transparent)"><div class="pack-emoji">🎭</div><div class="pack-name">감동 드라마</div></div>
+        <div class="pack-body">
+          <div class="pack-stat"><span class="stat-label">그림체</span><span class="stat-value" style="color:#ffb450">따뜻한 수채화</span></div>
+          <div class="pack-stat"><span class="stat-label">핵심 감정</span><span class="stat-value">슬픔 30~40%</span></div>
+          <div class="pack-stat"><span class="stat-label">글쓰기 규칙</span><span class="stat-value">183줄</span></div>
+          <div class="pack-stat"><span class="stat-label">대본 구조</span><span class="stat-value">포인트 채점</span></div>
+        </div>
+      </div>
+      <div class="pack-card" data-delay="150">
+        <div class="pack-header" style="background:linear-gradient(135deg,rgba(255,71,87,0.1),transparent)"><div class="pack-emoji">😱</div><div class="pack-name">공포</div></div>
+        <div class="pack-body">
+          <div class="pack-stat"><span class="stat-label">그림체</span><span class="stat-value" style="color:var(--red)">모노크롬 웹툰</span></div>
+          <div class="pack-stat"><span class="stat-label">핵심 감정</span><span class="stat-value">공포 + 절박</span></div>
+          <div class="pack-stat"><span class="stat-label">글쓰기 규칙</span><span class="stat-value">183줄</span></div>
+          <div class="pack-stat"><span class="stat-label">카메라</span><span class="stat-value">시네마틱 명암</span></div>
+        </div>
+      </div>
+      <div class="pack-card" data-delay="300">
+        <div class="pack-header" style="background:linear-gradient(135deg,rgba(167,139,250,0.1),transparent)"><div class="pack-emoji">🔥</div><div class="pack-name">막장 드라마</div></div>
+        <div class="pack-body">
+          <div class="pack-stat"><span class="stat-label">그림체</span><span class="stat-value" style="color:var(--purple)">강렬한 웹툰</span></div>
+          <div class="pack-stat"><span class="stat-label">핵심 감정</span><span class="stat-value">분노 17~26%</span></div>
+          <div class="pack-stat"><span class="stat-label">반전</span><span class="stat-value">2중 반전 필수</span></div>
+          <div class="pack-stat"><span class="stat-label">증거물</span><span class="stat-value">유언장/카톡/통장</span></div>
+        </div>
+      </div>
+      <div class="pack-card" data-delay="450">
+        <div class="pack-header" style="background:linear-gradient(135deg,rgba(0,212,170,0.1),transparent)"><div class="pack-emoji">📱</div><div class="pack-name">사기 경보</div></div>
+        <div class="pack-body">
+          <div class="pack-stat"><span class="stat-label">특화</span><span class="stat-value" style="color:var(--mint)">보이스피싱 실제 수법</span></div>
+          <div class="pack-stat"><span class="stat-label">소품</span><span class="stat-value">문자/전화/송금</span></div>
+          <div class="pack-stat"><span class="stat-label">모션</span><span class="stat-value">모션툰 지원</span></div>
+          <div class="pack-stat"><span class="stat-label">숏츠</span><span class="stat-value">자동 추출</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 10. FEATURES ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">핵심 기능 <span class="mint">8가지</span></div>
+    <div class="features-grid">
+      <div class="feature-card" data-delay="0"><div class="feature-emoji">🎭</div><div class="feature-name">팩 시스템</div><div class="feature-desc">장르별 대본 규칙, 그림체, 음성, 효과음이 완벽 분리. 팩만 바꾸면 전혀 다른 채널.</div></div>
+      <div class="feature-card" data-delay="100"><div class="feature-emoji">💰</div><div class="feature-name">API 비용 0원</div><div class="feature-desc">Claude CLI 기반 대본 생성. 이미지/음성도 로컬 GPU. 월 운영비 0원.</div></div>
+      <div class="feature-card" data-delay="200"><div class="feature-emoji">🔄</div><div class="feature-name">자동 복구</div><div class="feature-desc">실패해도 체크포인트에서 자동 재시작. 이미 만든 결과물은 다시 만들지 않습니다.</div></div>
+      <div class="feature-card" data-delay="300"><div class="feature-emoji">📱</div><div class="feature-name">숏츠 동시 생성</div><div class="feature-desc">대본 단계부터 숏츠 적합 장면을 자동 선별. 가로+세로 동시 출력.</div></div>
+      <div class="feature-card" data-delay="400"><div class="feature-emoji">🧬</div><div class="feature-name">캐릭터 일관성</div><div class="feature-desc">같은 캐릭터 = 같은 얼굴. Stable Seed + 의상/소품 추적으로 씬 간 일관성 유지.</div></div>
+      <div class="feature-card" data-delay="500"><div class="feature-emoji">📊</div><div class="feature-name">대본 자동 채점</div><div class="feature-desc">감정 분배, 반전 구조, 증거물 활용을 자동 채점. 점수 미달이면 다시 씁니다.</div></div>
+      <div class="feature-card" data-delay="600"><div class="feature-emoji">🎬</div><div class="feature-name">콜드 오프닝</div><div class="feature-desc">클라이맥스 대사를 자동 추출해서 영상 시작에 배치. 시청자를 즉시 끌어들입니다.</div></div>
+      <div class="feature-card" data-delay="700"><div class="feature-emoji">🔐</div><div class="feature-name">소스코드 보호</div><div class="feature-desc">Nuitka 네이티브 바이너리 + Firebase 팩 암호화 + HMAC 서명. 3중 보안.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 11. TECH STACK ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">기술 스택</div>
+    <div class="tech-grid">
+      <div class="tech-item" data-delay="0"><div class="tech-icon">🤖</div><div class="tech-name">Claude CLI</div><div class="tech-role">대본 생성 (비용 0원)</div></div>
+      <div class="tech-item" data-delay="100"><div class="tech-icon">🎨</div><div class="tech-name">Stable Diffusion</div><div class="tech-role">로컬 이미지 생성</div></div>
+      <div class="tech-item" data-delay="200"><div class="tech-icon">🔊</div><div class="tech-name">GPT-SoVITS</div><div class="tech-role">AI 음성 합성</div></div>
+      <div class="tech-item" data-delay="300"><div class="tech-icon">🎬</div><div class="tech-name">Remotion</div><div class="tech-role">영상 자동 편집</div></div>
+      <div class="tech-item" data-delay="400"><div class="tech-icon">🔥</div><div class="tech-name">Firebase</div><div class="tech-role">라이선스 + 팩 보안</div></div>
+      <div class="tech-item" data-delay="500"><div class="tech-icon">🖥️</div><div class="tech-name">CustomTkinter</div><div class="tech-role">데스크탑 GUI</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 12. COMPARISON ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">경쟁사와 <span class="mint">비교</span></div>
+    <table class="compare-table">
+      <thead><tr><th>항목</th><th class="them">일반 AI 영상 도구</th><th class="us">Reverie Studio</th></tr></thead>
+      <tbody>
+        <tr><td>대본 품질</td><td class="them">단순 GPT 출력</td><td class="us">포인트 채점 + 감정 분배 강제</td></tr>
+        <tr><td>이미지 스타일</td><td class="them">장르 구분 없음</td><td class="us">팩별 완전 분리 (수채화/모노크롬/웹툰)</td></tr>
+        <tr><td>캐릭터 일관성</td><td class="them">씬마다 다른 얼굴</td><td class="us">Stable Seed + 의상/소품 추적</td></tr>
+        <tr><td>음성</td><td class="them">TTS 1종</td><td class="us">캐릭터별 목소리 + 감정별 연기</td></tr>
+        <tr><td>숏츠</td><td class="them">수동 편집</td><td class="us">대본 단계부터 자동 설계</td></tr>
+        <tr><td>실패 복구</td><td class="them">처음부터 다시</td><td class="us">체크포인트 자동 재개</td></tr>
+        <tr><td>API 비용</td><td class="them">월 5~15만원</td><td class="us">0원 (Claude CLI + 로컬 GPU)</td></tr>
+        <tr><td>새 장르 추가</td><td class="them">코드 수정 필요</td><td class="us">팩 파일 1개 추가 (코드 0줄)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ========== 13. ROADMAP ========== -->
+<section class="slide">
+  <div class="slide-inner">
+    <div class="section-title">앞으로의 <span class="orange">로드맵</span></div>
+    <div class="quality-grid">
+      <div class="quality-item" data-delay="0"><div class="qi-label">STAGE 1 — 진행 중</div><div class="qi-value">🎬 모션툰 엔진</div><div class="qi-desc">눈깜빡임, 입벌림, 소품 애니메이션. 정적 이미지에서 살아있는 영상툰으로 진화합니다.</div></div>
+      <div class="quality-item" data-delay="150"><div class="qi-label">STAGE 2</div><div class="qi-value">📱 숏츠 자동 추출</div><div class="qi-desc">장편 영상에서 숏츠 적합 장면을 자동 선별, 9:16 세로 프레이밍으로 자동 변환.</div></div>
+      <div class="quality-item" data-delay="300"><div class="qi-label">STAGE 3</div><div class="qi-value">🤖 AI 자율주행 모드</div><div class="qi-desc">트렌드 수집 → 주제 선정 → 영상 생산 → 업로드까지 완전 자동. 사람 개입 0.</div></div>
+      <div class="quality-item" data-delay="450"><div class="qi-label">STAGE 4</div><div class="qi-value">🏪 팩 마켓</div><div class="qi-desc">누구나 팩을 만들고 판매할 수 있는 마켓플레이스. 새 장르 = 새 수익.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 14. CTA ========== -->
+<section class="slide" id="slide-cta">
+  <div class="slide-inner">
+    <div class="cta-title">창업자 플랜<br><span class="count">100명</span> 모집 중</div>
+    <div class="cta-subtitle">AI 영상 자동화의 시작, 지금 합류하세요</div>
+    <div class="cta-benefits">
+      <div class="cta-benefit"><span class="check">✓</span> 조기 접근</div>
+      <div class="cta-benefit"><span class="check">✓</span> 전 팩 무제한</div>
+      <div class="cta-benefit"><span class="check">✓</span> 우선 기술 지원</div>
+      <div class="cta-benefit"><span class="check">✓</span> 향후 모든 업데이트</div>
+    </div>
+    <button class="cta-button">💬 오픈 카톡 참여하기</button>
+    <div class="cta-footer">Reverie Studio — AI 영상 자동화 엔진</div>
+  </div>
+</section>
+
+<script>
+const canvas=document.getElementById('bg-canvas'),ctx=canvas.getContext('2d');let particles=[];
+function resize(){canvas.width=innerWidth;canvas.height=innerHeight}
+function mkP(){return{x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,s:Math.random()*2+0.5,o:Math.random()*0.12+0.04,h:Math.random()>0.7?160:200}}
+function init(){particles=[];for(let i=0;i<40;i++)particles.push(mkP())}
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;if(p.x<0||p.x>canvas.width)p.vx*=-1;if(p.y<0||p.y>canvas.height)p.vy*=-1;ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,Math.PI*2);ctx.fillStyle=`hsla(${p.h},80%,60%,${p.o})`;ctx.fill()});for(let i=0;i<particles.length;i++)for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<150){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle=`rgba(0,212,170,${0.03*(1-d/150)})`;ctx.lineWidth=0.5;ctx.stroke()}}requestAnimationFrame(draw)}
+resize();init();draw();window.addEventListener('resize',()=>{resize();init()});
+const slides=document.querySelectorAll('.slide'),pf=document.getElementById('progressFill'),ic=document.getElementById('slideIndicators');
+slides.forEach((_,i)=>{const d=document.createElement('div');d.className='slide-dot';d.onclick=()=>slides[i].scrollIntoView({behavior:'smooth'});ic.appendChild(d)});
+const dots=document.querySelectorAll('.slide-dot');
+function onScroll(){const st=window.scrollY,dh=document.documentElement.scrollHeight-innerHeight;pf.style.width=(st/dh*100)+'%';slides.forEach((s,i)=>{const r=s.getBoundingClientRect(),inn=s.querySelector('.slide-inner');if(r.top<innerHeight*0.75&&r.bottom>0){inn.classList.add('visible');dots[i].classList.add('active');s.querySelectorAll('.pain-card,.result-card,.pipeline-step,.feature-card,.quality-item,.pack-card,.tech-item').forEach((c,j)=>{setTimeout(()=>c.classList.add('visible'),parseInt(c.dataset.delay||j*150))});s.querySelectorAll('.pipeline-arrow').forEach((a,j)=>{setTimeout(()=>a.classList.add('visible'),j*200+100)});const g=s.querySelector('.gui-mockup');if(g)setTimeout(()=>g.classList.add('visible'),200)}else{dots[i].classList.remove('active')}})}
+window.addEventListener('scroll',onScroll);onScroll();
+</script>
+</body>
+</html>

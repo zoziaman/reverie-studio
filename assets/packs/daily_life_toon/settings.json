@@ -1,0 +1,436 @@
+{
+  "style": {
+    "image_style": "clean Korean serialized webtoon panel, crisp black line art, clean cel shading, medium-shot friendly composition, expressive readable face, natural proportions, simple everyday Korean interior or street background, character occupies 35-60 percent of frame height, clear foreground silhouette, polished webtoon illustration",
+    "model": "flat2d_webtoon"
+  },
+  "tts": {
+    "narrator": "narrator_female",
+    "character_mapping": {
+      "narrator": "narrator_female",
+      "narration": "narrator_female",
+      "나레이션": "narrator_female",
+      "순자": "grandma",
+      "덕배": "grandpa",
+      "미숙": "middle_woman",
+      "진우": "young_man",
+      "나리": "young_woman",
+      "할머니": "grandma",
+      "할아버지": "grandpa",
+      "아줌마": "middle_woman",
+      "청년": "young_man",
+      "여자": "young_woman",
+      "남자": "young_man",
+      "grandma": "grandma",
+      "grandpa": "grandpa",
+      "middle_woman": "middle_woman",
+      "young_man": "young_man",
+      "young_woman": "young_woman"
+    },
+    "default_emotion": "calm",
+    "allowed_emotions": [
+      "calm",
+      "happy",
+      "sad",
+      "worried",
+      "angry",
+      "whisper"
+    ],
+    "emotion_weights": {
+      "calm": 5,
+      "worried": 2,
+      "happy": 2,
+      "sad": 1
+    }
+  },
+  "content": {
+    "duration_minutes": 5,
+    "min_turns": 45,
+    "max_turns": 75,
+    "image_style": "layered daily webtoon"
+  },
+  "assets": {
+    "bgm_folder": "senior/touching",
+    "sfx_folder": "common",
+    "sfx_enabled": true,
+    "sfx_category": "daily",
+    "sfx_intensity": "medium",
+    "use_channel_bgm": true,
+    "use_channel_sfx": true,
+    "use_channel_tts": true
+  },
+  "sfx": {
+    "category_guide": "This is a warm Korean daily-life webtoon video. Use subtle SFX only when they improve the scene. Available tags: rain, night, door, footsteps, whoosh, notification, sad, happy, crying, impact. Avoid horror jumpscare unless the story is explicitly mystery or thriller.",
+    "keyword_map": {
+      "비": "rain",
+      "빗소리": "rain",
+      "현관": "door",
+      "문": "door",
+      "엘리베이터": "notification",
+      "알림": "notification",
+      "전화": "notification",
+      "발소리": "footsteps",
+      "걸어": "footsteps",
+      "울": "crying",
+      "눈물": "crying",
+      "슬프": "sad",
+      "웃": "happy",
+      "장면": "whoosh",
+      "순간": "whoosh"
+    }
+  },
+  "visual": {
+    "character_system_enabled": true,
+    "forced_style": {
+      "force_positive": "clean Korean serialized webtoon panel, crisp black line art, clean cel shading, medium-shot friendly composition, expressive readable face, natural proportions, simple everyday Korean interior or street background, character occupies 35-60 percent of frame height, clear foreground silhouette, polished webtoon illustration",
+      "force_negative": "photorealistic, 3d render, generic anime screenshot, chibi, super deformed, doll face, tiny person, far away character, distorted line art, glitch, over-sharpened, noisy edges, extra limbs, extra fingers, cropped head, cut off hair, messy overlays, floating UI card, readable text, random letters, signage text, watermark, logo, gore, nsfw"
+    },
+    "thumbnail_backgrounds": [
+      "small Korean apartment kitchen at breakfast, warm window light, no people",
+      "quiet convenience store at night, fluorescent light, no people",
+      "apartment hallway with shoes by the door, evening light, no people",
+      "neighborhood cafe corner table, rainy window, no people",
+      "rooftop laundry line at sunset, city apartments behind, no people"
+    ],
+    "safe_fallbacks": [
+      "clean Korean apartment living room, warm afternoon light, no people, webtoon background",
+      "quiet neighborhood street, convenience store glow, no people, webtoon background",
+      "small cafe interior, soft rainy window light, no people, webtoon background"
+    ],
+    "safe_fallback_prompt": "clean Korean webtoon background, simple everyday space, no people, no signs, no text, open center composition"
+  },
+  "visual_storytelling": {
+    "enabled": true,
+    "prompt_strategy": "videotoon_layered_scene",
+    "characters": {
+      "sunja_grandma": {
+        "base": "Sunja, elderly Korean grandmother, short gray hair, cardigan and apron, kind but sharp eyes, compact posture, premium Korean webtoon character",
+        "style": "consistent face, clean black line art, medium-shot readable acting, natural proportions, no text"
+      },
+      "deokbae_grandpa": {
+        "base": "Deokbae, elderly Korean grandfather, silver hair, gentle wrinkles, vest over shirt, stubborn but warm expression, premium Korean webtoon character",
+        "style": "consistent face, clean black line art, medium-shot readable acting, natural proportions, no text"
+      },
+      "misuk_auntie": {
+        "base": "Misuk, middle-aged Korean auntie, practical bob haircut, cardigan, skeptical expressive eyes, neighborhood warmth, premium Korean webtoon character",
+        "style": "consistent face, clean black line art, medium-shot readable acting, natural proportions, no text"
+      },
+      "jinwoo_young_man": {
+        "base": "Jinwoo, Korean young man, neat black hair, casual office-worker outfit, tired but sincere eyes, expressive eyebrows, premium Korean webtoon character",
+        "style": "consistent face, clean black line art, medium-shot readable acting, natural proportions, no text"
+      },
+      "nari_young_woman": {
+        "base": "Nari, Korean young woman, shoulder-length black hair, beige cardigan or casual modern outfit, clear eyes, decisive but warm expression, premium Korean webtoon character",
+        "style": "consistent face, clean black line art, medium-shot readable acting, natural proportions, no text"
+      },
+      "_default": {
+        "base": "Korean webtoon character, everyday outfit, clean foreground cutout",
+        "style": "consistent face, clean line art"
+      }
+    },
+    "sd_model": {
+      "checkpoint": "flat2DAnimerge_v45Sharp.safetensors",
+      "sampler": "DPM++ 2M Karras",
+      "steps": 20,
+      "cfg_scale": 6.5,
+      "width": 1024,
+      "height": 576,
+      "positive_base": "clean Korean serialized webtoon panel, crisp black line art, clean cel shading, medium-shot friendly composition, expressive readable face, natural proportions, simple everyday Korean interior or street background, character occupies 35-60 percent of frame height, clear foreground silhouette, polished webtoon illustration",
+      "negative_base": "photorealistic, 3d render, generic anime screenshot, chibi, super deformed, doll face, tiny person, far away character, distorted line art, glitch, over-sharpened, noisy edges, extra limbs, extra fingers, cropped head, cut off hair, messy overlays, floating UI card, readable text, random letters, signage text, watermark, logo, gore, nsfw",
+      "lora_models": []
+    },
+    "subtitle_style": {
+      "font_family": "Noto Sans KR",
+      "font_size": 34,
+      "font_weight": "bold",
+      "text_color": "#FFFFFF",
+      "stroke_color": "#101018",
+      "stroke_width": 4,
+      "background_enabled": true,
+      "background_color": "rgba(12,12,18,0.62)",
+      "background_padding": 8,
+      "background_radius": 14,
+      "position": "bottom",
+      "margin_bottom": 52
+    },
+    "character_library": {
+      "enabled": true,
+      "auto_generate": false,
+      "library_path": "assets/characters/일상 영상툰",
+      "preferred_expressions": [
+        "neutral",
+        "talking",
+        "fear",
+        "surprise",
+        "sad",
+        "anger",
+        "happy"
+      ],
+      "preferred_poses": [
+        "standing"
+      ],
+      "required_variant_keys": [
+        "neutral_standing",
+        "talking_standing",
+        "fear_standing",
+        "surprise_standing",
+        "sad_standing",
+        "anger_standing",
+        "happy_standing"
+      ],
+      "min_quality_score": 0.6,
+      "face_detection_required": false
+    },
+    "max_consecutive_reuse": 1
+  },
+  "background_library": {
+    "profile": "daily_life_toon",
+    "style_prompt": "clean reusable Korean webtoon background, no people, no signs, no text, open center space for character, simple cel-shaded perspective",
+    "negative_prompt": "people, character, face, readable text, letters, logo, UI card, photorealistic, glitch, clutter",
+    "images_per_location": 3,
+    "location_templates": {
+      "apartment_living_room": {
+        "keywords": [
+          "집",
+          "거실",
+          "아파트",
+          "소파"
+        ],
+        "base_prompt": "Korean apartment living room, sofa, low table, warm afternoon light, clean webtoon background, no people"
+      },
+      "apartment_entrance": {
+        "keywords": [
+          "현관",
+          "우산꽂이",
+          "신발장",
+          "apartment entrance",
+          "umbrella rack",
+          "apartment entrance umbrella rack",
+          "apartment entrance close-up",
+          "apartment entrance final wide shot",
+          "apartment entrance bulletin",
+          "front door",
+          "doorway",
+          "shoe cabinet",
+          "notice board"
+        ],
+        "base_prompt": "Korean apartment entrance, shoe cabinet, umbrella stand, warm hallway light, clean webtoon background, no people"
+      },
+      "apartment_hallway": {
+        "keywords": [
+          "복도",
+          "아파트 복도",
+          "현관문",
+          "apartment hallway",
+          "stairs",
+          "apartment hallway table",
+          "apartment stairs",
+          "corridor",
+          "stairwell"
+        ],
+        "base_prompt": "Korean apartment hallway with doors and soft ceiling light, clean webtoon background, no people"
+      },
+      "elevator_lobby": {
+        "keywords": [
+          "엘리베이터",
+          "로비",
+          "elevator",
+          "lobby"
+        ],
+        "base_prompt": "small Korean apartment elevator lobby, quiet floor signs blurred unreadable, clean webtoon background, no people"
+      },
+      "convenience_store": {
+        "keywords": [
+          "편의점",
+          "가게 앞",
+          "convenience store",
+          "storefront",
+          "convenience store front",
+          "convenience store entrance",
+          "shop front",
+          "store entrance"
+        ],
+        "base_prompt": "quiet Korean convenience store exterior at rainy morning, soft fluorescent glow, clean webtoon background, no people, no readable signs"
+      },
+      "kitchen": {
+        "keywords": [
+          "부엌",
+          "주방",
+          "식탁"
+        ],
+        "base_prompt": "small Korean apartment kitchen, breakfast table, rice cooker, window light, clean webtoon background, no people"
+      },
+      "neighborhood_street": {
+        "keywords": [
+          "동네",
+          "골목",
+          "거리",
+          "길거리",
+          "인도",
+          "city sidewalk",
+          "sidewalk",
+          "neighborhood street",
+          "rainy sidewalk"
+        ],
+        "base_prompt": "quiet Korean neighborhood street, small shops, apartment blocks, sunset light, clean webtoon background, no people"
+      },
+      "cafe": {
+        "keywords": [
+          "카페",
+          "커피",
+          "테이블"
+        ],
+        "base_prompt": "small neighborhood cafe interior, rainy window, two empty chairs, clean webtoon background, no people"
+      },
+      "rooftop": {
+        "keywords": [
+          "옥상",
+          "빨래",
+          "rooftop",
+          "laundry line"
+        ],
+        "base_prompt": "Korean apartment rooftop with laundry lines and city apartments, sunset light, clean webtoon background, no people"
+      }
+    }
+  },
+  "motiontoon": {
+    "enabled": true,
+    "mode": "screen_space",
+    "profile": "advanced",
+    "character_layer_mode": "simple_sprite",
+    "overlay_theme": "default",
+    "default_scene_type": "dialogue",
+    "blink_enabled": true,
+    "mouth_flap_enabled": true,
+    "layered_cutout_enabled": true,
+    "layered_cutout_strength": 1.0,
+    "prop_overlay_enabled": false,
+    "dialogue_panel_enabled": false,
+    "idle_drift_enabled": false,
+    "puppet_bob_enabled": false,
+    "impact_shake_enabled": false,
+    "snap_zoom_enabled": false,
+    "subtitle_pulse_enabled": false,
+    "slow_push_enabled": true,
+    "shorts_vertical_ready": true,
+    "video_toon_local_enabled": true,
+    "video_toon_generation_backend": "comfyui",
+    "video_toon_layered_assets_required": true,
+    "video_toon_workflow_template": "layered_character_reference_v1",
+    "prop_keywords": [],
+    "cast_slots": {
+      "protagonist": {
+        "character_id": "nari_young_woman",
+        "aliases": [
+          "민서",
+          "나리",
+          "nari",
+          "nari_young_woman",
+          "young_woman",
+          "woman",
+          "female lead"
+        ]
+      },
+      "deuteragonist": {
+        "character_id": "jinwoo_young_man",
+        "aliases": [
+          "지우",
+          "진우",
+          "jinwoo",
+          "jinwoo_young_man",
+          "young_man",
+          "man",
+          "male lead"
+        ]
+      },
+      "support": {
+        "character_id": "misuk_auntie",
+        "aliases": [
+          "미숙",
+          "미숙아줌마",
+          "misuk",
+          "misuk_auntie",
+          "middle_woman",
+          "auntie"
+        ]
+      },
+      "elder": {
+        "character_id": "sunja_grandma",
+        "aliases": [
+          "순자",
+          "순자할머니",
+          "sunja",
+          "sunja_grandma",
+          "grandma",
+          "elder_woman"
+        ]
+      },
+      "elder_man": {
+        "character_id": "deokbae_grandpa",
+        "aliases": [
+          "덕배",
+          "덕배할아버지",
+          "deokbae",
+          "deokbae_grandpa",
+          "grandpa",
+          "elder_man"
+        ]
+      }
+    }
+  },
+  "script_quality": {
+    "min_non_narrator_roles": 3,
+    "max_narration_ratio": 0.35,
+    "max_ellipsis_ratio": 0.08,
+    "min_turns_for_gate": 20,
+    "warn_topic_overlap_ratio": 0.25
+  },
+  "thumbnail": {
+    "text_default": "일상툰",
+    "style_guide": "웹툰 표지처럼 캐릭터 표정과 한 줄 상황으로 끌어당긴다. 과장된 사기/막장 문구 대신 생활 속 이상함, 관계 변화, 작은 반전을 강조한다.",
+    "title_hooks": [
+      "그날의 한마디",
+      "이상한 아침",
+      "비밀은 식탁 밑에",
+      "퇴근길에 생긴 일",
+      "옆집 불이 꺼졌다"
+    ]
+  },
+  "sd": {
+    "positive": "clean Korean serialized webtoon panel, crisp black line art, clean cel shading, medium-shot friendly composition, expressive readable face, natural proportions, simple everyday Korean interior or street background, character occupies 35-60 percent of frame height, clear foreground silhouette, polished webtoon illustration",
+    "negative": "(worst quality:1.4), (low quality:1.4), photorealistic, 3d render, generic anime screenshot, chibi, super deformed, doll face, tiny person, far away character, distorted line art, glitch, over-sharpened, noisy edges, extra limbs, extra fingers, cropped head, cut off hair, messy overlays, floating UI card, readable text, random letters, signage text, watermark, logo, gore, nsfw",
+    "cfg_scale": 6.5,
+    "steps": 20,
+    "sampler": "DPM++ 2M Karras",
+    "width": 1024,
+    "height": 576,
+    "checkpoint": "flat2DAnimerge_v45Sharp.safetensors"
+  },
+  "video": {
+    "pause_duration": 0.45,
+    "zoom_speed": 0.6,
+    "fps": 24
+  },
+  "hook_style": {
+    "top_label": "일상툰",
+    "top_color": "#F2C078",
+    "main_color": "#FFFFFF",
+    "bg_color": [
+      20,
+      22,
+      26
+    ],
+    "duration": 3.5
+  },
+  "scene_analyzer": {
+    "art_style_prefix": "clean Korean webtoon panel, crisp black line art, clean cel shading,",
+    "art_style_description": "modern Korean daily-life webtoon video panel with readable character acting",
+    "texture_keywords": "clean lineart, cel shading, simple background, natural everyday lighting",
+    "forbidden_styles": "photorealistic, 3d render, horror manga, monochrome-only, glitch, noisy, readable text, UI overlays",
+    "good_examples": [
+      "clean Korean webtoon panel, (solo young woman worried expression:1.2), apartment hallway, rainy evening, medium shot, natural proportions",
+      "clean Korean webtoon panel, (two neighbors talking calmly:1.2), small apartment entrance, warm light, medium two-shot",
+      "clean Korean webtoon panel, (elderly woman relieved smile:1.2), living room sofa, soft afternoon light, close-up",
+      "clean Korean webtoon panel, quiet neighborhood street after rain, warm shop lights, establishing shot, no text"
+    ]
+  }
+}

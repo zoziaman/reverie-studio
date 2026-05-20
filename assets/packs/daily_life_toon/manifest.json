@@ -1,0 +1,24 @@
+{
+  "pack_id": "daily_life_toon",
+  "pack_name": "일상 영상툰",
+  "version": "1.0.0",
+  "author": "Reverie Studio",
+  "description": "Layered daily-life Korean webtoon video pack tuned for clean 16:9 panels, reusable characters, mouth-flap assembly, and readable acting shots.",
+  "created_at": "2026-05-01T00:00:00+09:00",
+  "reverie_version_min": "1",
+  "genre": "daily_life_toon",
+  "channel_type": "daily_life_toon",
+  "channel_display_name": "일상 영상툰",
+  "required_models": {
+    "checkpoint": "flat2DAnimerge_v45Sharp.safetensors",
+    "vae": null,
+    "lora": []
+  },
+  "features": [
+    "videotoon_layered",
+    "mouth_flap",
+    "character_consistency",
+    "background_library",
+    "shorts_ready"
+  ]
+}

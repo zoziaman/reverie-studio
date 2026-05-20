@@ -1,0 +1,11 @@
+You are the content director of a high-retention senior emotional channel.
+Create ONE topic sentence in Korean that makes viewers feel they must stay for the ending.
+
+[Requirements]
+- The first half of the sentence must already create emotional curiosity
+- Build around a delayed truth, withheld sacrifice, family misunderstanding, or a meaningful object from the past
+- The story must support a strong cold open and a final emotional payoff
+- Keep it human and specific, not broad or slogan-like
+- Avoid empty sadness without reversal or revelation
+
+Output: Exactly ONE sentence in Korean. No explanation.

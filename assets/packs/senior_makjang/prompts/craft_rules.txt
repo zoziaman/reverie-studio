@@ -1,0 +1,182 @@
+[CRAFT RULES - 막장 드라마 작법]
+
+== 기본 규칙 ==
+1) Write EXACTLY {{target_turns}} turns — no fewer, no more.
+   - Minimum dialogue turns (non-narration): {{min_dialogue}}
+   - Maximum narration turns: {{max_narration}}
+   ★ COUNT CAREFULLY: If you write more than {{max_narration}} narration turns, the script WILL be rejected.
+   ★ Maximum 2 consecutive narration turns. After 2 narration, the NEXT turn MUST be character dialogue.
+2) Show, Don't Tell: Instead of "she was angry", write "the glass shattered against the wall."
+3) Dialogue to narration ratio = 7:3. Narration ONLY for scene transitions.
+   - Every scene MUST have character dialogue. Pure-narration scenes are FORBIDDEN.
+4) No repetition: never re-explain existing information. Always add new developments.
+5) Ellipsis: ONLY "..." allowed. Never ". . ." — never end sentences with commas.
+6) voice_type must match the character's age/gender accurately.
+7) Character names: common Korean names that indicate gender ONLY!
+
+== 막장 드라마 전용 작법 ==
+8) 갈등 에스컬레이션 구조:
+   - 도입: 표면적 평화 (텐션 3/10) — 가족 모임, 식사 자리
+   - 발단: 작은 균열 (텐션 5/10) — 의미심장한 한 마디, 눈빛
+   - 폭발: 진실 폭로 (텐션 8/10) — 비밀, 배신, 돈 문제
+   - 대치: 극한 대립 (텐션 10/10) — 고성, 물건 깨짐, 나가라
+   - 결말: 허탈한 잔해 (텐션 6/10) — 모두가 상처받고 남은 침묵
+
+9) 갈등 기법:
+   - 반전은 최소 2회: 1차 반전 (비밀 폭로) + 2차 반전 (숨겨진 진실)
+   - 모든 캐릭터에게 비밀이 하나씩 있어야 함
+   - "착한 사람 vs 나쁜 사람" 이분법 금지 — 모두 사정이 있음
+   - 돈, 유산, 이혼, 불륜, 출생의 비밀 등 자극적 소재 적극 사용
+   - 막장이되 개연성 유지 — "왜 저 행동을 했는지" 동기 명확
+
+10) 대사 톤 가이드:
+   - 어른들: 권위적이지만 내면은 불안 ("닥쳐!", 하지만 손이 떨림)
+   - 젊은 세대: 존대 → 반말 전환으로 감정 폭발 표현
+   - 최대 임팩트 대사: 짧고 냉정한 한 마디 ("다 알아.", "끝이야.")
+   - 침묵과 소리의 대비: 고성 후 갑자기 조용해지는 장면
+
+11) Vary sentence length: 대치 장면 = 초단문 연속 (3~8자), 폭로 = 중간 (10~20자), 나레이션 = 담담하게 (15~25자).
+12) sfx_tag는 충격적 순간에 집중 사용 (전체 턴의 12~18%).
+
+== 🔴 MANDATORY: 구체적 배경 설정 (12점 기준 — 누락 시 감점) 🔴 ==
+반드시 도입부에 3개 이상의 구체적 숫자/정보 포함 필수:
+- 연도: "2012년", "IMF 직후", "코로나 봉쇄가 막 풀린 2022년"
+- 장소: "서울 강남구 아파트", "경기도 광주 시골 집", "부산 해운대 근처"
+- 금액/비율/나이: "30억 유산", "20년 결혼생활", "예순두 살 시어머니"
+★ "어느 집에서", "한 가족이" 같은 모호한 설정 금지.
+★ 예시: "2018년, 서울 강남 48평 아파트. 결혼 22년차 부부의..."
+
+== 🔴 MANDATORY: 다층 반전 (15점 기준 — 2중 반전 필수) 🔴 ==
+반드시 최소 2중 반전 구조 포함:
+- 1차 반전: 비밀 폭로 (유산 문제, 출생의 비밀, 불륜 폭로 등)
+- 2차 반전: 숨겨진 진실 ("나쁜 사람"으로 보이던 인물에게 다른 사정이 있었음)
+★ Pattern: A가 악인이라고 생각했는데 → 실은 B가 더 큰 문제를 숨기고 있었음
+★ 단순 "착한 vs 나쁜" 이분법 금지 — 모두 사정이 있고 모두 틀림
+★ 2차 반전이 1차보다 더 충격적이어야 함
+
+== 🔴 MANDATORY: 증거/문서 역할 (보너스 +2점) 🔴 ==
+반드시 증거나 문서가 판도를 뒤집는 역할을 해야 함:
+- 유언장, 통장, 계약서 (재산 분쟁에서 결정적 역할)
+- 문자/카톡 스크린샷 (불륜/거짓말 증거)
+- 녹취록, 영상 (권력자의 약점)
+- 오래된 편지 (출생의 비밀 폭로)
+★ 증거물은 이야기 초반에 언급 → 클라이맥스에서 폭발적 등장
+
+== 🔴 MANDATORY: 도덕적 딜레마 (보너스 +3점) 🔴 ==
+누가 악인인지 모호해야 함. 시청자가 "나라면 어쩌지?" 고민하게:
+- 가난 때문에 나쁜 선택을 한 사람 (악인인가? 피해자인가?)
+- 가족을 위해 도덕을 어긴 사람 (용서받아야 하나?)
+- 진실을 알리면 더 큰 피해가 생기는 상황
+★ 쉽게 판단할 수 없는 상황이 좋은 막장 드라마의 핵심
+
+== 🔴 MANDATORY: 최소 4인 캐릭터 구성 🔴 ==
+최소 4명의 구별되는 캐릭터 필수:
+1. 시어머니/할머니 — 권위적이지만 내면 불안
+2. 며느리/아들 — 억눌렸지만 폭발 직전
+3. 갈등을 숨기거나 부추기는 인물 — 비밀을 아는 조연
+4. 나레이터
+★ 각 캐릭터가 비밀을 하나씩 가지고 있어야 함
+
+== 🔴 MANDATORY: 감각적 디테일 (12점 기준) 🔴 ==
+추상적 감정 설명 금지. 신체/행동으로 폭발:
+- "화가 났다" ❌ → "유리컵이 벽에 부딪혀 산산조각 났습니다" ✅
+- "슬펐다" ❌ → "입술을 꽉 깨물었지만 눈물이 뺨을 타고 흘렀습니다" ✅
+- 손떨림, 눈빛, 목소리 갈라짐 등 구체적 신체 반응 필수
+★ 파트당 최소 3개의 구체적 행동/감각 묘사 포함
+
+== 🔴 MANDATORY: 제목 가이드 (5점 기준) 🔴 ==
+제목은 반드시 클릭을 유도하는 충격/반전 암시형으로:
+- 반전 암시형: "시어머니가 며느리에게 숨긴 것", "30년 결혼의 진실"
+- 의문형: "왜 그날 며느리는 유언장을 찢었나?", "아들은 왜 어머니 편을 안 들었나"
+- 폭로형: "유산 전부를 가져간 사람", "이혼하자는 말 뒤에 숨겨진 음모"
+★ "충격적인 가족 이야기", "막장 드라마" 같은 직접 설명형 제목 금지
+
+== 🔴 MANDATORY EMOTION DISTRIBUTION (STRICT!) 🔴 ==
+This is the most important rule. You MUST follow this:
+
+For {{target_turns}} turns, aim for this distribution:
+| Emotion   | Count  | %       | When to use |
+|-----------|--------|---------|-------------|
+| angry     | 6-9    | 17-26%  | Rage, confrontation, explosion — the CORE makjang emotion |
+| desperate | 4-6    | 11-17%  | Trapped, cornered, no way out, begging |
+| sad       | 4-6    | 11-17%  | Aftermath, loss, betrayal aftermath, regret |
+| worried   | 3-5    | 9-14%   | Suspicion, dread, secret about to be exposed |
+| calm      | 3-5    | 9-14%   | Cold declarations, surface peace, icy control |
+| whisper   | 3-4    | 9-11%   | Secrets, conspiracies, "..." silence beats, threats |
+| happy     | 1-2    | 3-6%    | False peace before storm, ironic joy |
+
+★ MINIMUM REQUIREMENTS (if not met, script is rejected): ★
+- angry: at least 4 turns
+- desperate: at least 2 turns
+- sad: at least 2 turns
+- whisper: at least 2 turns
+- At least 4 different emotions used total
+- calm: maximum 25% (about 8 turns for 35-turn script)
+- happy: maximum 10% (this is makjang, not a comedy)
+
+★ COMMON MISTAKE — DO NOT DO THIS: ★
+❌ Narrator emotion always "calm" → Results in 60%+ calm → REJECTED!
+✅ Narrator emotion varies by scene tension:
+   - Surface peace: "calm" (e.g., "가족들이 식탁에 모여 앉았다.")
+   - Suspicion building: "worried" (e.g., "하지만 아무도 눈을 마주치지 않았다.")
+   - Secret revealed: "whisper" (e.g., "그 순간... 봉투 안의 서류가 떨어졌다.")
+   - Aftermath: "sad" (e.g., "텅 빈 거실에 시계 소리만 남았다.")
+
+★ EXAMPLE: Good emotion distribution for Part 2 (35 turns): ★
+turns 1-7: calm(2), worried(3), whisper(2) — surface tension
+turns 8-15: angry(3), worried(2), whisper(1), desperate(1), sad(1) — cracks appear
+turns 16-25: angry(4), desperate(3), sad(2), whisper(1) — explosion
+turns 26-35: sad(3), desperate(2), angry(2), whisper(1), calm(1), worried(1) — aftermath
+→ Total: angry=9, desperate=6, sad=6, worried=6, whisper=5, calm=3, happy=0 ✅
+
+== 🔴 MANDATORY SILENCE BEATS (STRICT!) 🔴 ==
+Each part MUST include exactly 3-5 silence beats.
+A silence beat is a turn where the text is ONLY: "..."
+(just three dots, nothing else)
+The role is "나레이션" and the emotion is "whisper".
+
+Place silence beats:
+- After a shocking revelation (the truth hits — let it sink in)
+- After someone screams or slams the door (sudden silence = maximum impact)
+- Before the final devastating line (builds unbearable anticipation)
+- When two characters stare at each other without speaking
+
+Example:
+{{"role": "나레이션", "character": "narrator", "text": "...", "emotion": "whisper"}}
+
+== 🔴 MANDATORY CHARACTER ACTIONS (STRICT!) 🔴 ==
+Characters MUST take at least 4 concrete physical actions per part:
+- CONFRONT: 대면하기, 따지기, 증거 내밀기, 눈 마주치기
+- REVEAL: 비밀 폭로, 서류/사진 꺼내기, 진실 터뜨리기
+- ESCAPE: 나가버리기, 문 닫기, 전화 끊기, 등 돌리기
+- DESTROY: 물건 깨기, 서류 찢기, 반지 벗어 놓기, 사진 뒤집기
+
+❌ WRONG: Characters just argue with words for 15 turns straight
+✅ RIGHT: She throws the envelope → papers scatter → he picks one up → reads it → goes pale → she turns to leave
+
+== DIALOGUE RULES ==
+- Characters speak naturally — no exposition dumps
+- Rage makes people speak in short bursts: "뭐라고?" "거짓말." "나가."
+- Interrupted sentences show loss of control: "내가 언제... 아니, 넌 자격이 없어!"
+- Maximum 3 sentences per dialogue turn
+- Impact lines = 1 sentence maximum ("다 알고 있었어.")
+- 존대→반말 전환 = 감정 폭발 신호
+
+== STRUCTURE PER SCENE ==
+1. Surface calm (everyone pretending things are fine)
+2. First crack (a look, a word, a misplaced item)
+3. Escalation (each revelation makes things worse)
+4. Explosion (all masks come off, truth erupts)
+5. Wreckage/Cliffhanger (the silence after the storm)
+
+== FORBIDDEN ==
+- Calm, reasonable conflict resolution (this is makjang!)
+- Characters forgiving too easily (real betrayal leaves scars)
+- Explaining motivations through narration (show through ACTIONS)
+- One-dimensional villains (even the "bad" character has reasons)
+- Physical violence descriptions (emotional violence only)
+- Using [calm] as default emotion for ALL narration
+- Characters being passive for more than 3 consecutive turns
+- More than 2 consecutive turns of same character (dialogue = exchange)
+
+ALL dialogue text must be written in Korean.

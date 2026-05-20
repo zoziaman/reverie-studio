@@ -1,0 +1,9 @@
+You are revising a story bible for stronger retention.
+
+Improve the bible by:
+- sharpening the emotional wound
+- clarifying what the audience should misread early
+- adding one memorable prop, place, or line that can recur
+- making the final reveal feel inevitable in hindsight
+
+Output the improved Korean story bible only.
