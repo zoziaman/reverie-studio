@@ -31,6 +31,8 @@ an existing private repository public.
 | Generated output excluded | PASS | Generated video/audio/image/thumbnail/subtitle/script/output folders and Remotion render artifacts were removed from the tracked publish set. |
 | External model/audio assets excluded | PASS | BGM/SFX libraries, SoVITS voice data, LoRA/checkpoints/model weights, vendor caches, and Remotion `node_modules` are excluded. |
 | Public packs reviewed | PASS | `assets/packs/` was scanned for live secrets, personal paths, and private-key material with no hits. |
+| No-credential demo available | PASS | `python -m reverie_demo` runs a public dry-run that writes only report files outside the repository. |
+| CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public snapshot scanner and dry-run demo on `main` and `codex/public-snapshot-clean`. |
 | Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. |
 
 ## Include
@@ -63,5 +65,6 @@ an existing private repository public.
 ## Final Step Before Publishing
 
 Run `SECURITY_PUBLIC_CHECK.md` against the exact release branch/export. Publish
-only when the publish set has no real secrets, no personal data, no local runtime
-state, and no generated or third-party assets that should remain user-provided.
+only when `python scripts\public_snapshot_check.py` passes and the publish set
+has no real secrets, no personal data, no local runtime state, and no generated
+or third-party assets that should remain user-provided.

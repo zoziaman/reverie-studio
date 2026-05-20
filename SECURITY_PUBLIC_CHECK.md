@@ -35,6 +35,7 @@ also been scanned or replaced by a clean release branch/export.
 Run these against the exact release directory or branch:
 
 ```powershell
+python scripts\public_snapshot_check.py
 rg -n "AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|ya29\.[A-Za-z0-9_-]+|xox[baprs]-[A-Za-z0-9-]{20,}|BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY|private_key|client_secret|firebase-adminsdk"
 rg -n "C:\\Users\\|C:/Users/|@gmail\.com|@naver\.com|@daum\.net|010[- ]?[0-9]{4}[- ]?[0-9]{4}"
 git ls-files | rg -i "(^|/)(\.env|.*token.*|.*credential.*|.*secret.*|.*oauth.*|.*session.*|.*memory.*|.*\.db|.*\.sqlite|.*\.pickle|.*\.pkl|.*\.log)$|(^|/)(daily|\.opennexus|\.claude|logs|data/logs|data/backups|src/data/logs)(/|$)"

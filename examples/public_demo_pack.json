@@ -1,0 +1,31 @@
+{
+  "pack_id": "public_demo",
+  "name": "Public Demo Pack",
+  "purpose": "Show the repeatable Reverie Studio workflow without external models, credentials, generated media, or private channel data.",
+  "target_runtime_seconds": 10,
+  "style": {
+    "visual": "placeholder storyboard frames",
+    "voice": "placeholder narration",
+    "subtitle": "plain review captions",
+    "music": "not included"
+  },
+  "story_beats": [
+    {
+      "role": "narrator",
+      "text": "A creator wants to test a repeatable local video workflow without exposing private assets."
+    },
+    {
+      "role": "operator",
+      "text": "The studio maps the idea into scenes, placeholder visuals, voice slots, captions, and review gates."
+    },
+    {
+      "role": "narrator",
+      "text": "The dry run stops before upload and leaves an auditable report instead of publishing anything."
+    }
+  ],
+  "expected_gates": [
+    "no_credentials",
+    "no_generated_media",
+    "manual_upload_review"
+  ]
+}
