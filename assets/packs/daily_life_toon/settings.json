@@ -317,8 +317,48 @@
     "video_toon_layered_assets_required": true,
     "video_toon_workflow_template": "layered_character_reference_v1",
     "prop_keywords": [],
+    "actor_pool": {
+      "nari_young_woman": {
+        "character_id": "nari_young_woman",
+        "visual_identity": "Nari, recurring young woman actor with shoulder-length black hair, clear decisive eyes, and a warm modern casual look",
+        "voice_profile": "young_woman",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "jinwoo_young_man": {
+        "character_id": "jinwoo_young_man",
+        "visual_identity": "Jinwoo, recurring young man actor with neat black hair, tired sincere eyes, and casual office-worker styling",
+        "voice_profile": "young_man",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "misuk_auntie": {
+        "character_id": "misuk_auntie",
+        "visual_identity": "Misuk, recurring middle-aged auntie actor with practical bob haircut, skeptical expressive eyes, and neighborhood warmth",
+        "voice_profile": "middle_woman",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "sunja_grandma": {
+        "character_id": "sunja_grandma",
+        "visual_identity": "Sunja, recurring elderly grandmother actor with short gray hair, cardigan and apron, compact posture, and kind sharp eyes",
+        "voice_profile": "grandma",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "deokbae_grandpa": {
+        "character_id": "deokbae_grandpa",
+        "visual_identity": "Deokbae, recurring elderly grandfather actor with silver hair, gentle wrinkles, vest over shirt, and stubborn warm expression",
+        "voice_profile": "grandpa",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      }
+    },
+    "role_casting_contract": {
+      "enabled": true,
+      "strict_actor_refs": true,
+      "allow_background_extras": true,
+      "assignment_key": "role_casting",
+      "required_scene_fields": ["scene_id", "role_id", "actor_id", "emotion", "shot_type"]
+    },
     "cast_slots": {
       "protagonist": {
+        "actor_id": "nari_young_woman",
         "character_id": "nari_young_woman",
         "aliases": [
           "민서",
@@ -331,6 +371,7 @@
         ]
       },
       "deuteragonist": {
+        "actor_id": "jinwoo_young_man",
         "character_id": "jinwoo_young_man",
         "aliases": [
           "지우",
@@ -343,6 +384,7 @@
         ]
       },
       "support": {
+        "actor_id": "misuk_auntie",
         "character_id": "misuk_auntie",
         "aliases": [
           "미숙",
@@ -354,6 +396,7 @@
         ]
       },
       "elder": {
+        "actor_id": "sunja_grandma",
         "character_id": "sunja_grandma",
         "aliases": [
           "순자",
@@ -365,6 +408,7 @@
         ]
       },
       "elder_man": {
+        "actor_id": "deokbae_grandpa",
         "character_id": "deokbae_grandpa",
         "aliases": [
           "덕배",

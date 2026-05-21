@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from config.pack_validator import PackValidator
 
 
@@ -291,3 +294,23 @@ def test_pack_validator_warns_for_legacy_videotoon_cast_without_actor_pool():
 
     assert result.is_valid is True
     assert any("actor_pool missing" in warning for warning in result.warnings)
+
+
+def test_public_videotoon_packs_use_actor_pool_contract():
+    validator = PackValidator()
+    repo_root = Path(__file__).resolve().parents[1]
+
+    for pack_name in ("daily_life_toon", "mystery_toon"):
+        settings_path = repo_root / "assets" / "packs" / pack_name / "settings.json"
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        motiontoon = settings["motiontoon"]
+
+        result = validator.validate_settings(settings)
+
+        assert result.is_valid is True, f"{pack_name}: {result.errors}"
+        assert "actor_pool" in motiontoon
+        assert "role_casting_contract" in motiontoon
+        assert not any("actor_pool missing" in warning for warning in result.warnings)
+        for slot_name, slot_data in motiontoon["cast_slots"].items():
+            assert slot_data.get("actor_id"), f"{pack_name}.{slot_name} missing actor_id"
+            assert slot_data["actor_id"] in motiontoon["actor_pool"]

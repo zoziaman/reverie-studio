@@ -152,12 +152,51 @@
     "video_toon_layered_assets_required": true,
     "video_toon_workflow_template": "layered_character_reference_v1",
     "prop_keywords": [],
+    "actor_pool": {
+      "nari_young_woman": {
+        "character_id": "nari_young_woman",
+        "visual_identity": "Nari, recurring observer actor with shoulder-length black hair, alert decisive eyes, and modern casual styling",
+        "voice_profile": "young_woman",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "jinwoo_young_man": {
+        "character_id": "jinwoo_young_man",
+        "visual_identity": "Jinwoo, recurring skeptic actor with neat casual clothes, tired observant eyes, and restrained mystery-toon acting",
+        "voice_profile": "young_man",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "misuk_auntie": {
+        "character_id": "misuk_auntie",
+        "visual_identity": "Misuk, recurring witness actor with practical bob haircut, skeptical gaze, and grounded neighborhood presence",
+        "voice_profile": "middle_woman",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "sunja_grandma": {
+        "character_id": "sunja_grandma",
+        "visual_identity": "Sunja, recurring elder actor with short gray hair, cardigan and apron, suspicious but composed expression",
+        "voice_profile": "grandma",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      },
+      "fake_manager": {
+        "character_id": "fake_manager",
+        "visual_identity": "Recurring ambiguous building-manager actor with neat jacket, controlled smile, and suspicious middle-aged presence",
+        "voice_profile": "middle_man",
+        "required_variants": ["neutral_standing", "talking_standing", "fear_standing", "surprise_standing", "sad_standing", "anger_standing", "happy_standing"]
+      }
+    },
+    "role_casting_contract": {
+      "enabled": true,
+      "strict_actor_refs": true,
+      "allow_background_extras": true,
+      "assignment_key": "role_casting",
+      "required_scene_fields": ["scene_id", "role_id", "actor_id", "emotion", "shot_type"]
+    },
     "cast_slots": {
-      "observer": {"character_id": "nari_young_woman", "aliases": ["나리", "관찰자", "young_woman"]},
-      "skeptic": {"character_id": "jinwoo_young_man", "aliases": ["진우", "청년", "young_man"]},
-      "witness": {"character_id": "misuk_auntie", "aliases": ["미숙", "아줌마", "middle_woman"]},
-      "elder": {"character_id": "sunja_grandma", "aliases": ["순자", "할머니", "grandma"]},
-      "suspect": {"character_id": "fake_manager", "aliases": ["관리인", "남자", "manager"]}
+      "observer": {"actor_id": "nari_young_woman", "character_id": "nari_young_woman", "aliases": ["나리", "관찰자", "young_woman"]},
+      "skeptic": {"actor_id": "jinwoo_young_man", "character_id": "jinwoo_young_man", "aliases": ["진우", "청년", "young_man"]},
+      "witness": {"actor_id": "misuk_auntie", "character_id": "misuk_auntie", "aliases": ["미숙", "아줌마", "middle_woman"]},
+      "elder": {"actor_id": "sunja_grandma", "character_id": "sunja_grandma", "aliases": ["순자", "할머니", "grandma"]},
+      "suspect": {"actor_id": "fake_manager", "character_id": "fake_manager", "aliases": ["관리인", "남자", "manager"]}
     }
   },
   "script_quality": {
