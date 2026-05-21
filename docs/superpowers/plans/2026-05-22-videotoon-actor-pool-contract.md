@@ -289,3 +289,31 @@ Generation requests use:
 
 Run: `pytest tests/test_videotoon_local.py -q`
 Expected: all tests pass.
+
+### Task 10: Migrate Public Video-Toon Packs And Factory Wiring
+
+**Files:**
+- Modify: `assets/packs/daily_life_toon/settings.json`
+- Modify: `assets/packs/mystery_toon/settings.json`
+- Modify: `src/pipeline/orchestrator.py`
+- Modify: `src/utils/videotoon_contract.py`
+- Modify: `tests/test_pack_validator.py`
+- Modify: `tests/test_videotoon_contract.py`
+- Modify: `tests/test_videotoon_local.py`
+
+- [x] **Step 1: Add actor pools to public video-toon packs**
+
+Add `motiontoon.actor_pool`, `motiontoon.role_casting_contract`, and `cast_slots.*.actor_id` while preserving legacy `character_id`.
+
+- [x] **Step 2: Expand cast slot aliases into role casting**
+
+`role_casting_from_motiontoon_slots(...)` maps both slot names and slot aliases to the chosen `actor_id`.
+
+- [x] **Step 3: Wire MediaFactory to the active pack contract**
+
+`_write_videotoon_production_bundle(...)` reads `get_motiontoon_config()`, passes role casting into `build_scene_specs_from_production(...)`, and passes `actor_pool` / `role_casting` into `write_production_bundle(...)`.
+
+- [x] **Step 4: Verify**
+
+Run: `pytest tests/test_pack_validator.py tests/test_videotoon_contract.py tests/test_videotoon_local.py -q`
+Expected: all tests pass.

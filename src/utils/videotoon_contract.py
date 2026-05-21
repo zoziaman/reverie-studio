@@ -49,6 +49,10 @@ def role_casting_from_motiontoon_slots(cast_slots: Mapping[str, Any]) -> Dict[st
         actor_id = str(slot_data.get("actor_id") or slot_data.get("character_id") or "").strip()
         if actor_id:
             casting[str(role_id)] = actor_id
+            for alias in list(slot_data.get("aliases") or []):
+                alias_key = str(alias or "").strip()
+                if alias_key:
+                    casting.setdefault(alias_key, actor_id)
     return casting
 
 

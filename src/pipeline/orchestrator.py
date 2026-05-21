@@ -417,22 +417,33 @@ class MediaFactory:
     ) -> Optional[Dict[str, Any]]:
         """Materialize the current production plan into the local VideoToon bundle contract."""
         try:
+            from config.pack_config import get_motiontoon_config
             from modules_pro.videotoon_local import (
                 VideoToonLocalWorkspace,
                 build_scene_specs_from_production,
             )
+            from utils.videotoon_contract import role_casting_from_motiontoon_slots
 
             workspace = VideoToonLocalWorkspace.from_settings(config)
+            motiontoon = get_motiontoon_config()
+            actor_pool = dict(getattr(motiontoon, "actor_pool", {}) or {})
+            role_casting = role_casting_from_motiontoon_slots(getattr(motiontoon, "cast_slots", {}) or {})
             scenes = build_scene_specs_from_production(
                 script_list=script_list,
                 image_prompts=image_prompts,
                 scene_analysis_cache=scene_analysis_cache,
+                role_casting=role_casting,
             )
             if not scenes:
                 safe_print("[VideoToon] storyboard bundle skipped: no scenes")
                 return None
 
-            manifest = workspace.write_production_bundle(project_name, scenes)
+            manifest = workspace.write_production_bundle(
+                project_name,
+                scenes,
+                actor_pool=actor_pool,
+                role_casting=role_casting,
+            )
             message = (
                 f"[VideoToon] storyboard bundle saved: {manifest['manifest_path']} "
                 f"({manifest['scene_count']} scenes), progress: {manifest.get('progress_path')}"

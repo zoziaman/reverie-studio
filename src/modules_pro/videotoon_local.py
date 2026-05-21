@@ -303,6 +303,9 @@ def build_scene_specs_from_production(
         emotion = str(prompt_data.get("emotion") or turn.get("emotion") or "")
         shot_type = str(prompt_data.get("shot_type") or prompt_data.get("camera_shot") or "")
         motion_preset = str(prompt_data.get("motion_preset") or "")
+        is_background_extra = bool(prompt_data.get("is_background_extra", False))
+        if role_casting and role_id.strip().lower() in {"narrator", "narration"} and not actor_id:
+            is_background_extra = True
 
         if index in analyzed:
             scene = VideoToonSceneSpec.from_scene_result(analyzed[index])
@@ -317,6 +320,8 @@ def build_scene_specs_from_production(
                 updates["shot_type"] = shot_type
             if not scene.motion_preset and motion_preset:
                 updates["motion_preset"] = motion_preset
+            if not scene.is_background_extra and is_background_extra:
+                updates["is_background_extra"] = True
             if not scene.text and turn.get("text"):
                 updates["text"] = str(turn.get("text") or "")
             if not scene.speaker and (turn.get("role") or turn.get("speaker")):
@@ -346,7 +351,7 @@ def build_scene_specs_from_production(
                 camera_shot=str(prompt_data.get("camera_shot") or ""),
                 shot_type=shot_type,
                 motion_preset=motion_preset,
-                is_background_extra=bool(prompt_data.get("is_background_extra", False)),
+                is_background_extra=is_background_extra,
                 key_props=[str(p) for p in list(prompt_data.get("key_props") or [])] if isinstance(prompt_data, dict) else [],
                 sd_prompt=prompt_text,
                 continuity_hint=str(prompt_data.get("continuity_hint") or ""),

@@ -10,7 +10,7 @@ from utils.videotoon_contract import (
 def test_role_casting_from_motiontoon_slots_prefers_actor_id():
     casting = role_casting_from_motiontoon_slots(
         {
-            "victim": {"actor_id": "actor_woman_01", "character_id": "legacy_woman"},
+            "victim": {"actor_id": "actor_woman_01", "character_id": "legacy_woman", "aliases": ["lead"]},
             "suspect": {"character_id": "legacy_suspect"},
             "empty": {},
         }
@@ -18,6 +18,7 @@ def test_role_casting_from_motiontoon_slots_prefers_actor_id():
 
     assert casting == {
         "victim": "actor_woman_01",
+        "lead": "actor_woman_01",
         "suspect": "legacy_suspect",
     }
 

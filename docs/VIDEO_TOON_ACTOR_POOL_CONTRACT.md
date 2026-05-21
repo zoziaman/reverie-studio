@@ -120,6 +120,8 @@ Episode and scene validation lives in `utils.videotoon_contract`:
 
 Generation requests now expose `identity_source`, `identity_contract`, and `variant_generation_support`. When `actor_id` is present, the identity source is `actor_pool`; IP-Adapter and ControlNet are marked as optional support for missing pose, depth, or face-reference variants.
 
+The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
+
 ## Target Video-Toon Grammar
 
 The target is not full animation first. The reliable MVP is:

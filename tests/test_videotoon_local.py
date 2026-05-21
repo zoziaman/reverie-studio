@@ -1065,3 +1065,39 @@ def test_media_factory_can_write_videotoon_bundle_without_running_generation(tmp
     assert Path(manifest["progress_path"]).is_file()
     assert any("VideoToon" in message for message in logs)
     assert any("progress" in message for message in logs)
+
+
+def test_media_factory_passes_actor_contract_to_videotoon_bundle(tmp_path, monkeypatch):
+    import config.pack_config as pack_config
+    from config.settings import config
+    from pipeline.orchestrator import MediaFactory
+
+    monkeypatch.setattr(config, "VIDEOTOON_WORKSPACE_ROOT", str(tmp_path / "VideoToon"))
+    monkeypatch.setattr(config, "VIDEOTOON_IMAGE_BACKEND", "comfyui")
+    monkeypatch.setattr(config, "VIDEOTOON_LOCAL_MODE_OVERRIDE", True)
+    monkeypatch.setattr(
+        pack_config,
+        "get_motiontoon_config",
+        lambda: MotiontoonConfig(
+            enabled=True,
+            video_toon_local_enabled=True,
+            actor_pool={"actor_woman_01": {"visual_identity": "fixed woman actor"}},
+            cast_slots={"victim": {"actor_id": "actor_woman_01", "aliases": ["victim_alias"]}},
+        ),
+    )
+
+    factory = MediaFactory.__new__(MediaFactory)
+    manifest = factory._write_videotoon_production_bundle(
+        project_name="run-factory-actor",
+        script_list=[{"role": "victim_alias", "emotion": "fear", "text": "I should not have opened that message."}],
+        image_prompts=[{"prompt": "woman looking at phone", "shot_type": "medium_close"}],
+        scene_analysis_cache=None,
+    )
+
+    assert manifest is not None
+    assert manifest["actor_contract_validation"]["is_valid"] is True
+    request_path = Path(manifest["scenes"][0]["generation_request_path"])
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    assert request["role_id"] == "victim_alias"
+    assert request["actor_id"] == "actor_woman_01"
+    assert request["identity_source"] == "actor_pool"
