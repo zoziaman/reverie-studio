@@ -1,10 +1,19 @@
 from types import SimpleNamespace
 
 from utils.videotoon_contract import (
+    actor_id_from_slot,
+    actor_identity_candidates_from_slot,
     role_casting_from_motiontoon_slots,
     scene_dicts_from_specs,
     validate_episode_actor_contract,
 )
+
+
+def test_actor_id_from_slot_prefers_actor_id_but_keeps_legacy_candidate():
+    slot_data = {"actor_id": "actor_woman_01", "character_id": "legacy_woman"}
+
+    assert actor_id_from_slot(slot_data) == "actor_woman_01"
+    assert actor_identity_candidates_from_slot(slot_data) == ["actor_woman_01", "legacy_woman"]
 
 
 def test_role_casting_from_motiontoon_slots_prefers_actor_id():

@@ -28,6 +28,7 @@ import requests
 
 logger = logging.getLogger(__name__)
 
+from utils.videotoon_contract import actor_id_from_slot
 from config.settings import config
 try:
     from config.pack_config import ACTIVE_PACK, PACK_CONFIG_AVAILABLE
@@ -902,7 +903,7 @@ class ImagePipeline:
                 preferred_ids = []
                 for slot in preferred_slots:
                     slot_data = slot_defs.get(slot, {}) if isinstance(slot_defs, dict) else {}
-                    char_id = slot_data.get('character_id', '') if isinstance(slot_data, dict) else ''
+                    char_id = actor_id_from_slot(slot_data)
                     if char_id and char_id in actual_chars:
                         preferred_ids.append(char_id)
                 if preferred_ids:

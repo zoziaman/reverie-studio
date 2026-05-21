@@ -537,7 +537,7 @@ def build_layered_cutout_assets(
             "mouth_closed_path": "",
             "mouth_open_path": "",
         }
-        if bool(dict(rig_overrides or {}).get("allow_synthetic_face_parts", False)):
+        if bool(dict(rig_overrides or {}).get("allow_synthetic_face_parts", True)):
             face_assets = _build_face_assets(out_dir, stem, rig_overrides=rig_overrides)
         cached_meta = load_layered_cutout_metadata(
             str(src_path),
@@ -635,7 +635,7 @@ def build_layered_cutout_assets(
         "mouth_closed_path": "",
         "mouth_open_path": "",
     }
-    if bool(dict(rig_overrides or {}).get("allow_synthetic_face_parts", False)):
+    if bool(dict(rig_overrides or {}).get("allow_synthetic_face_parts", True)):
         face_assets = _build_face_assets(out_dir, stem, rig_overrides=rig_overrides)
     bbox_left, bbox_top, bbox_right, bbox_bottom = subject_bbox
     rig_data = dict(rig_overrides or {})

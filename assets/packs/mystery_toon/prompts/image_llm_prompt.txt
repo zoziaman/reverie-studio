@@ -1,8 +1,10 @@
 For each scene, produce a layered mystery video-toon visual brief:
 1. background_location: reusable location name
 2. background_prompt: no people, no readable text, no UI, clean space for character
-3. character_id: sunja_grandma, deokbae_grandpa, misuk_auntie, jinwoo_young_man, nari_young_woman, fake_manager
-4. expression: neutral, talking, worried, angry, sad, scared, whisper
-5. pose: standing, seated, leaning, listening, looking_back
-6. camera: close-up, medium shot, low angle, hallway wide shot
+3. actor_id: sunja_grandma, deokbae_grandpa, misuk_auntie, jinwoo_young_man, nari_young_woman, fake_manager
+4. role_id: mystery role for this episode (the same actor_id can play different roles in another episode)
+5. expression: neutral, talking, worried, angry, sad, scared, whisper
+6. pose: standing, seated, leaning, listening, looking_back
+7. camera: close-up, medium shot, low angle, hallway wide shot
+Use character_id only as a legacy alias when a downstream tool has not migrated to actor_id yet.
 Use physical clues only: umbrella, key, shoe print, note, light switch, door chain. Avoid floating cards and fake app screens.

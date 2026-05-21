@@ -36,6 +36,28 @@ def _actor_ids(actor_pool: Mapping[str, Any]) -> set[str]:
     return {str(actor_id) for actor_id in actor_pool.keys() if str(actor_id).strip()}
 
 
+def actor_identity_candidates_from_slot(slot_data: Any) -> list[str]:
+    """Return slot identity candidates with actor_id taking precedence.
+
+    actor_id is the stable public contract for recurring video-toon actors.
+    character_id remains a legacy bridge for older packs and library folders.
+    """
+    if not isinstance(slot_data, Mapping):
+        return []
+
+    candidates: list[str] = []
+    for key in ("actor_id", "character_id"):
+        value = str(slot_data.get(key) or "").strip()
+        if value and value not in candidates:
+            candidates.append(value)
+    return candidates
+
+
+def actor_id_from_slot(slot_data: Any) -> str:
+    candidates = actor_identity_candidates_from_slot(slot_data)
+    return candidates[0] if candidates else ""
+
+
 def role_casting_from_motiontoon_slots(cast_slots: Mapping[str, Any]) -> Dict[str, str]:
     """Build an episode role casting table from pack-level motiontoon slots.
 
@@ -46,7 +68,7 @@ def role_casting_from_motiontoon_slots(cast_slots: Mapping[str, Any]) -> Dict[st
     for role_id, slot_data in _coerce_mapping(cast_slots).items():
         if not isinstance(slot_data, Mapping):
             continue
-        actor_id = str(slot_data.get("actor_id") or slot_data.get("character_id") or "").strip()
+        actor_id = actor_id_from_slot(slot_data)
         if actor_id:
             casting[str(role_id)] = actor_id
             for alias in list(slot_data.get("aliases") or []):

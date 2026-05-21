@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field, asdict
 from datetime import datetime
+from utils.videotoon_contract import actor_id_from_slot, actor_identity_candidates_from_slot
 
 try:
     from utils.logger import get_logger
@@ -426,7 +427,12 @@ Output ONLY the JSON below (no explanation):
         for slot_name, slot_data in self._get_pack_motiontoon_cast_slots().items():
             if not isinstance(slot_data, dict):
                 continue
-            if str(slot_data.get("character_id", "") or "").strip().lower() == normalized_char:
+            slot_ids = {
+                candidate.strip().lower()
+                for candidate in actor_identity_candidates_from_slot(slot_data)
+                if candidate.strip()
+            }
+            if normalized_char in slot_ids:
                 return str(slot_name)
         return ""
 
@@ -463,7 +469,12 @@ Output ONLY the JSON below (no explanation):
         for candidate_slot, slot_data in slots.items():
             if not isinstance(slot_data, dict):
                 continue
-            if str(slot_data.get("character_id", "") or "").strip().lower() == normalized_char:
+            slot_ids = {
+                candidate.strip().lower()
+                for candidate in actor_identity_candidates_from_slot(slot_data)
+                if candidate.strip()
+            }
+            if normalized_char in slot_ids:
                 slot_name = str(candidate_slot)
                 break
 
@@ -1003,8 +1014,8 @@ Output ONLY the JSON below (no explanation):
         for slot_name, slot_data in slots.items():
             if not isinstance(slot_data, dict):
                 continue
-            character_id = str(slot_data.get("character_id", "") or "").strip().lower()
-            if not character_id:
+            actor_id = actor_id_from_slot(slot_data).lower()
+            if not actor_id:
                 continue
             aliases = [slot_name]
             aliases.extend(slot_data.get("aliases", []) or [])
@@ -1012,7 +1023,7 @@ Output ONLY the JSON below (no explanation):
                 alias_clean = str(alias).strip().lower()
                 if not alias_clean:
                     continue
-                self.scene_analyzer.alias_to_id[alias_clean] = character_id
+                self.scene_analyzer.alias_to_id[alias_clean] = actor_id
                 applied += 1
 
         if applied:
@@ -1025,9 +1036,9 @@ Output ONLY the JSON below (no explanation):
             slot_data = slots.get(slot_name, {})
             if not isinstance(slot_data, dict):
                 continue
-            character_id = str(slot_data.get("character_id", "") or "").strip()
-            if character_id and character_id not in preferred:
-                preferred.append(character_id)
+            actor_id = actor_id_from_slot(slot_data)
+            if actor_id and actor_id not in preferred:
+                preferred.append(actor_id)
         return preferred
 
     def _get_pack_slot_order(self) -> List[str]:
@@ -1089,12 +1100,12 @@ Output ONLY the JSON below (no explanation):
         if any(token in speaker_clean for token in male_elder_tokens):
             if "support" in slots:
                 support_data = slots.get("support", {})
-                support_id = str(support_data.get("character_id", "") or "").strip().lower()
+                support_id = actor_id_from_slot(support_data).lower()
                 if support_id in {"grandpa", "middle_man", "young_man", "man"}:
                     return "support"
             if "elder" in slots:
                 elder_data = slots.get("elder", {})
-                elder_id = str(elder_data.get("character_id", "") or "").strip().lower()
+                elder_id = actor_id_from_slot(elder_data).lower()
                 if elder_id in {"grandpa", "middle_man", "young_man", "man"}:
                     return "elder"
         if any(token in speaker_clean for token in antagonist_tokens) and "antagonist" in slots:
@@ -1120,7 +1131,7 @@ Output ONLY the JSON below (no explanation):
 
         slot_order = self._get_pack_slot_order()
         fixed_ids = {
-            str(slot_data.get("character_id", "") or "").strip().lower()
+            actor_id_from_slot(slot_data).lower()
             for slot_data in slots.values()
             if isinstance(slot_data, dict)
         }
@@ -1163,11 +1174,11 @@ Output ONLY the JSON below (no explanation):
             if not inferred_slot:
                 continue
             slot_data = slots.get(inferred_slot, {})
-            character_id = str(slot_data.get("character_id", "") or "").strip().lower()
-            if not character_id or inferred_slot in slot_assignments:
+            actor_id = actor_id_from_slot(slot_data).lower()
+            if not actor_id or inferred_slot in slot_assignments:
                 continue
             slot_assignments[inferred_slot] = speaker
-            speaker_assignments[speaker] = character_id
+            speaker_assignments[speaker] = actor_id
 
         ranked_speakers = sorted(
             speaker_counts.items(),
@@ -1183,16 +1194,16 @@ Output ONLY the JSON below (no explanation):
             if not slot_name:
                 continue
             slot_data = slots.get(slot_name, {})
-            character_id = str(slot_data.get("character_id", "") or "").strip().lower()
-            if not character_id:
+            actor_id = actor_id_from_slot(slot_data).lower()
+            if not actor_id:
                 continue
             slot_assignments.setdefault(slot_name, speaker)
-            speaker_assignments[speaker] = character_id
+            speaker_assignments[speaker] = actor_id
 
         applied = 0
-        for speaker, character_id in speaker_assignments.items():
-            self.scene_analyzer.alias_to_id[speaker.lower()] = character_id
-            logger.info(f"[VSD] fixed cast mapping: '{speaker}' -> '{character_id}'")
+        for speaker, actor_id in speaker_assignments.items():
+            self.scene_analyzer.alias_to_id[speaker.lower()] = actor_id
+            logger.info(f"[VSD] fixed cast mapping: '{speaker}' -> '{actor_id}'")
             applied += 1
 
         return applied > 0

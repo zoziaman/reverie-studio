@@ -433,6 +433,31 @@ def test_required_sheet_variant_keys_union_multiple_pack_slots(tmp_path, monkeyp
     ]
 
 
+def test_pack_cast_slot_resolution_prefers_actor_id(tmp_path, monkeypatch):
+    from config import pack_config
+
+    manager = CharacterLibraryManager(pack_id="test_pack", library_base_path=str(tmp_path))
+    monkeypatch.setattr(
+        pack_config,
+        "ACTIVE_PACK",
+        SimpleNamespace(
+            pack_id="test_pack",
+            motiontoon=SimpleNamespace(
+                cast_slots={
+                    "protagonist": {
+                        "actor_id": "actor_woman_01",
+                        "character_id": "legacy_woman",
+                    }
+                }
+            ),
+        ),
+        raising=False,
+    )
+
+    assert manager._resolve_pack_cast_slot_names("actor_woman_01") == ["protagonist"]
+    assert manager._resolve_pack_cast_slot_names("legacy_woman") == ["protagonist"]
+
+
 def test_character_sheet_coverage_reports_missing_required_variants(tmp_path):
     manager = CharacterLibraryManager(pack_id="test_pack", library_base_path=str(tmp_path))
     manager.config.preferred_expressions = ["neutral", "talking"]
@@ -1905,6 +1930,58 @@ def test_fixed_cast_mapping_assigns_story_speakers_to_pack_slots():
     assert director.scene_analyzer.alias_to_id["서윤"] == "young_woman"
     assert director.scene_analyzer.alias_to_id["도진"] == "young_man"
     assert director.scene_analyzer.alias_to_id["어머니"] == "grandma"
+
+
+def test_fixed_cast_mapping_prefers_actor_id_over_legacy_character_id():
+    director = VisualStorytellingDirector.__new__(VisualStorytellingDirector)
+    director.scene_analyzer = SceneAnalyzer(gemini_client=None, character_definitions=[])
+    director.gemini_client = None
+    director._get_pack_motiontoon_cast_slots = lambda: {
+        "protagonist": {
+            "actor_id": "actor_woman_01",
+            "character_id": "legacy_woman",
+            "aliases": ["lead"],
+        },
+        "deuteragonist": {
+            "actor_id": "actor_man_01",
+            "character_id": "legacy_man",
+            "aliases": ["partner"],
+        },
+    }
+    director._apply_pack_cast_aliases = VisualStorytellingDirector._apply_pack_cast_aliases.__get__(
+        director, VisualStorytellingDirector
+    )
+    director._get_pack_slot_order = VisualStorytellingDirector._get_pack_slot_order.__get__(
+        director, VisualStorytellingDirector
+    )
+    director._infer_pack_slot_for_speaker = VisualStorytellingDirector._infer_pack_slot_for_speaker.__get__(
+        director, VisualStorytellingDirector
+    )
+    director._apply_fixed_cast_role_mapping = VisualStorytellingDirector._apply_fixed_cast_role_mapping.__get__(
+        director, VisualStorytellingDirector
+    )
+    director._resolve_motiontoon_slot_name = VisualStorytellingDirector._resolve_motiontoon_slot_name.__get__(
+        director, VisualStorytellingDirector
+    )
+    director._get_pack_preferred_character_ids = VisualStorytellingDirector._get_pack_preferred_character_ids.__get__(
+        director, VisualStorytellingDirector
+    )
+
+    applied = director._apply_fixed_cast_role_mapping(
+        [
+            {"speaker": "Lead", "text": "I saw it."},
+            {"speaker": "Partner", "text": "Then we move now."},
+        ]
+    )
+
+    assert applied is True
+    assert director.scene_analyzer.alias_to_id["lead"] == "actor_woman_01"
+    assert director.scene_analyzer.alias_to_id["partner"] == "actor_man_01"
+    director._apply_pack_cast_aliases()
+    assert director.scene_analyzer.alias_to_id["protagonist"] == "actor_woman_01"
+    assert director._get_pack_preferred_character_ids() == ["actor_woman_01", "actor_man_01"]
+    assert director._resolve_motiontoon_slot_name("actor_woman_01") == "protagonist"
+    assert director._resolve_motiontoon_slot_name("legacy_woman") == "protagonist"
 
 
 def test_major_character_ids_prefer_pack_fixed_cast():

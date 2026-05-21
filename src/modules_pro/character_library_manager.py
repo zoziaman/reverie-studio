@@ -26,6 +26,7 @@ from utils.layered_cutout import (
     load_layered_cutout_assets,
     load_layered_cutout_metadata,
 )
+from utils.videotoon_contract import actor_identity_candidates_from_slot
 
 try:
     from utils.logger import get_logger
@@ -2788,7 +2789,12 @@ class CharacterLibraryManager:
             for slot_name, slot_data in cast_slots.items():
                 if not isinstance(slot_data, dict):
                     continue
-                if str(slot_data.get("character_id", "") or "").strip().lower() == normalized_char:
+                slot_ids = {
+                    candidate.strip().lower()
+                    for candidate in actor_identity_candidates_from_slot(slot_data)
+                    if candidate.strip()
+                }
+                if normalized_char in slot_ids:
                     normalized_slot = str(slot_name).strip().lower()
                     if normalized_slot and normalized_slot not in matches:
                         matches.append(normalized_slot)
