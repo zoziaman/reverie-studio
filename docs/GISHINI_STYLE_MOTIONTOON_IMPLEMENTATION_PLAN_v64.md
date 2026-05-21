@@ -1,6 +1,11 @@
 # Gishini-Style Motiontoon Implementation Plan v64
 Last updated: 2026-03-15
 
+> Superseded note, 2026-05-22: For video-toon character consistency, follow
+> `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md` first. The active direction is
+> pack-level actor pools, episode role casting, and scene-level actor
+> references before renderer feature expansion.
+
 ## 1. 즉시 구현 순서
 
 1. planner 출력에 `scene_type`, `motion_priority`, `shorts_candidate` 추가

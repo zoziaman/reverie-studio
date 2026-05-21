@@ -1,6 +1,12 @@
 # Gishini-Style Motiontoon Design v64
 Last updated: 2026-03-15
 
+> Superseded note, 2026-05-22: For character consistency, the active
+> video-toon direction is `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md`: fixed
+> pack-level actors, episode-level role casting, and scene-level actor
+> references. Limited animation primitives remain renderer tools, not the
+> identity source.
+
 ## 1. 목적
 
 이 문서는 Reverie를 `정적 이미지 + 카메라 효과` 중심 파이프라인에서 `제한 애니메이션 영상툰 파이프라인`으로 확장하기 위한 설계를 정의한다.

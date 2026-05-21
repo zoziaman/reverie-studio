@@ -1,5 +1,10 @@
 # 팩 품질 전략 v61 — SD 이미지 + 대본 + TTS 전면 개선
 
+> Superseded note, 2026-05-22: For video-toon character consistency, use
+> `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md` as the active rule. ControlNet and
+> IP-Adapter are optional support for generating missing actor variants, not the
+> primary runtime consistency mechanism.
+
 > **작성일**: 2026-02-17
 > **상태**: 전략 수립 완료, 실행 대기
 > **핵심 결정**: 전 장르 2D 웹툰/일러스트 통일, 실사풍 완전 폐기
