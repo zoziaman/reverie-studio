@@ -94,6 +94,8 @@ def normalize_motiontoon_config(raw: Any, *, fallback_enabled: bool = False) -> 
         "prop_keywords": [str(keyword) for keyword in prop_keywords if keyword],
         "scene_motion_rules": _coerce_dict(data.get("scene_motion_rules")),
         "cast_slots": _coerce_dict(data.get("cast_slots")),
+        "actor_pool": _coerce_dict(data.get("actor_pool")),
+        "role_casting_contract": _coerce_dict(data.get("role_casting_contract")),
         "puppet_profiles": _coerce_dict(data.get("puppet_profiles")),
     }
 

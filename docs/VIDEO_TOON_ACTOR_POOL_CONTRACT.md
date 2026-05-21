@@ -1,0 +1,122 @@
+# Video-Toon Actor Pool Contract
+
+Status: active design rule
+
+Reverie Studio video-toon packs should not rely on scene-by-scene character generation as the primary way to preserve character consistency. The stable unit is a pack-level actor pool. Episodes assign those fixed actors to temporary story roles.
+
+## Rule
+
+Use this model for video-toon packs:
+
+```text
+actor_id = fixed visual identity, voice profile, sprite sheet, motion profile
+role_id = episode-specific story function
+scene_id = shot-level use of an actor in a role
+```
+
+The same actor can play different roles in different omnibus episodes. The actor's face, body language, palette, and voice should remain stable. The role, motivation, relationships, and emotional arc can change per episode.
+
+## Why This Replaces The Old Approach
+
+The older consistency approach tried to keep characters stable through prompts, fixed seeds, ControlNet, or IP-Adapter while each scene still asked the image backend to invent a person. That is brittle.
+
+This contract moves identity upstream:
+
+1. Create or import the actor pool for the pack.
+2. Audit the actor pool before episode production.
+3. Cast actors into episode roles.
+4. Build scene and shot plans that reference actor_id.
+5. Use ControlNet, IP-Adapter, or ComfyUI only to generate missing actor variants, not as the primary runtime consistency mechanism.
+
+## Pack-Level Actor Pool
+
+`settings.motiontoon.actor_pool` defines reusable actors for the pack.
+
+```json
+{
+  "motiontoon": {
+    "enabled": true,
+    "video_toon_local_enabled": true,
+    "actor_pool": {
+      "actor_woman_01": {
+        "character_id": "actor_woman_01",
+        "visual_identity": "sharp-eyed recurring woman actor with short black hair",
+        "voice_profile": "female_01",
+        "required_variants": ["neutral_front", "fear_front", "talking_front"],
+        "sprite_sheet": {
+          "neutral_front": "assets/characters/actor_woman_01/neutral_front.png",
+          "fear_front": "assets/characters/actor_woman_01/fear_front.png",
+          "talking_front": "assets/characters/actor_woman_01/talking_front.png"
+        }
+      }
+    }
+  }
+}
+```
+
+Minimum fields:
+
+- `visual_identity`: Required. Short human-readable lock on the actor's stable look.
+- `character_id`: Optional bridge to existing `visual_storytelling.characters`.
+- `voice_profile`: Optional but recommended. Keeps the same face tied to the same voice.
+- `required_variants`: Optional list of sprite or expression keys needed before production.
+- `sprite_sheet`: Optional map from variant key to local asset path.
+
+## Episode-Level Role Casting
+
+Episodes should cast actors into roles. The role can change per episode; the actor stays stable.
+
+```json
+{
+  "episode_id": "used_market_scam",
+  "role_casting": {
+    "scammer": "actor_man_01",
+    "victim": "actor_woman_01",
+    "witness": "actor_elder_01"
+  }
+}
+```
+
+Recommended rule: keep the actor's voice stable unless the story explicitly treats the actor as disguised or distorted.
+
+## Scene-Level Shot Contract
+
+Generated or planned scenes should reference actors, not free-form new people.
+
+```json
+{
+  "scene_id": "s014",
+  "role_id": "victim",
+  "actor_id": "actor_woman_01",
+  "emotion": "fear",
+  "pose": "front",
+  "shot_type": "medium_close",
+  "background_id": "apartment_night_01",
+  "motion_preset": "slow_push"
+}
+```
+
+If a scene needs an anonymous crowd or background extra, mark it as an extra and do not let it become a recurring main role.
+
+## Validator Boundary
+
+The pack validator now accepts and checks:
+
+- `settings.motiontoon.actor_pool`
+- `settings.motiontoon.role_casting_contract`
+- `settings.motiontoon.cast_slots.*.actor_id`
+
+Legacy `character_id` slots are still accepted for older packs. New video-toon packs should move toward `actor_id`.
+
+## Target Video-Toon Grammar
+
+The target is not full animation first. The reliable MVP is:
+
+- fixed actor cutouts
+- reusable expression or pose variants
+- background plates that can change per episode
+- camera moves such as slow push, snap zoom, shake, black hold, and flash
+- prop closeups and evidence overlays
+- subtitles and timing that carry the rhythm
+
+Full mouth flap, blinking, and detailed puppet motion are useful later. They should not block the core actor-pool contract.

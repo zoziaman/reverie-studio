@@ -146,3 +146,148 @@ def test_pack_validator_accepts_script_quality_settings():
 
     assert result.is_valid is True
     assert not result.errors
+
+
+def test_pack_validator_accepts_actor_pool_role_casting_contract():
+    validator = PackValidator()
+    result = validator.validate_settings(
+        {
+            "visual_storytelling": {
+                "enabled": True,
+                "characters": {
+                    "actor_woman_01": {"base": "fixed Korean woman actor", "style": "webtoon cutout"},
+                    "actor_man_01": {"base": "fixed Korean man actor", "style": "webtoon cutout"},
+                    "_default": {"base": "fallback actor"},
+                },
+                "sd_model": {"checkpoint": "mistoonAnime_v10Noobai.safetensors"},
+            },
+            "tts": {"character_mapping": {"narrator": "narrator_female"}},
+            "sd": {"positive": "test"},
+            "visual": {"safe_fallbacks": ["fallback"]},
+            "motiontoon": {
+                "enabled": True,
+                "video_toon_local_enabled": True,
+                "video_toon_generation_backend": "comfyui",
+                "video_toon_workflow_template": "layered_actor_pool_v1",
+                "actor_pool": {
+                    "actor_woman_01": {
+                        "character_id": "actor_woman_01",
+                        "visual_identity": "sharp-eyed recurring woman actor with short black hair",
+                        "voice_profile": "female_01",
+                        "required_variants": ["neutral_front", "fear_front"],
+                        "sprite_sheet": {
+                            "neutral_front": "assets/characters/actor_woman_01/neutral_front.png",
+                            "fear_front": "assets/characters/actor_woman_01/fear_front.png",
+                        },
+                    },
+                    "actor_man_01": {
+                        "character_id": "actor_man_01",
+                        "visual_identity": "tall recurring man actor with narrow face",
+                        "voice_profile": "male_01",
+                    },
+                },
+                "role_casting_contract": {
+                    "enabled": True,
+                    "strict_actor_refs": True,
+                    "allow_background_extras": True,
+                    "assignment_key": "role_casting",
+                    "required_scene_fields": ["actor_id", "role_id", "emotion", "shot_type"],
+                },
+                "cast_slots": {
+                    "protagonist": {"actor_id": "actor_woman_01", "aliases": ["lead", "victim"]},
+                    "suspect": {"actor_id": "actor_man_01", "aliases": ["scammer", "suspect"]},
+                },
+            },
+        }
+    )
+
+    assert result.is_valid is True
+    assert not result.errors
+
+
+def test_pack_validator_rejects_cast_slot_actor_missing_from_pool():
+    validator = PackValidator()
+    result = validator.validate_settings(
+        {
+            "visual_storytelling": {
+                "enabled": True,
+                "characters": {
+                    "actor_woman_01": {"base": "fixed Korean woman actor", "style": "webtoon cutout"},
+                    "_default": {"base": "fallback actor"},
+                },
+                "sd_model": {"checkpoint": "mistoonAnime_v10Noobai.safetensors"},
+            },
+            "tts": {"character_mapping": {"narrator": "narrator_female"}},
+            "sd": {"positive": "test"},
+            "visual": {"safe_fallbacks": ["fallback"]},
+            "motiontoon": {
+                "enabled": True,
+                "actor_pool": {
+                    "actor_woman_01": {
+                        "character_id": "actor_woman_01",
+                        "visual_identity": "fixed woman actor",
+                    },
+                },
+                "cast_slots": {
+                    "suspect": {"actor_id": "actor_man_99", "aliases": ["suspect"]},
+                },
+            },
+        }
+    )
+
+    assert result.is_valid is False
+    assert any("actor_man_99" in error and "actor_pool" in error for error in result.errors)
+
+
+def test_pack_validator_rejects_actor_without_visual_identity():
+    validator = PackValidator()
+    result = validator.validate_settings(
+        {
+            "visual_storytelling": {
+                "enabled": True,
+                "characters": {
+                    "actor_woman_01": {"base": "fixed Korean woman actor", "style": "webtoon cutout"},
+                    "_default": {"base": "fallback actor"},
+                },
+                "sd_model": {"checkpoint": "mistoonAnime_v10Noobai.safetensors"},
+            },
+            "tts": {"character_mapping": {"narrator": "narrator_female"}},
+            "sd": {"positive": "test"},
+            "visual": {"safe_fallbacks": ["fallback"]},
+            "motiontoon": {
+                "enabled": True,
+                "actor_pool": {
+                    "actor_woman_01": {"character_id": "actor_woman_01"},
+                },
+                "cast_slots": {
+                    "protagonist": {"actor_id": "actor_woman_01"},
+                },
+            },
+        }
+    )
+
+    assert result.is_valid is False
+    assert any("visual_identity" in error for error in result.errors)
+
+
+def test_pack_validator_warns_for_legacy_videotoon_cast_without_actor_pool():
+    validator = PackValidator()
+    result = validator.validate_settings(
+        {
+            "visual_storytelling": {"enabled": False},
+            "tts": {"character_mapping": {"narrator": "narrator_female"}},
+            "sd": {"positive": "test"},
+            "visual": {"safe_fallbacks": ["fallback"]},
+            "motiontoon": {
+                "enabled": True,
+                "video_toon_local_enabled": True,
+                "video_toon_workflow_template": "legacy_character_reference_v1",
+                "cast_slots": {
+                    "protagonist": {"character_id": "young_woman", "aliases": ["lead"]},
+                },
+            },
+        }
+    )
+
+    assert result.is_valid is True
+    assert any("actor_pool missing" in warning for warning in result.warnings)

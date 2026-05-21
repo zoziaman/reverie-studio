@@ -58,6 +58,18 @@ class PackValidator:
             return channel_type.split("_", 1)[0] in self.VALID_CHANNEL_TYPES
         return False
 
+    def _known_visual_character_ids(self, visual_storytelling: Dict[str, Any]) -> List[str]:
+        characters = visual_storytelling.get("characters", {})
+        if isinstance(characters, dict):
+            return [str(character_id) for character_id in characters if not str(character_id).startswith("_")]
+        if isinstance(characters, list):
+            ids: List[str] = []
+            for character in characters:
+                if isinstance(character, dict) and character.get("id"):
+                    ids.append(str(character.get("id")))
+            return ids
+        return []
+
     def validate_manifest(self, manifest: Dict[str, Any]) -> ValidationResult:
         result = ValidationResult()
 
@@ -89,7 +101,102 @@ class PackValidator:
 
         return result
 
-    def _validate_motiontoon(self, motiontoon: Dict[str, Any]) -> ValidationResult:
+    def _validate_actor_pool(
+        self,
+        actor_pool: Dict[str, Any],
+        visual_storytelling: Optional[Dict[str, Any]] = None,
+    ) -> ValidationResult:
+        result = ValidationResult()
+        visual_storytelling = visual_storytelling or {}
+        known_character_ids = set(self._known_visual_character_ids(visual_storytelling))
+
+        if not isinstance(actor_pool, dict):
+            result.add_error("settings.motiontoon.actor_pool must be an object")
+            return result
+
+        for actor_id, actor_data in actor_pool.items():
+            actor_path = f"settings.motiontoon.actor_pool.{actor_id}"
+            if not isinstance(actor_id, str) or not actor_id.strip():
+                result.add_error("settings.motiontoon.actor_pool keys must be non-empty actor ids")
+                continue
+            if not isinstance(actor_data, dict):
+                result.add_error(f"{actor_path} must be an object")
+                continue
+
+            visual_identity = actor_data.get("visual_identity")
+            if not isinstance(visual_identity, str) or not visual_identity.strip():
+                result.add_error(f"{actor_path}.visual_identity is required")
+
+            character_id = actor_data.get("character_id")
+            if character_id is not None:
+                if not isinstance(character_id, str) or not character_id.strip():
+                    result.add_error(f"{actor_path}.character_id must be a non-empty string")
+                elif known_character_ids and character_id not in known_character_ids:
+                    result.add_error(f"{actor_path}.character_id '{character_id}' is not defined in visual_storytelling.characters")
+
+            voice_profile = actor_data.get("voice_profile")
+            if voice_profile is not None and not isinstance(voice_profile, str):
+                result.add_error(f"{actor_path}.voice_profile must be a string")
+
+            aliases = actor_data.get("aliases")
+            if aliases is not None:
+                if not isinstance(aliases, list):
+                    result.add_error(f"{actor_path}.aliases must be a list")
+                elif any(not isinstance(alias, str) or not alias.strip() for alias in aliases):
+                    result.add_error(f"{actor_path}.aliases must contain non-empty strings")
+
+            required_variants = actor_data.get("required_variants")
+            if required_variants is not None:
+                if not isinstance(required_variants, list):
+                    result.add_error(f"{actor_path}.required_variants must be a list")
+                elif any(not isinstance(variant, str) or not variant.strip() for variant in required_variants):
+                    result.add_error(f"{actor_path}.required_variants must contain non-empty strings")
+
+            sprite_sheet = actor_data.get("sprite_sheet")
+            if sprite_sheet is not None:
+                if not isinstance(sprite_sheet, dict):
+                    result.add_error(f"{actor_path}.sprite_sheet must be an object")
+                elif required_variants:
+                    missing_variants = [variant for variant in required_variants if variant not in sprite_sheet]
+                    if missing_variants:
+                        result.add_warning(
+                            f"{actor_path}.sprite_sheet missing required variants: {', '.join(missing_variants)}"
+                        )
+
+        return result
+
+    def _validate_role_casting_contract(self, contract: Dict[str, Any]) -> ValidationResult:
+        result = ValidationResult()
+
+        if not isinstance(contract, dict):
+            result.add_error("settings.motiontoon.role_casting_contract must be an object")
+            return result
+
+        for field_name in ("enabled", "strict_actor_refs", "allow_background_extras"):
+            value = contract.get(field_name)
+            if value is not None and not isinstance(value, bool):
+                result.add_error(f"settings.motiontoon.role_casting_contract.{field_name} must be a bool")
+
+        assignment_key = contract.get("assignment_key")
+        if assignment_key is not None and not isinstance(assignment_key, str):
+            result.add_error("settings.motiontoon.role_casting_contract.assignment_key must be a string")
+
+        required_scene_fields = contract.get("required_scene_fields")
+        if required_scene_fields is not None:
+            if not isinstance(required_scene_fields, list):
+                result.add_error("settings.motiontoon.role_casting_contract.required_scene_fields must be a list")
+            elif any(not isinstance(field_name, str) or not field_name.strip() for field_name in required_scene_fields):
+                result.add_error(
+                    "settings.motiontoon.role_casting_contract.required_scene_fields must contain non-empty strings"
+                )
+
+        return result
+
+    def _validate_motiontoon(
+        self,
+        motiontoon: Dict[str, Any],
+        visual_storytelling: Optional[Dict[str, Any]] = None,
+    ) -> ValidationResult:
         result = ValidationResult()
 
         if not isinstance(motiontoon, dict):
@@ -167,6 +274,27 @@ class PackValidator:
         if scene_motion_rules is not None and not isinstance(scene_motion_rules, dict):
             result.add_error("settings.motiontoon.scene_motion_rules must be an object")
 
+        actor_pool = motiontoon.get("actor_pool")
+        actor_pool_ids: set[str] = set()
+        if actor_pool is not None:
+            actor_result = self._validate_actor_pool(actor_pool, visual_storytelling=visual_storytelling)
+            result.errors.extend(actor_result.errors)
+            result.warnings.extend(actor_result.warnings)
+            if actor_result.errors:
+                result.is_valid = False
+            if isinstance(actor_pool, dict):
+                actor_pool_ids = {str(actor_id) for actor_id in actor_pool.keys()}
+        elif motiontoon.get("video_toon_local_enabled") is True and motiontoon.get("cast_slots"):
+            result.add_warning("settings.motiontoon.actor_pool missing; video-toon pack will use legacy character_id slots")
+
+        role_contract = motiontoon.get("role_casting_contract")
+        if role_contract is not None:
+            contract_result = self._validate_role_casting_contract(role_contract)
+            result.errors.extend(contract_result.errors)
+            result.warnings.extend(contract_result.warnings)
+            if contract_result.errors:
+                result.is_valid = False
+
         cast_slots = motiontoon.get("cast_slots")
         if cast_slots is not None:
             if not isinstance(cast_slots, dict):
@@ -178,6 +306,16 @@ class PackValidator:
                         continue
                     if "character_id" in slot_data and not isinstance(slot_data.get("character_id"), str):
                         result.add_error(f"settings.motiontoon.cast_slots.{slot_name}.character_id must be a string")
+                    if "actor_id" in slot_data and not isinstance(slot_data.get("actor_id"), str):
+                        result.add_error(f"settings.motiontoon.cast_slots.{slot_name}.actor_id must be a string")
+                    if not slot_data.get("actor_id") and not slot_data.get("character_id"):
+                        result.add_error(
+                            f"settings.motiontoon.cast_slots.{slot_name} must define actor_id or legacy character_id"
+                        )
+                    if slot_data.get("actor_id") and actor_pool_ids and slot_data.get("actor_id") not in actor_pool_ids:
+                        result.add_error(
+                            f"settings.motiontoon.cast_slots.{slot_name}.actor_id '{slot_data.get('actor_id')}' is not defined in actor_pool"
+                        )
                     aliases = slot_data.get("aliases")
                     if aliases is not None and not isinstance(aliases, list):
                         result.add_error(f"settings.motiontoon.cast_slots.{slot_name}.aliases must be a list")
@@ -338,7 +476,7 @@ class PackValidator:
 
         motiontoon = settings.get("motiontoon", {})
         if motiontoon:
-            mt_result = self._validate_motiontoon(motiontoon)
+            mt_result = self._validate_motiontoon(motiontoon, visual_storytelling=visual_storytelling)
             result.errors.extend(mt_result.errors)
             result.warnings.extend(mt_result.warnings)
             if mt_result.errors:

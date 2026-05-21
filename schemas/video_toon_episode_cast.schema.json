@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/reverie/video_toon_episode_cast.schema.json",
+  "title": "Reverie Video-Toon Episode Cast",
+  "type": "object",
+  "required": ["episode_id", "role_casting"],
+  "additionalProperties": true,
+  "properties": {
+    "episode_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role_casting": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scene_id", "role_id", "actor_id", "emotion", "shot_type"],
+        "additionalProperties": true,
+        "properties": {
+          "scene_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "emotion": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pose": {
+            "type": "string"
+          },
+          "shot_type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "background_id": {
+            "type": "string"
+          },
+          "motion_preset": {
+            "type": "string"
+          },
+          "is_background_extra": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

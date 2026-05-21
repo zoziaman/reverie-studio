@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/reverie/video_toon_actor_pool.schema.json",
+  "title": "Reverie Video-Toon Actor Pool",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "required": ["visual_identity"],
+    "additionalProperties": true,
+    "properties": {
+      "character_id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "visual_identity": {
+        "type": "string",
+        "minLength": 1
+      },
+      "voice_profile": {
+        "type": "string",
+        "minLength": 1
+      },
+      "motion_profile": {
+        "type": "string",
+        "minLength": 1
+      },
+      "aliases": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required_variants": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "sprite_sheet": {
+        "type": "object",
+        "additionalProperties": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "emotion": {
+                  "type": "string"
+                },
+                "pose": {
+                  "type": "string"
+                }
+              }
+            }
+          ]
+        }
+      }
+    }
+  }
+}

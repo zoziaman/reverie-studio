@@ -75,6 +75,17 @@ The intended local production loop is:
    mode first.
 8. Keep enough logs to understand cost, duration, failures, and retry points.
 
+## Video-Toon Direction
+
+For video-toon packs, Reverie Studio now treats character consistency as a
+pack contract instead of a per-scene prompt trick. A pack should define a fixed
+actor pool first, then cast those actors into different episode roles for
+omnibus stories. Scene plans should reference `actor_id` instead of asking the
+image backend to invent a new lead character each time.
+
+See `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md` for the active rule and
+`schemas/` for the actor-pool and episode-cast shapes.
+
 ## Current Public Snapshot Boundary
 
 This repository is prepared as a sanitized public snapshot. The public branch is
