@@ -127,6 +127,9 @@ class VideoToonSceneSpec:
 
     scene_id: str
     dialogue_index: int = 0
+    role_id: str = ""
+    actor_id: str = ""
+    emotion: str = ""
     text: str = ""
     speaker: str = ""
     characters: List[VideoToonCharacterCue] = field(default_factory=list)
@@ -137,6 +140,9 @@ class VideoToonSceneSpec:
     atmosphere: str = ""
     story_beat: str = ""
     camera_shot: str = ""
+    shot_type: str = ""
+    motion_preset: str = ""
+    is_background_extra: bool = False
     key_props: List[str] = field(default_factory=list)
     outfit_hint: str = ""
     sd_prompt: str = ""
@@ -168,9 +174,16 @@ class VideoToonSceneSpec:
                 )
             )
 
+        dominant_emotion = str(getattr(scene, "emotion", "") or "")
+        if not dominant_emotion and characters:
+            dominant_emotion = characters[0].emotion
+
         return cls(
             scene_id=str(getattr(scene, "scene_id", "") or f"scene_{int(getattr(scene, 'dialogue_index', 0)):04d}"),
             dialogue_index=int(getattr(scene, "dialogue_index", 0) or 0),
+            role_id=str(getattr(scene, "role_id", "") or getattr(scene, "role", "") or ""),
+            actor_id=str(getattr(scene, "actor_id", "") or ""),
+            emotion=dominant_emotion,
             text=str(getattr(scene, "original_dialogue", "") or ""),
             speaker=str(getattr(scene, "speaker", "") or ""),
             characters=characters,
@@ -181,6 +194,9 @@ class VideoToonSceneSpec:
             atmosphere=str(getattr(scene, "atmosphere", "") or ""),
             story_beat=str(getattr(scene, "story_beat", "") or ""),
             camera_shot=str(getattr(scene, "camera_shot", "") or ""),
+            shot_type=str(getattr(scene, "shot_type", "") or getattr(scene, "camera_shot", "") or ""),
+            motion_preset=str(getattr(scene, "motion_preset", "") or ""),
+            is_background_extra=bool(getattr(scene, "is_background_extra", False)),
             key_props=[str(p) for p in list(getattr(scene, "key_props", []) or [])],
             outfit_hint=str(getattr(scene, "outfit_hint", "") or ""),
             sd_prompt=str(getattr(scene, "sd_prompt", "") or ""),
@@ -194,6 +210,9 @@ class VideoToonSceneSpec:
         """Return the backend-neutral image generation request for this scene."""
         return {
             "scene_id": self.scene_id,
+            "role_id": self.role_id,
+            "actor_id": self.actor_id,
+            "emotion": self.emotion,
             "backend": config.image_backend,
             "size": {
                 "width": config.generation_width,
@@ -205,6 +224,8 @@ class VideoToonSceneSpec:
             "layer_outputs": list(self.required_outputs),
             "prompt": self.sd_prompt,
             "negative_prompt_policy": "pack_default_plus_video_toon_safety",
+            "shot_type": self.shot_type,
+            "motion_preset": self.motion_preset,
             "reference_assets": {
                 "character_reference_path": self.character_reference_path,
                 "pose_reference_path": self.pose_reference_path,
@@ -230,6 +251,7 @@ def build_scene_specs_from_production(
     script_list: Iterable[Dict[str, Any]],
     image_prompts: Iterable[Any],
     scene_analysis_cache: Optional[Any] = None,
+    role_casting: Optional[Dict[str, str]] = None,
 ) -> List[VideoToonSceneSpec]:
     """Build VideoToon scene specs from the current production payload.
 
@@ -240,6 +262,7 @@ def build_scene_specs_from_production(
     """
     scripts = list(script_list or [])
     prompts = list(image_prompts or [])
+    role_casting = dict(role_casting or {})
 
     analyzed: Dict[int, Any] = {}
     if isinstance(scene_analysis_cache, dict):
@@ -253,10 +276,32 @@ def build_scene_specs_from_production(
         turn = scripts[index] if index < len(scripts) and isinstance(scripts[index], dict) else {}
         prompt_obj = prompts[index] if index < len(prompts) else {}
         prompt_text = _prompt_to_text(prompt_obj)
+        prompt_data = prompt_obj if isinstance(prompt_obj, dict) else {}
+        role_id = str(
+            prompt_data.get("role_id")
+            or turn.get("role_id")
+            or turn.get("role")
+            or turn.get("speaker")
+            or ""
+        )
+        actor_id = str(prompt_data.get("actor_id") or turn.get("actor_id") or role_casting.get(role_id, "") or "")
+        emotion = str(prompt_data.get("emotion") or turn.get("emotion") or "")
+        shot_type = str(prompt_data.get("shot_type") or prompt_data.get("camera_shot") or "")
+        motion_preset = str(prompt_data.get("motion_preset") or "")
 
         if index in analyzed:
             scene = VideoToonSceneSpec.from_scene_result(analyzed[index])
             updates: Dict[str, Any] = {}
+            if not scene.role_id and role_id:
+                updates["role_id"] = role_id
+            if not scene.actor_id and actor_id:
+                updates["actor_id"] = actor_id
+            if not scene.emotion and emotion:
+                updates["emotion"] = emotion
+            if not scene.shot_type and shot_type:
+                updates["shot_type"] = shot_type
+            if not scene.motion_preset and motion_preset:
+                updates["motion_preset"] = motion_preset
             if not scene.text and turn.get("text"):
                 updates["text"] = str(turn.get("text") or "")
             if not scene.speaker and (turn.get("role") or turn.get("speaker")):
@@ -268,11 +313,13 @@ def build_scene_specs_from_production(
             scenes.append(scene)
             continue
 
-        prompt_data = prompt_obj if isinstance(prompt_obj, dict) else {}
         scenes.append(
             VideoToonSceneSpec(
                 scene_id=str(prompt_data.get("scene_id") or f"scene_{index:04d}"),
                 dialogue_index=index,
+                role_id=role_id,
+                actor_id=actor_id,
+                emotion=emotion,
                 text=str(turn.get("text") or ""),
                 speaker=str(turn.get("role") or turn.get("speaker") or ""),
                 location=str(prompt_data.get("location") or ""),
@@ -282,6 +329,9 @@ def build_scene_specs_from_production(
                 atmosphere=str(prompt_data.get("atmosphere") or ""),
                 story_beat=str(prompt_data.get("story_beat") or ""),
                 camera_shot=str(prompt_data.get("camera_shot") or ""),
+                shot_type=shot_type,
+                motion_preset=motion_preset,
+                is_background_extra=bool(prompt_data.get("is_background_extra", False)),
                 key_props=[str(p) for p in list(prompt_data.get("key_props") or [])] if isinstance(prompt_data, dict) else [],
                 sd_prompt=prompt_text,
                 continuity_hint=str(prompt_data.get("continuity_hint") or ""),

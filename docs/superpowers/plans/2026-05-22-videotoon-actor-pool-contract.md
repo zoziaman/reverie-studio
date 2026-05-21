@@ -13,9 +13,16 @@
 ## File Structure
 
 - Modify `src/config/pack_validator.py`: validate `motiontoon.actor_pool`, `motiontoon.role_casting_contract`, and `cast_slots.*.actor_id`.
+- Modify `src/config/pack_config.py`: preserve actor-pool fields when loading motiontoon settings.
+- Modify `src/config/pack_models.py`: carry actor-pool fields on `MotiontoonConfig`.
+- Modify `src/modules_pro/videotoon_local.py`: carry `role_id`, `actor_id`, `emotion`, `shot_type`, and `motion_preset` into storyboard/generation requests.
 - Modify `src/utils/motiontoon.py`: preserve actor-pool fields when normalizing motiontoon config.
+- Create `src/utils/videotoon_contract.py`: validate episode role casting and scene-level actor references.
 - Modify `tests/test_pack_validator.py`: cover valid actor pools, invalid missing actors, invalid missing visual identity, and legacy warnings.
 - Modify `tests/test_motiontoon_scene_type.py`: cover normalization of actor-pool contract fields.
+- Modify `tests/test_videotoon_contract.py`: cover episode casting and scene reference validation.
+- Modify `tests/test_videotoon_local.py`: cover scene specs carrying actor contract fields.
+- Modify `tests/test_visual_storytelling_config.py`: cover motiontoon config preserving actor-pool fields.
 - Create `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md`: public-facing rule document.
 - Create `schemas/video_toon_actor_pool.schema.json`: actor-pool shape.
 - Create `schemas/video_toon_episode_cast.schema.json`: episode role-casting and scene reference shape.
@@ -140,4 +147,71 @@ git diff --stat
 git status --short
 ```
 
-Expected: only docs, schemas, validator, motiontoon config normalization, and tests changed.
+Expected: only docs, schemas, actor-pool validators, motiontoon config loading, VideoToon scene-contract fields, and tests changed.
+
+### Task 5: Episode Role Casting Validator
+
+**Files:**
+- Create: `src/utils/videotoon_contract.py`
+- Create: `tests/test_videotoon_contract.py`
+- Modify: `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md`
+
+- [x] **Step 1: Add episode contract validator**
+
+Create:
+
+```python
+def validate_episode_actor_contract(episode, actor_pool, *, assignment_key="role_casting", strict_actor_refs=True, allow_background_extras=True, required_scene_fields=None):
+    ...
+```
+
+It must reject unknown actors, unknown roles, missing scene fields, and scenes where `actor_id` does not match the role-casting table.
+
+- [x] **Step 2: Add tests for valid and invalid episode casting**
+
+Run: `pytest tests/test_videotoon_contract.py -q`
+Expected: all tests pass.
+
+### Task 6: Carry Actor References Into VideoToon Scene Specs
+
+**Files:**
+- Modify: `src/modules_pro/videotoon_local.py`
+- Modify: `tests/test_videotoon_local.py`
+
+- [x] **Step 1: Add scene spec fields**
+
+Add `role_id`, `actor_id`, `emotion`, `shot_type`, `motion_preset`, and `is_background_extra` to `VideoToonSceneSpec`.
+
+- [x] **Step 2: Add build_scene_specs_from_production role casting**
+
+Add optional `role_casting` input and use it to resolve `actor_id` from script/image prompt roles.
+
+- [x] **Step 3: Add tests**
+
+Run: `pytest tests/test_videotoon_local.py -q`
+Expected: all tests pass.
+
+### Task 7: Preserve Actor Pool Through Pack Config Loading
+
+**Files:**
+- Modify: `src/config/pack_models.py`
+- Modify: `src/config/pack_config.py`
+- Modify: `tests/test_visual_storytelling_config.py`
+
+- [x] **Step 1: Add fields to MotiontoonConfig**
+
+Add:
+
+```python
+actor_pool: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+role_casting_contract: Dict[str, Any] = field(default_factory=dict)
+```
+
+- [x] **Step 2: Preserve fields while loading and cloning**
+
+Update `_load_motiontoon_config`, `_clone_motiontoon_config`, and fallback `get_motiontoon_config` construction.
+
+- [x] **Step 3: Verify**
+
+Run: `pytest tests/test_visual_storytelling_config.py -q`
+Expected: all tests pass.

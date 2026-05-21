@@ -869,6 +869,51 @@ def test_workspace_writes_production_videotoon_bundle(tmp_path):
     assert request["storyboard"]["text"] == "문자를 확인했다."
 
 
+def test_build_scene_specs_applies_episode_role_casting_to_actor_id():
+    scenes = build_scene_specs_from_production(
+        script_list=[
+            {"role": "victim", "emotion": "fear", "text": "I should not have opened that message."},
+            {"role": "scammer", "emotion": "smirk", "text": "Send it before midnight."},
+        ],
+        image_prompts=[
+            {"prompt": "woman looking at phone", "shot_type": "medium_close", "motion_preset": "slow_push"},
+            {"prompt": "man smiling in office", "shot_type": "prop_reveal", "motion_preset": "snap_zoom"},
+        ],
+        role_casting={
+            "victim": "actor_woman_01",
+            "scammer": "actor_man_01",
+        },
+    )
+
+    assert scenes[0].role_id == "victim"
+    assert scenes[0].actor_id == "actor_woman_01"
+    assert scenes[0].emotion == "fear"
+    assert scenes[0].shot_type == "medium_close"
+    assert scenes[0].motion_preset == "slow_push"
+    assert scenes[1].role_id == "scammer"
+    assert scenes[1].actor_id == "actor_man_01"
+
+
+def test_generation_request_includes_actor_contract_fields():
+    scene = VideoToonSceneSpec(
+        scene_id="scene_actor",
+        role_id="victim",
+        actor_id="actor_woman_01",
+        emotion="fear",
+        shot_type="medium_close",
+        motion_preset="slow_push",
+        sd_prompt="woman looking at phone",
+    )
+    request = scene.to_generation_request(VideoToonStackConfig(workspace_root="unused"))
+
+    assert request["role_id"] == "victim"
+    assert request["actor_id"] == "actor_woman_01"
+    assert request["emotion"] == "fear"
+    assert request["shot_type"] == "medium_close"
+    assert request["motion_preset"] == "slow_push"
+    assert request["storyboard"]["actor_id"] == "actor_woman_01"
+
+
 def test_workspace_tracks_scene_status_and_bundle_progress(tmp_path):
     workspace = VideoToonLocalWorkspace(VideoToonStackConfig(workspace_root=str(tmp_path / "VideoToon")))
     scenes = [

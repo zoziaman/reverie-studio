@@ -414,6 +414,12 @@ def _load_motiontoon_config(data: Dict[str, Any], fallback_enabled: bool = False
     cast_slots = motion_data.get("cast_slots", {})
     if not isinstance(cast_slots, dict):
         cast_slots = {}
+    actor_pool = motion_data.get("actor_pool", {})
+    if not isinstance(actor_pool, dict):
+        actor_pool = {}
+    role_casting_contract = motion_data.get("role_casting_contract", {})
+    if not isinstance(role_casting_contract, dict):
+        role_casting_contract = {}
     puppet_profiles = motion_data.get("puppet_profiles", {})
     if not isinstance(puppet_profiles, dict):
         puppet_profiles = {}
@@ -448,6 +454,8 @@ def _load_motiontoon_config(data: Dict[str, Any], fallback_enabled: bool = False
         prop_keywords=prop_keywords,
         scene_motion_rules=scene_rules,
         cast_slots=cast_slots,
+        actor_pool=actor_pool,
+        role_casting_contract=role_casting_contract,
         puppet_profiles=puppet_profiles,
     )
 
@@ -2376,6 +2384,8 @@ def get_motiontoon_config() -> MotiontoonConfig:
             prop_keywords=getattr(motiontoon, "prop_keywords", []),
             scene_motion_rules=getattr(motiontoon, "scene_motion_rules", {}),
             cast_slots=getattr(motiontoon, "cast_slots", {}),
+            actor_pool=getattr(motiontoon, "actor_pool", {}),
+            role_casting_contract=getattr(motiontoon, "role_casting_contract", {}),
             puppet_profiles=getattr(motiontoon, "puppet_profiles", {}),
         )
     return _clone_motiontoon_config(motiontoon)

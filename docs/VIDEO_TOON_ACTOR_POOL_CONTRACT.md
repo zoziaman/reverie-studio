@@ -108,6 +108,14 @@ The pack validator now accepts and checks:
 
 Legacy `character_id` slots are still accepted for older packs. New video-toon packs should move toward `actor_id`.
 
+Episode and scene validation lives in `utils.videotoon_contract`:
+
+- `role_casting_from_motiontoon_slots(...)` converts pack slots into an episode role-casting table.
+- `validate_episode_actor_contract(...)` checks that episode roles point to known actors and that scenes do not drift away from the assigned actor.
+- `scene_dicts_from_specs(...)` extracts validation fields from `VideoToonSceneSpec` objects.
+
+`VideoToonSceneSpec` carries `role_id`, `actor_id`, `emotion`, `shot_type`, and `motion_preset` into the generation request and storyboard JSON. This keeps the production bundle aligned with the actor-pool contract before image generation begins.
+
 ## Target Video-Toon Grammar
 
 The target is not full animation first. The reliable MVP is:

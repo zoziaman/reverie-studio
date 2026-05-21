@@ -669,6 +669,8 @@ class MotiontoonConfig:
     prop_keywords: List[str] = field(default_factory=list)
     scene_motion_rules: Dict[str, List[str]] = field(default_factory=dict)
     cast_slots: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    actor_pool: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    role_casting_contract: Dict[str, Any] = field(default_factory=dict)
     puppet_profiles: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
@@ -728,6 +730,8 @@ def _clone_motiontoon_config(motiontoon: "MotiontoonConfig") -> "MotiontoonConfi
         prop_keywords=list(getattr(motiontoon, "prop_keywords", []) or []),
         scene_motion_rules=dict(getattr(motiontoon, "scene_motion_rules", {}) or {}),
         cast_slots=dict(getattr(motiontoon, "cast_slots", {}) or {}),
+        actor_pool=dict(getattr(motiontoon, "actor_pool", {}) or {}),
+        role_casting_contract=dict(getattr(motiontoon, "role_casting_contract", {}) or {}),
         puppet_profiles=dict(getattr(motiontoon, "puppet_profiles", {}) or {}),
     )
 
