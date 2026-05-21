@@ -914,6 +914,61 @@ def test_generation_request_includes_actor_contract_fields():
     assert request["storyboard"]["actor_id"] == "actor_woman_01"
 
 
+def test_write_production_bundle_records_actor_contract_validation(tmp_path):
+    workspace = VideoToonLocalWorkspace(VideoToonStackConfig(workspace_root=str(tmp_path / "VideoToon")))
+    scenes = [
+        VideoToonSceneSpec(
+            scene_id="scene_0001",
+            role_id="victim",
+            actor_id="actor_woman_01",
+            emotion="fear",
+            shot_type="medium_close",
+            sd_prompt="woman looking at phone",
+        )
+    ]
+
+    manifest = workspace.write_production_bundle(
+        "run-actor-contract",
+        scenes,
+        actor_pool={"actor_woman_01": {"visual_identity": "fixed woman actor"}},
+        role_casting={"victim": "actor_woman_01"},
+    )
+
+    assert manifest["actor_contract_validation"]["is_valid"] is True
+    assert manifest["actor_contract_validation"]["role_count"] == 1
+    assert manifest["actor_contract_validation"]["scene_count"] == 1
+
+
+def test_write_production_bundle_rejects_actor_contract_mismatch(tmp_path):
+    workspace = VideoToonLocalWorkspace(VideoToonStackConfig(workspace_root=str(tmp_path / "VideoToon")))
+    scenes = [
+        VideoToonSceneSpec(
+            scene_id="scene_0001",
+            role_id="victim",
+            actor_id="actor_man_01",
+            emotion="fear",
+            shot_type="medium_close",
+            sd_prompt="man looking at phone",
+        )
+    ]
+
+    try:
+        workspace.write_production_bundle(
+            "run-actor-contract-fail",
+            scenes,
+            actor_pool={
+                "actor_woman_01": {"visual_identity": "fixed woman actor"},
+                "actor_man_01": {"visual_identity": "fixed man actor"},
+            },
+            role_casting={"victim": "actor_woman_01"},
+        )
+    except ValueError as exc:
+        assert "actor contract validation failed" in str(exc)
+        assert "does not match" in str(exc)
+    else:
+        raise AssertionError("write_production_bundle accepted an actor mismatch")
+
+
 def test_workspace_tracks_scene_status_and_bundle_progress(tmp_path):
     workspace = VideoToonLocalWorkspace(VideoToonStackConfig(workspace_root=str(tmp_path / "VideoToon")))
     scenes = [

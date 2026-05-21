@@ -215,3 +215,35 @@ Update `_load_motiontoon_config`, `_clone_motiontoon_config`, and fallback `get_
 
 Run: `pytest tests/test_visual_storytelling_config.py -q`
 Expected: all tests pass.
+
+### Task 8: Enforce Contract At Bundle Boundary
+
+**Files:**
+- Modify: `src/modules_pro/videotoon_local.py`
+- Modify: `tests/test_videotoon_local.py`
+- Modify: `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md`
+
+- [x] **Step 1: Add optional validation to write_production_bundle**
+
+Add optional keyword arguments:
+
+```python
+actor_pool: Optional[Dict[str, Any]] = None
+role_casting: Optional[Dict[str, str]] = None
+validate_actor_contract: bool = False
+```
+
+When actor pool or role casting data is provided, validate before writing generation requests.
+
+- [x] **Step 2: Record validation in the manifest**
+
+Add `actor_contract_validation` with `is_valid`, `errors`, `warnings`, `role_count`, and `scene_count`.
+
+- [x] **Step 3: Reject mismatches**
+
+Raise `ValueError` when a scene's `actor_id` does not match the episode role-casting table.
+
+- [x] **Step 4: Verify**
+
+Run: `pytest tests/test_videotoon_local.py tests/test_videotoon_contract.py -q`
+Expected: all tests pass.

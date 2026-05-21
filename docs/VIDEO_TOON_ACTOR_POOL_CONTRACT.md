@@ -116,6 +116,8 @@ Episode and scene validation lives in `utils.videotoon_contract`:
 
 `VideoToonSceneSpec` carries `role_id`, `actor_id`, `emotion`, `shot_type`, and `motion_preset` into the generation request and storyboard JSON. This keeps the production bundle aligned with the actor-pool contract before image generation begins.
 
+`VideoToonLocalWorkspace.write_production_bundle(...)` can enforce this contract before any generation request is written. Pass `actor_pool` and `role_casting` to record `actor_contract_validation` in the bundle manifest. A mismatch raises `ValueError` before the run reaches ComfyUI or SD WebUI.
+
 ## Target Video-Toon Grammar
 
 The target is not full animation first. The reliable MVP is:

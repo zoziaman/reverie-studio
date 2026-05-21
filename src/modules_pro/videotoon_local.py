@@ -15,6 +15,8 @@ from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
+from utils.videotoon_contract import scene_dicts_from_specs, validate_episode_actor_contract
+
 
 DEFAULT_REQUIRED_MODEL_PATHS = (
     "models/clip_vision/CLIP-ViT-H-14-laion2B-s32B-b79K.safetensors",
@@ -815,11 +817,40 @@ class VideoToonLocalWorkspace:
         self,
         production_id: str,
         scenes: Iterable[VideoToonSceneSpec],
+        *,
+        actor_pool: Optional[Dict[str, Any]] = None,
+        role_casting: Optional[Dict[str, str]] = None,
+        validate_actor_contract: bool = False,
     ) -> Dict[str, Any]:
         """Write storyboard, per-scene generation requests, and a bundle manifest."""
         self.ensure_layout()
         character_manifest = self.load_character_reference_manifest()
         scene_list = [self.apply_character_reference(scene, character_manifest) for scene in list(scenes or [])]
+        should_validate_actor_contract = validate_actor_contract or bool(actor_pool) or bool(role_casting)
+        actor_contract_report: Dict[str, Any] = {}
+        if should_validate_actor_contract:
+            role_casting_data = dict(role_casting or {})
+            if not role_casting_data:
+                for scene in scene_list:
+                    if scene.role_id and scene.actor_id:
+                        role_casting_data.setdefault(scene.role_id, scene.actor_id)
+            result = validate_episode_actor_contract(
+                {
+                    "episode_id": production_id,
+                    "role_casting": role_casting_data,
+                    "scenes": scene_dicts_from_specs(scene_list),
+                },
+                actor_pool or {},
+            )
+            actor_contract_report = {
+                "is_valid": result.is_valid,
+                "errors": list(result.errors),
+                "warnings": list(result.warnings),
+                "role_count": len(role_casting_data),
+                "scene_count": len(scene_list),
+            }
+            if not result.is_valid:
+                raise ValueError("VideoToon actor contract validation failed: " + "; ".join(result.errors))
         storyboard_path = self.write_storyboard(production_id, scene_list)
         scene_entries: List[Dict[str, Any]] = []
         for scene in scene_list:
@@ -859,6 +890,8 @@ class VideoToonLocalWorkspace:
             "config": asdict(self.config),
             "scenes": scene_entries,
         }
+        if actor_contract_report:
+            manifest["actor_contract_validation"] = actor_contract_report
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
         self.write_bundle_progress(production_id)
         return manifest
