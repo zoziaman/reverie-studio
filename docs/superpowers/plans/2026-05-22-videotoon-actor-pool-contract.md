@@ -247,3 +247,45 @@ Raise `ValueError` when a scene's `actor_id` does not match the episode role-cas
 
 Run: `pytest tests/test_videotoon_local.py tests/test_videotoon_contract.py -q`
 Expected: all tests pass.
+
+### Task 9: Demote ControlNet/IP-Adapter To Optional Variant Support
+
+**Files:**
+- Modify: `src/modules_pro/videotoon_local.py`
+- Modify: `tests/test_videotoon_local.py`
+- Modify: `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md`
+
+- [x] **Step 1: Add actor-pool-first request metadata**
+
+Generation requests now include:
+
+```json
+{
+  "identity_source": "actor_pool",
+  "identity_contract": {
+    "role_id": "victim",
+    "actor_id": "actor_woman_01",
+    "emotion": "fear"
+  }
+}
+```
+
+- [x] **Step 2: Re-label ControlNet/IP-Adapter as optional support**
+
+Generation requests use:
+
+```json
+{
+  "character_reference_mode": "actor_pool_optional_ip_adapter",
+  "pose_control_mode": "optional_controlnet_openpose_sd15",
+  "depth_control_mode": "optional_controlnet_depth_sd15",
+  "variant_generation_support": {
+    "mode": "optional_missing_variant_generation"
+  }
+}
+```
+
+- [x] **Step 3: Verify**
+
+Run: `pytest tests/test_videotoon_local.py -q`
+Expected: all tests pass.

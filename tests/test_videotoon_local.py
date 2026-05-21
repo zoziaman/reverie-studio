@@ -118,8 +118,10 @@ def test_workspace_writes_storyboard_and_generation_request(tmp_path):
     assert storyboard["scenes"][0]["scene_id"] == "scene_0001"
     assert request["backend"] == "comfyui"
     assert request["size"] == {"width": 1024, "height": 576}
-    assert request["character_reference_mode"] == "ip_adapter_plus_face_sd15"
-    assert request["pose_control_mode"] == "controlnet_openpose_sd15"
+    assert request["identity_source"] == "legacy_scene_prompt"
+    assert request["character_reference_mode"] == "actor_pool_optional_ip_adapter"
+    assert request["pose_control_mode"] == "optional_controlnet_openpose_sd15"
+    assert request["variant_generation_support"]["mode"] == "optional_missing_variant_generation"
     assert Path(artifacts.scene_dir).name == "scene_0001"
     assert "run_01" in artifacts.scene_dir
 
@@ -909,6 +911,12 @@ def test_generation_request_includes_actor_contract_fields():
     assert request["role_id"] == "victim"
     assert request["actor_id"] == "actor_woman_01"
     assert request["emotion"] == "fear"
+    assert request["identity_source"] == "actor_pool"
+    assert request["identity_contract"] == {
+        "role_id": "victim",
+        "actor_id": "actor_woman_01",
+        "emotion": "fear",
+    }
     assert request["shot_type"] == "medium_close"
     assert request["motion_preset"] == "slow_push"
     assert request["storyboard"]["actor_id"] == "actor_woman_01"

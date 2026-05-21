@@ -118,6 +118,8 @@ Episode and scene validation lives in `utils.videotoon_contract`:
 
 `VideoToonLocalWorkspace.write_production_bundle(...)` can enforce this contract before any generation request is written. Pass `actor_pool` and `role_casting` to record `actor_contract_validation` in the bundle manifest. A mismatch raises `ValueError` before the run reaches ComfyUI or SD WebUI.
 
+Generation requests now expose `identity_source`, `identity_contract`, and `variant_generation_support`. When `actor_id` is present, the identity source is `actor_pool`; IP-Adapter and ControlNet are marked as optional support for missing pose, depth, or face-reference variants.
+
 ## Target Video-Toon Grammar
 
 The target is not full animation first. The reliable MVP is:

@@ -210,19 +210,32 @@ class VideoToonSceneSpec:
 
     def to_generation_request(self, config: VideoToonStackConfig) -> Dict[str, Any]:
         """Return the backend-neutral image generation request for this scene."""
+        variant_support = {
+            "mode": "optional_missing_variant_generation",
+            "ip_adapter_face": bool(self.character_reference_path),
+            "controlnet_pose": bool(self.pose_reference_path),
+            "controlnet_depth": bool(self.depth_reference_path),
+        }
         return {
             "scene_id": self.scene_id,
             "role_id": self.role_id,
             "actor_id": self.actor_id,
             "emotion": self.emotion,
+            "identity_source": "actor_pool" if self.actor_id else "legacy_scene_prompt",
+            "identity_contract": {
+                "role_id": self.role_id,
+                "actor_id": self.actor_id,
+                "emotion": self.emotion,
+            },
             "backend": config.image_backend,
             "size": {
                 "width": config.generation_width,
                 "height": config.generation_height,
             },
-            "character_reference_mode": "ip_adapter_plus_face_sd15",
-            "pose_control_mode": "controlnet_openpose_sd15",
-            "depth_control_mode": "controlnet_depth_sd15",
+            "character_reference_mode": "actor_pool_optional_ip_adapter",
+            "pose_control_mode": "optional_controlnet_openpose_sd15",
+            "depth_control_mode": "optional_controlnet_depth_sd15",
+            "variant_generation_support": variant_support,
             "layer_outputs": list(self.required_outputs),
             "prompt": self.sd_prompt,
             "negative_prompt_policy": "pack_default_plus_video_toon_safety",
