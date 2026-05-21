@@ -9,6 +9,7 @@ repository.
 
 ```powershell
 $env:PYTHONPATH="src"
+python -m reverie_doctor --json
 python -m reverie_demo --out "$env:TEMP\reverie-public-demo"
 ```
 
@@ -16,6 +17,9 @@ Expected files:
 
 ```text
 %TEMP%\reverie-public-demo\
+  backend_profile.json
+  environment_report.json
+  quality_gate.json
   run_manifest.json
   stage_log.jsonl
   pipeline_report.md
@@ -26,21 +30,40 @@ Expected files:
 ```mermaid
 flowchart LR
     A["Content pack"] --> B["Story plan"]
-    B --> C["Image backend dry-run"]
-    C --> D["TTS backend dry-run"]
-    D --> E["Caption plan"]
-    E --> F["Render plan"]
-    F --> G["Metadata gate"]
-    G --> H["Upload blocked for human review"]
+    B --> C["Environment doctor"]
+    C --> D["Backend profile"]
+    D --> E["Image backend dry-run"]
+    E --> F["TTS backend dry-run"]
+    F --> G["Caption plan"]
+    G --> H["Render plan"]
+    H --> I["Metadata gate"]
+    I --> J["Quality gate"]
+    J --> K["Upload blocked for human review"]
 ```
 
 The demo proves that a fresh public clone can:
 
 - load a public content-pack fixture
 - produce a deterministic stage manifest
+- describe the selected backend profile
+- check local prerequisites without reading credentials
+- write a dry-run quality gate result
 - write duration, cost, artifact, and status rows
 - keep upload behind a manual review gate
 - avoid credentials, generated media, model files, voice data, and local paths
+
+## Backend Profiles
+
+Use `--backend-profile` to choose the setup shape that the dry-run describes:
+
+```powershell
+python -m reverie_demo --backend-profile local_dry_run --out "$env:TEMP\reverie-public-demo"
+python -m reverie_demo --backend-profile local_comfyui_sovits --out "$env:TEMP\reverie-sovits-plan"
+python -m reverie_demo --backend-profile local_comfyui_supertonic --out "$env:TEMP\reverie-supertonic-plan"
+```
+
+The public demo still stays report-only. Choosing a real backend profile does
+not start ComfyUI, TTS, Remotion, or upload.
 
 ## What It Does Not Prove
 

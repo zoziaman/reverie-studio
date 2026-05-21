@@ -14,8 +14,10 @@ NEEDS REVIEW
 The tracked publish set has been cleaned for an open-source snapshot: local
 agent state, session logs, generated media/output, vendor caches, and
 machine-specific paths found during review were removed. The remaining review
-gate is repository history: scan or replace old private history before turning
-an existing private repository public.
+gates are repository history and the optional Firebase Functions dependency
+audit: scan or replace old private history before turning an existing private
+repository public, and review the residual low-severity functions chain before
+calling that surface production-ready.
 
 ## Release Checklist
 
@@ -32,7 +34,11 @@ an existing private repository public.
 | External model/audio assets excluded | PASS | BGM/SFX libraries, SoVITS voice data, LoRA/checkpoints/model weights, vendor caches, and Remotion `node_modules` are excluded. |
 | Public packs reviewed | PASS | `assets/packs/` was scanned for live secrets, personal paths, and private-key material with no hits. |
 | No-credential demo available | PASS | `python -m reverie_demo` runs a public dry-run that writes only report files outside the repository. |
+| Local setup doctor available | PASS | `python -m reverie_doctor --json` reports missing local prerequisites without reading secrets or starting services. |
+| Backend profile boundary documented | PASS | `docs/BACKEND_PROFILES.md` and `src/reverie_backends.py` describe dry-run, local SoVITS, local Supertonic, and opt-in cloud profiles. |
+| Public quality gate available | PASS | The dry-run writes `quality_gate.json` with score, threshold, review requirements, and no media inspection. |
 | CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public snapshot scanner and dry-run demo on `main` and `codex/public-snapshot-clean`. |
+| Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix` was applied to the lockfile; `npm audit` still reports 9 low-severity transitive findings that require a breaking force fix. |
 | Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. |
 
 ## Include
@@ -46,6 +52,7 @@ an existing private repository public.
 - `.gitignore`
 - source files under `src/`
 - tests that do not require private credentials or generated assets
+- public setup/onboarding docs under `docs/`
 - public pack prompts/templates under `assets/packs/` after review
 - public Remotion scaffolding under `remotion-poc/` after excluding render output
 - setup/build docs that use placeholders only

@@ -28,12 +28,17 @@ jobs:
         run: python scripts/public_snapshot_check.py
 
       - name: Run public demo tests
-        run: python -m pytest tests/test_public_demo.py -q
+        run: python -m pytest tests/test_public_demo.py tests/test_public_readiness_tools.py -q
+        env:
+          PYTHONPATH: src
+
+      - name: Run local setup doctor
+        run: python -m reverie_doctor --json
         env:
           PYTHONPATH: src
 
       - name: Run no-credential dry-run demo
-        run: python -m reverie_demo --out "$RUNNER_TEMP/reverie-public-demo"
+        run: python -m reverie_demo --backend-profile local_dry_run --out "$RUNNER_TEMP/reverie-public-demo"
         env:
           PYTHONPATH: src
 

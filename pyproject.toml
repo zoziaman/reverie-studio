@@ -45,12 +45,13 @@ classifiers = [
 [project.scripts]
 reverie-commercial-readiness = "utils.commercial_readiness:main"
 reverie-demo = "reverie_demo:main"
+reverie-doctor = "reverie_doctor:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.setuptools]
-py-modules = ["reverie_demo"]
+py-modules = ["reverie_backends", "reverie_demo", "reverie_doctor", "reverie_quality"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]

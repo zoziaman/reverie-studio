@@ -26,6 +26,7 @@ credentials:
 git clone https://github.com/zoziaman/reverie-studio.git
 cd reverie-studio
 $env:PYTHONPATH="src"
+python -m reverie_doctor --json
 python -m reverie_demo --out "$env:TEMP\reverie-public-demo"
 Get-Content "$env:TEMP\reverie-public-demo\pipeline_report.md"
 ```
@@ -34,15 +35,19 @@ The demo writes only safe report files outside the repository:
 
 ```text
 %TEMP%\reverie-public-demo\
+  backend_profile.json
+  environment_report.json
+  quality_gate.json
   run_manifest.json
   stage_log.jsonl
   pipeline_report.md
 ```
 
 It proves that a fresh public clone can load a public content pack, map the
-workflow stages, record duration/cost/status rows, and stop before upload. It
-does not render real video, call AI APIs, start local model servers, or create
-generated media. See `docs/PUBLIC_DEMO.md`.
+workflow stages, record duration/cost/status rows, choose a backend profile,
+run a local setup doctor, score a public quality gate, and stop before upload.
+It does not render real video, call AI APIs, start local model servers, or
+create generated media. See `docs/PUBLIC_DEMO.md`.
 
 ## Target Workflow
 
@@ -81,6 +86,9 @@ Included:
 - Python desktop app and workflow modules under `src/`
 - Public pack templates and prompt examples under `assets/packs/`
 - A no-credential dry-run demo under `src/reverie_demo.py`
+- A local setup doctor under `src/reverie_doctor.py`
+- Public backend profiles under `src/reverie_backends.py`
+- A public dry-run quality gate under `src/reverie_quality.py`
 - A public demo pack under `examples/public_demo_pack.json`
 - Tests for the demo and selected pipeline/security surfaces
 - Security and public-release checklists
@@ -129,26 +137,59 @@ assets. A typical setup looks like this:
 
 1. Install Python 3.11+.
 2. Install project dependencies from `pyproject.toml` or `requirements.txt`.
-3. Install and run any local generation services you want to use, such as
+3. Run the public doctor and dry-run before adding real credentials:
+
+```powershell
+$env:PYTHONPATH="src"
+python -m reverie_doctor --json
+python -m reverie_demo --backend-profile local_dry_run --out "$env:TEMP\reverie-public-demo"
+```
+
+4. Install and run any local generation services you want to use, such as
    Stable Diffusion WebUI, ComfyUI, GPT-SoVITS, Supertonic 3, or a compatible
    TTS service.
-4. Copy `.env.example` to `.env` and fill in local-only values.
-5. Run the desktop app:
+5. Copy `.env.example` to `.env` and fill in local-only values.
+6. Run the desktop app:
 
 ```powershell
 copy .env.example .env
 python src\main_gui.py
 ```
 
-If you ask another Codex session to set this up from GitHub, the useful prompt is:
+If you ask another Codex session to set this up from GitHub, use the longer
+copy-paste prompt in `docs/CODEX_SETUP_PROMPT.md`.
+
+Short version:
 
 ```text
 Clone this repository, read README.md, .env.example, EXTERNAL_ASSETS.md,
-docs/PUBLIC_DEMO.md, SECURITY_PUBLIC_CHECK.md, and
-PUBLIC_RELEASE_CHECKLIST.md. First run the no-credential dry-run demo. Then set
-up a local Windows development run without adding real credentials, local paths,
-model files, voice data, or generated outputs to git.
+docs/PUBLIC_DEMO.md, docs/BACKEND_PROFILES.md, docs/CODEX_SETUP_PROMPT.md,
+SECURITY_PUBLIC_CHECK.md, and PUBLIC_RELEASE_CHECKLIST.md. First run
+python scripts/public_snapshot_check.py, python -m reverie_doctor --json, and
+the no-credential dry-run demo. Then set up a local Windows development run
+without adding real credentials, local paths, model files, voice data, or
+generated outputs to git.
 ```
+
+## Backend Profiles
+
+The public snapshot includes declarative backend profiles so a user or coding
+agent can choose a setup path explicitly:
+
+```powershell
+$env:PYTHONPATH="src"
+python -m reverie_demo --backend-profile local_dry_run --out "$env:TEMP\reverie-public-demo"
+python -m reverie_demo --backend-profile local_comfyui_supertonic --out "$env:TEMP\reverie-supertonic-plan"
+```
+
+Available profiles:
+
+- `local_dry_run`: no AI services, no credentials, report-only demo
+- `local_comfyui_sovits`: ComfyUI plus GPT-SoVITS, using user-provided local assets
+- `local_comfyui_supertonic`: ComfyUI plus Supertonic 3 voice presets
+- `cloud_assisted_private_review`: explicit opt-in credentials, private/test review first
+
+See `docs/BACKEND_PROFILES.md`.
 
 ## Required Local Assets
 
