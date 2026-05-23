@@ -1,7 +1,15 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 from typing import Any
+
+SRC_DIR = Path(__file__).resolve().parents[1] / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
+
+from utils.secret_redaction import redact_sensitive_text
 
 
 def _describe_key_state(api_key: str | None) -> str:
@@ -45,7 +53,7 @@ def main() -> int:
         genai = _load_gemini_module()
         genai.configure(api_key=api_key)
     except Exception as exc:
-        print(f"[configuration error] {exc}")
+        print(f"[configuration error] {redact_sensitive_text(exc)}")
         return 1
 
     print("\nRequesting available Gemini models...")
@@ -71,7 +79,7 @@ def main() -> int:
         print("\n[result] Gemini API responded successfully.")
         return 0
     except Exception as exc:
-        print(f"\n[connection failed] {exc}")
+        print(f"\n[connection failed] {redact_sensitive_text(exc)}")
         return 1
 
 

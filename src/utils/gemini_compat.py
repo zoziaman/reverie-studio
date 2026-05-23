@@ -26,6 +26,8 @@ import logging
 import concurrent.futures
 from typing import Optional, Any
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 # ============================================================
@@ -128,7 +130,7 @@ class _GeminiModelWrapper:
                         if config_dict:
                             kwargs['config'] = types.GenerateContentConfig(**config_dict)
                     except Exception as e:
-                        logger.warning(f"[GeminiWrapper] generation_config 변환 실패, 무시: {e}")
+                        logger.warning(f"[GeminiWrapper] generation_config 변환 실패, 무시: {redact_sensitive_text(e)}")
 
             # v62: safety_settings 자동 주입 (공포 콘텐츠 안전 필터 해제)
             # Gemini 기본값 BLOCK_MEDIUM_AND_ABOVE → 공포 콘텐츠 차단 → response.text=None
@@ -151,7 +153,7 @@ class _GeminiModelWrapper:
                 else:
                     kwargs['config'] = types.GenerateContentConfig(safety_settings=_safety)
             except Exception as e:
-                logger.debug(f"[GeminiWrapper] safety_settings 주입 실패 (무시): {e}")
+                logger.debug(f"[GeminiWrapper] safety_settings 주입 실패 (무시): {redact_sensitive_text(e)}")
 
             # v59.1.9: ThreadPoolExecutor로 timeout 강제 적용
             # v62.19: shutdown(wait=False, cancel_futures=True) — timeout 시 배경 스레드 블로킹 방지
@@ -181,7 +183,7 @@ class _GeminiModelWrapper:
         except TimeoutError:
             raise  # timeout은 그대로 전파
         except Exception as e:
-            logger.error(f"[GeminiWrapper] generate_content 실패 ({self._model_name}): {e}")
+            logger.error(f"[GeminiWrapper] generate_content 실패 ({self._model_name}): {redact_sensitive_text(e)}")
             raise
 
     @property
@@ -221,7 +223,7 @@ def configure_gemini(api_key: str) -> bool:
         return True
 
     except Exception as e:
-        logger.error(f"Gemini API 설정 실패: {e}")
+        logger.error(f"Gemini API 설정 실패: {redact_sensitive_text(e)}")
         return False
 
 
@@ -290,7 +292,7 @@ def _get_model_new_api(model_name: str, **kwargs) -> Optional[_GeminiModelWrappe
                 logger.warning(f"[GeminiCompat] {candidate} ping 타임아웃 ({PING_TIMEOUT}s)")
                 continue
             except Exception as e:
-                logger.debug(f"[GeminiCompat] {candidate} 시도 실패: {e}")
+                logger.debug(f"[GeminiCompat] {candidate} 시도 실패: {redact_sensitive_text(e)}")
                 continue
 
         logger.error("[GeminiCompat] 사용 가능한 모델 없음")
@@ -341,7 +343,7 @@ def generate_content(
         logger.warning(f"콘텐츠 생성 타임아웃 (prompt: {str(prompt)[:50]}...)")
         return None
     except Exception as e:
-        logger.error(f"콘텐츠 생성 실패: {e}")
+        logger.error(f"콘텐츠 생성 실패: {redact_sensitive_text(e)}")
         return None
 
 
@@ -364,7 +366,7 @@ def build_image_part(image_path: str) -> Optional[Any]:
 
         return Image.open(image_path)
     except Exception as e:
-        logger.error(f"이미지 파트 생성 실패: {e}")
+        logger.error(f"이미지 파트 생성 실패: {redact_sensitive_text(e)}")
         return None
 
 
@@ -394,7 +396,7 @@ def generate_vision_content(
             call_kwargs["timeout"] = timeout
         return model.generate_content(contents, **call_kwargs)
     except Exception as e:
-        logger.error(f"Vision 콘텐츠 생성 실패: {e}")
+        logger.error(f"Vision 콘텐츠 생성 실패: {redact_sensitive_text(e)}")
         return None
 
 

@@ -50,3 +50,22 @@ def test_debug_gemini_describes_key_state_without_revealing_value(monkeypatch):
     assert module._describe_key_state("") == "missing"
     assert module._describe_key_state(None) == "missing"
     assert module._describe_key_state("AIza" + ("b" * 32)) == "configured (value hidden)"
+
+
+def test_debug_gemini_redacts_configuration_errors(monkeypatch, capsys):
+    fake_key = "AIza" + ("j" * 32)
+
+    module = _load_debug_gemini(monkeypatch)
+    monkeypatch.setenv("GEMINI_API_KEY", fake_key)
+
+    class FakeGenAI:
+        @staticmethod
+        def configure(api_key=None):
+            raise RuntimeError(f"GEMINI_API_KEY={api_key}")
+
+    monkeypatch.setattr(module, "_load_gemini_module", lambda: FakeGenAI)
+
+    assert module.main() == 1
+    output = capsys.readouterr().out
+    assert fake_key not in output
+    assert "GEMINI_API_KEY=<redacted>" in output

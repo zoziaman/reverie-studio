@@ -13,18 +13,19 @@ import os
 import json
 import logging
 import base64
-import re
 import requests
 from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from enum import Enum
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
 def _redact_gemini_key(text: str) -> str:
-    return re.sub(r"([?&]key=)[^&\s]+", r"\1<redacted>", str(text or ""))
+    return redact_sensitive_text(text)
 
 
 # ============================================================
