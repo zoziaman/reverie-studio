@@ -33,6 +33,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Optional, List, Dict, Tuple, Callable
 from datetime import datetime
 from enum import Enum
+from utils.secret_redaction import redact_sensitive_text
 
 # OpenCV (선택적)
 try:
@@ -734,7 +735,7 @@ class StyleAnalyzer:
                 return {"error": f"API 오류: {response.status_code}"}
 
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": redact_sensitive_text(e)}
 
     def _build_style_analysis_prompt(self, video_info: Dict) -> str:
         """스타일 분석 프롬프트 생성"""
@@ -923,7 +924,7 @@ JSON만 응답해주세요."""
             return {"error": "API 실패"}
 
         except Exception as e:
-            return {"error": str(e)}
+            return {"error": redact_sensitive_text(e)}
 
     # ============================================================
     # 클론 레시피 생성 (종합)
