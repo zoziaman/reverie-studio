@@ -33,6 +33,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Callable
 from enum import Enum
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -336,6 +338,7 @@ class UtopiaEngine:
 
     def _add_log(self, message: str, level: str = "info", details: Dict = None):
         """로그 추가 (v54.7.3: Thread Safe)"""
+        message = redact_sensitive_text(message)
         entry = {
             "timestamp": datetime.now().isoformat(),
             "level": level,
@@ -446,6 +449,7 @@ class UtopiaEngine:
 
     def _set_state(self, new_state: UtopiaState, reason: str = ""):
         """상태 변경"""
+        reason = redact_sensitive_text(reason)
         old_state = self._current_state
         self._current_state = new_state
         self._save_state()
@@ -522,8 +526,9 @@ class UtopiaEngine:
                                 self._add_log(f"개인화 수집 실패: {errors[0]}", "warning")
             except Exception as e:
                 # v54.7.2: 개인화 실패 시 상태에 기록 (사용자가 확인 가능)
-                self._add_log(f"개인화 초기화 오류: {e}", "warning")
-                self.state["personalization_error"] = str(e)
+                safe_error = redact_sensitive_text(e)
+                self._add_log(f"개인화 초기화 오류: {safe_error}", "warning")
+                self.state["personalization_error"] = safe_error
                 self.state["personalization_last_attempt"] = datetime.now().isoformat()
 
         # 백그라운드에서 실행 (시작 지연 방지)
@@ -556,11 +561,12 @@ class UtopiaEngine:
             try:
                 self._engine_cycle()
             except Exception as e:
-                self._add_log(f"엔진 사이클 오류: {e}", "error")
+                safe_error = redact_sensitive_text(e)
+                self._add_log(f"엔진 사이클 오류: {safe_error}", "error")
                 if self.config.get("safety", {}).get("pause_on_error"):
-                    self._set_state(UtopiaState.ERROR, str(e))
+                    self._set_state(UtopiaState.ERROR, safe_error)
                     if self.on_error:
-                        self.on_error(str(e))
+                        self.on_error(safe_error)
 
             # 대기
             for _ in range(check_interval):
@@ -664,8 +670,9 @@ class UtopiaEngine:
                 self._set_state(UtopiaState.IDLE)
 
         except Exception as e:
-            self._add_log(f"콘텐츠 생성 실패: {e}", "error")
-            self._set_state(UtopiaState.ERROR, str(e))
+            safe_error = redact_sensitive_text(e)
+            self._add_log(f"콘텐츠 생성 실패: {safe_error}", "error")
+            self._set_state(UtopiaState.ERROR, safe_error)
 
     def generate_video_now(
         self,
@@ -742,8 +749,9 @@ class UtopiaEngine:
                         else:
                             self._add_log(f"영상 생성 실패: {gen_result.get('error')}", "error")
                     except Exception as e:
-                        self._add_log(f"비동기 생성 오류: {e}", "error")
-                        self._set_state(UtopiaState.ERROR, str(e))
+                        safe_error = redact_sensitive_text(e)
+                        self._add_log(f"비동기 생성 오류: {safe_error}", "error")
+                        self._set_state(UtopiaState.ERROR, safe_error)
 
                 threading.Thread(target=_generate_async, daemon=True).start()
                 result["success"] = True
@@ -756,9 +764,10 @@ class UtopiaEngine:
                 )
 
         except Exception as e:
-            result["error"] = str(e)
-            self._add_log(f"즉시 생성 실패: {e}", "error")
-            self._set_state(UtopiaState.ERROR, str(e))
+            safe_error = redact_sensitive_text(e)
+            result["error"] = safe_error
+            self._add_log(f"즉시 생성 실패: {safe_error}", "error")
+            self._set_state(UtopiaState.ERROR, safe_error)
 
         return result
 
@@ -870,8 +879,9 @@ class UtopiaEngine:
                 self._set_state(UtopiaState.ERROR, result["error"])
 
         except Exception as e:
-            result["error"] = str(e)
-            self._set_state(UtopiaState.ERROR, str(e))
+            safe_error = redact_sensitive_text(e)
+            result["error"] = safe_error
+            self._set_state(UtopiaState.ERROR, safe_error)
 
         return result
 
