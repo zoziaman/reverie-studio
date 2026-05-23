@@ -24,6 +24,10 @@ conversion. `python scripts\public_export.py --out <temp>` creates a
 history-free zip archive from the current tracked snapshot and writes
 `public_export_manifest.json`; `--with-public-export` records the same archive
 verification in `public_verify_report.json`.
+Read `publish_gate.release_options` before publishing: `history_free_export`
+is the clean distribution path when available, while `existing_repo_history`
+must stay blocked until `--with-history-scan` passes for the exact repository
+history being made public.
 
 ## Release Checklist
 
@@ -49,6 +53,7 @@ verification in `public_verify_report.json`.
 | CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public verifier and focused public tests on `main` and `codex/public-snapshot-clean`. |
 | Firebase Functions dependency audit | PASS | `npm --prefix functions audit --package-lock-only --omit=dev --json` reports 0 production vulnerabilities after the lockfile refresh and root `uuid` override. `public_verify.py --with-functions-audit` records structured counts and direct dependency versions without embedding raw npm output. |
 | Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. `python scripts\public_verify.py --with-history-scan --out <temp>` now checks git history filenames with the public snapshot path rules and reports only counts/fingerprints; this recovered branch still needs a clean release branch/export because historical blocked filenames are present. |
+| Public release option chosen | NEEDS REVIEW | Inspect `publish_gate.release_options` in `public_verify_report.json`. Use `history_free_export` for the history-free archive when it is available. Do not use `existing_repo_history` until it is no longer blocked by `--with-history-scan`. |
 
 ## Include
 
@@ -89,5 +94,6 @@ passing `public_snapshot` from a clean workspace, then
 `python scripts\public_export.py --verify --out <temp>` passes. The publish set
 must have no real secrets, no personal data, no local runtime state, and no
 generated or third-party assets that should remain user-provided. Treat
-`publish_gate.manual_review_items` in `public_verify_report.json` as mandatory
-before converting an existing private repository to public.
+`publish_gate.manual_review_items` and `publish_gate.release_options` in
+`public_verify_report.json` as mandatory before converting an existing private
+repository to public.

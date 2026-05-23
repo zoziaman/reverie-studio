@@ -25,6 +25,10 @@ public verifier report. After `npm --prefix functions ci`,
 without embedding stack traces or local paths. `--with-functions-audit` now
 records 0 production vulnerabilities for the optional functions package,
 together with structured counts and dependency versions.
+The verifier also reports `publish_gate.release_options`: publish this
+recovered/private-history workspace through `history_free_export` when it is
+available, and keep `existing_repo_history` blocked until the exact repository
+history passes `--with-history-scan`.
 
 ## Checklist
 
@@ -43,6 +47,7 @@ together with structured counts and dependency versions.
 | Firebase Functions syntax check | PASS | After `npm --prefix functions ci`, `python scripts\public_verify.py --with-functions-syntax --out <temp>` loads `functions/index.js` through Node and records only status, public-safe command text, return code, and generic detail in `checks.functions_syntax`. |
 | Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain` as counts and path fingerprints, not raw local path names; release review should use a clean branch/export before publishing. |
 | Git history filename scan | NEEDS REVIEW | `python scripts\public_verify.py --with-history-scan --out <temp>` reuses the public snapshot path rules against historical filenames and reports only counts/fingerprints. On this recovered branch it blocks direct public conversion because historical blocked roots, media/model extensions, and credential-like filenames still exist in old commits. |
+| Public release options | NEEDS REVIEW | Read `publish_gate.release_options` in `public_verify_report.json`. `history_free_export` is the safe route for a clean archive without git history when available. `existing_repo_history` must remain blocked until the history scan passes for the exact repository being made public. |
 | Firebase Functions dependency audit | PASS | `npm --prefix functions audit --package-lock-only --omit=dev --json` reports 0 production vulnerabilities after the lockfile refresh and root `uuid` override. The public verifier records structured counts and dependency versions instead of embedding raw parsed `npm audit` output. |
 | License boundary explicit | PASS | README and LICENSE state MIT for repository code/docs, while excluding rights to third-party local assets. |
 
@@ -69,3 +74,5 @@ git ls-files | rg -i "(\.(mp4|mov|avi|wav|mp3|flac|ogg|ckpt|safetensors|pt|pth|b
 Do not publish the whole local checkout by accident. Publish only after the
 release branch/export passes this check without real credentials, local runtime
 state, private personal data, generated media, or third-party model/audio assets.
+If the current snapshot passes but history scan fails, publish only the
+history-free export or a fresh repository created from it.

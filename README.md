@@ -295,6 +295,14 @@ history-free export and verification result in `public_verify_report.json`.
 whether `functions/index.js` loads under Node without embedding stack traces or
 local paths in the public report.
 
+Read `publish_gate.release_options` in `public_verify_report.json` before
+publishing. `history_free_export` is the public distribution path for this
+recovered/private-history workspace when it is `available`; it uses the
+history-free source archive and omits git history. `existing_repo_history` is
+separate: Do not make the existing repository public unless that option is no
+longer `blocked` after `--with-history-scan`, because old commits can still
+contain private filenames even when the current tracked snapshot is clean.
+
 Do not publish if the release contains real credentials, private local state,
 generated channel output, model weights, voice datasets, BGM/SFX libraries, or
 personal identifiers.

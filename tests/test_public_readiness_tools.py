@@ -109,6 +109,9 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "--with-public-export" in security
     assert "--with-functions-syntax" in security
     assert "publish_gate.manual_review_items" in checklist
+    assert "publish_gate.release_options" in checklist
+    assert "history_free_export" in checklist
+    assert "existing_repo_history" in checklist
     assert "python scripts\\public_snapshot_check.py --json" in security
     assert "python scripts\\public_snapshot_check.py --json" in checklist
     assert "workspace_state" in security
@@ -125,6 +128,9 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "path fingerprints" in security
     assert "raw local path names" in checklist
     assert "structured counts and dependency versions" in security
+    assert "publish_gate.release_options" in security
+    assert "history_free_export" in security
+    assert "existing_repo_history" in security
     assert "Snapshot findings" in security
     assert "snapshot findings as counts/fingerprints" in checklist
     assert "env-like credential/token filenames" in security
@@ -182,3 +188,7 @@ def test_readme_documents_public_export_workflow():
     assert "public_export_manifest.json" in readme
     assert "archive_sha256" in readme
     assert "git_history_included=false" in readme
+    assert "publish_gate.release_options" in readme
+    assert "history_free_export" in readme
+    assert "existing_repo_history" in readme
+    assert "Do not make the existing repository public" in readme
