@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from utils.secret_redaction import redact_sensitive_text
 
 try:
     from utils.logger import get_logger
@@ -706,8 +707,9 @@ class SDModelRecommender:
             return True, f"다운로드 완료: {os.path.basename(save_path)}"
 
         except Exception as e:
-            logger.error(f"[SDModelRecommender] 다운로드 실패: {e}")
-            return False, f"다운로드 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[SDModelRecommender] 다운로드 실패: {safe_error}")
+            return False, f"다운로드 실패: {safe_error}"
 
     def get_style_prompts(self, genre: str) -> Dict[str, str]:
         """장르별 스타일 프롬프트"""

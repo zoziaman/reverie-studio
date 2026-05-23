@@ -58,3 +58,25 @@ def test_image_pipeline_prefers_active_pack_genre_over_mode(monkeypatch):
 
     assert pack_id == "생활 사극 채널"
     assert genre == "senior"
+
+
+def test_download_model_error_redacts_secret_in_return(monkeypatch, tmp_path):
+    from modules_pro import sd_model_recommender as recommender_module
+    from modules_pro.sd_model_recommender import SDModelRecommender
+
+    secret = "hf_" + ("m" * 28)
+
+    def fail_get(*args, **kwargs):
+        raise RuntimeError(f"download failed for HF_TOKEN={secret}")
+
+    monkeypatch.setattr(recommender_module.requests, "get", fail_get)
+
+    recommender = SDModelRecommender()
+    success, message = recommender.download_model(
+        "https://example.invalid/model.safetensors",
+        str(tmp_path / "model.safetensors"),
+    )
+
+    assert success is False
+    assert secret not in message
+    assert "HF_TOKEN=<redacted>" in message
