@@ -116,3 +116,24 @@ def test_content_scan_detects_discord_and_telegram_webhooks(tmp_path):
         "webhooks.txt: content pattern matched: discord_webhook",
         "webhooks.txt: content pattern matched: telegram_bot_token",
     ]
+
+
+def test_build_json_report_redacts_raw_findings():
+    snapshot_check = _load_snapshot_check()
+    findings = [
+        "config/client_secret_alice.json: blocked filename pattern: client_secret_alice.json",
+        "notes.txt: content pattern matched: slack_token",
+    ]
+
+    report = snapshot_check.build_json_report(findings)
+
+    assert report["schema"] == "reverie.public_snapshot_check.v1"
+    assert report["status"] == "fail"
+    assert report["finding_count"] == 2
+    assert report["finding_types"] == {
+        "blocked filename pattern": 1,
+        "content pattern matched": 1,
+    }
+    assert report["finding_fingerprints"][0]["fingerprint"]
+    assert "findings" not in report
+    assert "client_secret_alice.json" not in str(report)

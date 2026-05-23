@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import argparse
+import hashlib
+import json
 import re
 import subprocess
 from pathlib import Path
@@ -157,10 +160,52 @@ def run_check(repo_root: Path) -> list[str]:
     return findings
 
 
-def main() -> int:
+def _finding_reason(finding: str) -> str:
+    _, separator, detail = finding.partition(": ")
+    if not separator:
+        return "unknown"
+    reason, _, _ = detail.partition(": ")
+    return reason or "unknown"
+
+
+def build_json_report(findings: list[str]) -> dict[str, object]:
+    finding_types: dict[str, int] = {}
+    fingerprints = []
+    for finding in findings:
+        reason = _finding_reason(finding)
+        finding_types[reason] = finding_types.get(reason, 0) + 1
+        fingerprints.append({
+            "reason": reason,
+            "fingerprint": hashlib.sha256(finding.encode("utf-8")).hexdigest()[:16],
+        })
+    return {
+        "schema": "reverie.public_snapshot_check.v1",
+        "status": "fail" if findings else "pass",
+        "finding_count": len(findings),
+        "finding_types": finding_types,
+        "finding_fingerprints": fingerprints[:50],
+        "truncated_finding_fingerprints": max(0, len(fingerprints) - 50),
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Check the tracked public snapshot for release blockers.")
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print a redacted machine-readable report instead of raw local paths.",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
     script_root = Path(__file__).resolve().parents[1]
     repo_root = Path(_git_lines(["rev-parse", "--show-toplevel"], cwd=script_root)[0])
     findings = run_check(repo_root)
+    if args.json:
+        print(json.dumps(build_json_report(findings), indent=2, ensure_ascii=False))
+        return 1 if findings else 0
     if findings:
         print("Public snapshot check: NEEDS REVIEW")
         for finding in findings:
