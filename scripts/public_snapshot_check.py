@@ -84,6 +84,8 @@ CONTENT_PATTERNS = {
     "github_token": re.compile(r"(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"),
     "aws_access_key": re.compile(r"(AKIA|ASIA)[0-9A-Z]{16}"),
     "stripe_live_key": re.compile(r"(sk|rk)_live_[A-Za-z0-9]{16,}"),
+    "huggingface_token": re.compile(r"hf_[A-Za-z0-9]{20,}"),
+    "npm_token": re.compile(r"npm_[A-Za-z0-9]{20,}"),
     "google_oauth_token": re.compile(r"ya29\.[A-Za-z0-9_-]+"),
     "slack_token": re.compile(r"xox[baprs]-[A-Za-z0-9-]{20,}"),
     "private_key_block": re.compile(r"BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY"),

@@ -72,3 +72,21 @@ def test_content_scan_detects_aws_and_stripe_keys(tmp_path):
         "cloud_keys.txt: content pattern matched: aws_access_key",
         "cloud_keys.txt: content pattern matched: stripe_live_key",
     ]
+
+
+def test_content_scan_detects_huggingface_and_npm_tokens(tmp_path):
+    snapshot_check = _load_snapshot_check()
+    secret_file = tmp_path / "package_tokens.txt"
+    hf_token = "hf" + "_" + "abcdefghijklmnopqrstuvwx123456"
+    npm_token = "npm" + "_" + "abcdefghijklmnopqrstuvwx123456"
+    secret_file.write_text(
+        f"HUGGINGFACE_TOKEN={hf_token}\nNPM_TOKEN={npm_token}\n",
+        encoding="utf-8",
+    )
+
+    findings = snapshot_check._scan_contents(tmp_path, [Path("package_tokens.txt")])
+
+    assert findings == [
+        "package_tokens.txt: content pattern matched: huggingface_token",
+        "package_tokens.txt: content pattern matched: npm_token",
+    ]
