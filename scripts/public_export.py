@@ -264,12 +264,11 @@ def _invalid_manifest_report(
 
 def _manifest_int(manifest: dict[str, Any], field_name: str) -> int | None:
     value = manifest.get(field_name)
-    if isinstance(value, bool):
+    if value is None:
+        return 0
+    if isinstance(value, bool) or not isinstance(value, int):
         return None
-    try:
-        return int(value or 0)
-    except (TypeError, ValueError):
-        return None
+    return value
 
 
 def _manifest_object(manifest: dict[str, Any], field_name: str) -> dict[str, Any] | None:
