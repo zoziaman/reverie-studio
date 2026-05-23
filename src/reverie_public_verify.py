@@ -26,6 +26,28 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT_CHECK_PATH = REPO_ROOT / "scripts" / "public_snapshot_check.py"
 DEFAULT_VERIFY_OUT = Path(tempfile.gettempdir()) / "reverie-public-verify"
 
+PUBLISH_REVIEW_ITEMS = (
+    {
+        "id": "existing_git_history",
+        "status": "review_required",
+        "evidence": "public_verify scans the tracked publish set only, not old commits.",
+        "required_before_public_existing_repo": (
+            "Scan or replace private history before converting an existing private repository to public."
+        ),
+    },
+    {
+        "id": "firebase_functions_dependency_audit",
+        "status": "review_required",
+        "evidence": (
+            "functions/npm audit currently reports 9 moderate production dependency findings; "
+            "the remaining npm-suggested fix requires a breaking firebase-admin/firebase-functions change."
+        ),
+        "required_before_public_existing_repo": (
+            "Keep Firebase Functions optional/non-production, or review and test the breaking dependency path."
+        ),
+    },
+)
+
 
 def _load_public_snapshot_check() -> ModuleType:
     spec = importlib.util.spec_from_file_location("public_snapshot_check", SNAPSHOT_CHECK_PATH)
@@ -77,6 +99,63 @@ def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
             "stderr_tail": _tail(exc.stderr or ""),
             "timeout_seconds": timeout_seconds,
         }
+
+
+def _build_publish_gate(
+    *,
+    failures: list[str],
+    snapshot_findings: list[str],
+    demo_safety: dict[str, Any],
+    environment_status: str | None,
+    pytest_report: dict[str, Any] | None,
+) -> dict[str, Any]:
+    machine_checks = [
+        {
+            "id": "tracked_publish_set",
+            "status": "pass" if not snapshot_findings else "blocked",
+            "evidence": (
+                "public_snapshot_check finding_count=0"
+                if not snapshot_findings
+                else "public_snapshot_check findings present"
+            ),
+        },
+        {
+            "id": "public_demo_safety",
+            "status": "pass" if not any(demo_safety.get(key) for key in (
+                "uses_credentials",
+                "calls_external_services",
+                "creates_media",
+                "starts_upload",
+            )) else "blocked",
+            "evidence": "demo safety flags are all false",
+        },
+        {
+            "id": "local_setup_doctor",
+            "status": environment_status or "unknown",
+            "evidence": "needs_setup is acceptable for a public clone; pass means this machine has required tools.",
+        },
+        {
+            "id": "pytest",
+            "status": pytest_report["status"] if pytest_report else "not_run",
+            "evidence": "run with --with-pytest for full test evidence.",
+        },
+    ]
+    publish_status = "blocked" if failures else "review_required"
+    recommendation = (
+        "Do not publish until blocking failures are fixed."
+        if failures
+        else (
+            "Tracked files passed public safety checks. Publish only as a clean export/branch "
+            "unless git history is reviewed; keep Firebase Functions optional until its "
+            "dependency audit is reviewed."
+        )
+    )
+    return {
+        "status": publish_status,
+        "recommendation": recommendation,
+        "machine_checks": machine_checks,
+        "manual_review_items": list(PUBLISH_REVIEW_ITEMS),
+    }
 
 
 def run_public_verification(
@@ -152,6 +231,13 @@ def run_public_verification(
         "overall_status": overall_status,
         "failures": failures,
         "warnings": warnings,
+        "publish_gate": _build_publish_gate(
+            failures=failures,
+            snapshot_findings=snapshot_findings,
+            demo_safety=demo_safety,
+            environment_status=environment_report.get("overall_status"),
+            pytest_report=pytest_report,
+        ),
         "checks": {
             "public_snapshot": {
                 "status": "pass" if not snapshot_findings else "fail",
@@ -221,6 +307,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
         print(f"Public verification: {report['overall_status'].upper()}")
+        print(f"Publish gate: {report['publish_gate']['status'].upper()}")
         print(f"Report: {Path(report['output_dir']) / 'public_verify_report.json'}")
         for failure in report["failures"]:
             print(f"- FAIL: {failure}")

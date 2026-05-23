@@ -26,39 +26,43 @@ credentials:
 git clone https://github.com/zoziaman/reverie-studio.git
 cd reverie-studio
 $env:PYTHONPATH="src"
-python -m reverie_doctor --json
-python -m reverie_demo --out "$env:TEMP\reverie-public-demo"
-Get-Content "$env:TEMP\reverie-public-demo\pipeline_report.md"
+python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
+Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
+Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
 ```
 
-The demo writes only safe report files outside the repository:
+The verifier writes only safe report files outside the repository:
 
 ```text
-%TEMP%\reverie-public-demo\
-  backend_profile.json
-  environment_report.json
-  pack.public_demo.json
-  storyboard.plan.json
-  placeholder_frames.manifest.json
-  placeholder_voice.manifest.json
-  captions.preview.json
-  render.command.preview.json
-  metadata.review.json
-  youtube.private_upload.not_started.json
-  quality_gate.json
-  video_toon_actor_template.render_plan.json
-  video_toon_actor_template.asset_work_order.json
-  video_toon_actor_template.remotion_props.json
-  run_manifest.json
-  stage_log.jsonl
-  pipeline_report.md
+%TEMP%\reverie-public-verify\
+  public_verify_report.json
+  public_demo\
+    backend_profile.json
+    environment_report.json
+    pack.public_demo.json
+    storyboard.plan.json
+    placeholder_frames.manifest.json
+    placeholder_voice.manifest.json
+    captions.preview.json
+    render.command.preview.json
+    metadata.review.json
+    youtube.private_upload.not_started.json
+    quality_gate.json
+    video_toon_actor_template.render_plan.json
+    video_toon_actor_template.asset_work_order.json
+    video_toon_actor_template.remotion_props.json
+    run_manifest.json
+    stage_log.jsonl
+    pipeline_report.md
 ```
 
 It proves that a fresh public clone can load a public content pack, map the
 workflow stages, record duration/cost/status rows, choose a backend profile,
 run a local setup doctor, write a fixed-actor video-toon Remotion props dry-run,
 score a public quality gate, and stop before upload. It does not render real
-video, call AI APIs, start local model servers, or create generated media. See
+video, call AI APIs, start local model servers, or create generated media. The
+top-level verification report also records publish-gate manual review items for
+git history and optional Firebase Functions dependencies. See
 `docs/PUBLIC_DEMO.md`.
 
 ## Target Workflow

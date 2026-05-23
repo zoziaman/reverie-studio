@@ -1,6 +1,6 @@
 # Public Release Checklist
 
-Date: 2026-05-21
+Date: 2026-05-23
 
 Purpose: prepare Reverie Studio for an open-source GitHub release that permits
 free use, modification, redistribution, and commercial use while excluding
@@ -11,13 +11,13 @@ content, and third-party model/audio assets.
 
 NEEDS REVIEW
 
-The tracked publish set has been cleaned for an open-source snapshot: local
-agent state, session logs, generated media/output, vendor caches, and
-machine-specific paths found during review were removed. The remaining review
-gates are repository history and the optional Firebase Functions dependency
-audit: scan or replace old private history before turning an existing private
-repository public, and review the residual low-severity functions chain before
-calling that surface production-ready.
+The tracked publish set now has a single public verification bundle. On the
+current branch, `python scripts\public_verify.py --with-pytest --out <temp>`
+passes the tracked-file scanner, public doctor, no-credential dry-run, and
+pytest. The remaining release gates are intentionally manual: scan or replace
+old private git history before turning an existing repository public, and review
+the optional Firebase Functions dependency chain before calling that surface
+production-ready.
 
 ## Release Checklist
 
@@ -37,8 +37,9 @@ calling that surface production-ready.
 | Local setup doctor available | PASS | `python -m reverie_doctor --json` reports missing local prerequisites without reading secrets or starting services. |
 | Backend profile boundary documented | PASS | `docs/BACKEND_PROFILES.md` and `src/reverie_backends.py` describe dry-run, local SoVITS, local Supertonic, and opt-in cloud profiles. |
 | Public quality gate available | PASS | The dry-run writes `quality_gate.json` with score, threshold, review requirements, and no media inspection. |
-| CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public snapshot scanner and dry-run demo on `main` and `codex/public-snapshot-clean`. |
-| Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix` was applied to the lockfile; `npm audit` still reports 9 low-severity transitive findings that require a breaking force fix. |
+| One-command public verifier available | PASS | `python scripts\public_verify.py --out <temp>` writes `public_verify_report.json` outside the repository and refuses repo-internal output by default. |
+| CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public verifier and focused public tests on `main` and `codex/public-snapshot-clean`. |
+| Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` was applied to the lockfile; `npm audit --omit=dev` still reports 9 moderate production dependency findings that require a breaking force fix path. |
 | Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. |
 
 ## Include
@@ -72,6 +73,8 @@ calling that surface production-ready.
 ## Final Step Before Publishing
 
 Run `SECURITY_PUBLIC_CHECK.md` against the exact release branch/export. Publish
-only when `python scripts\public_snapshot_check.py` passes and the publish set
-has no real secrets, no personal data, no local runtime state, and no generated
-or third-party assets that should remain user-provided.
+only when `python scripts\public_verify.py --with-pytest --out <temp>` passes,
+the publish set has no real secrets, no personal data, no local runtime state,
+and no generated or third-party assets that should remain user-provided. Treat
+`publish_gate.manual_review_items` in `public_verify_report.json` as mandatory
+before converting an existing private repository to public.

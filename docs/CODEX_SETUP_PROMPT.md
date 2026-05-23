@@ -58,13 +58,15 @@ Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
 The first successful run should create report files only:
 
 ```text
-reverie-public-demo/
-  backend_profile.json
-  environment_report.json
-  quality_gate.json
-  run_manifest.json
-  stage_log.jsonl
-  pipeline_report.md
+reverie-public-verify/
+  public_verify_report.json
+  public_demo/
+    backend_profile.json
+    environment_report.json
+    quality_gate.json
+    run_manifest.json
+    stage_log.jsonl
+    pipeline_report.md
 ```
 
 It should not create video, audio, image, subtitle, credential, token, database,

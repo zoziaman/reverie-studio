@@ -33,6 +33,10 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
     assert report["overall_status"] == "pass"
     assert report["checks"]["public_snapshot"]["status"] == "pass"
     assert report["checks"]["pytest"]["status"] == "not_run"
+    assert report["publish_gate"]["status"] == "review_required"
+    review_ids = {item["id"] for item in report["publish_gate"]["manual_review_items"]}
+    assert "existing_git_history" in review_ids
+    assert "firebase_functions_dependency_audit" in review_ids
     written = json.loads((tmp_path / "public_verify_report.json").read_text(encoding="utf-8"))
     assert written["schema"] == "reverie.public_verify.v1"
 
@@ -53,6 +57,7 @@ def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
     report = public_verify.run_public_verification(tmp_path)
 
     assert report["overall_status"] == "fail"
+    assert report["publish_gate"]["status"] == "blocked"
     assert report["checks"]["public_snapshot"]["finding_count"] == 1
     assert "public_snapshot_check" in report["failures"][0]
 
