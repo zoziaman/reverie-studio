@@ -28,6 +28,7 @@ cd reverie-studio
 $env:PYTHONPATH="src"
 python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
+Get-Content "$env:TEMP\reverie-public-verify\public_verify_summary.md"
 Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
 ```
 
@@ -36,6 +37,7 @@ The verifier writes only safe report files outside the repository:
 ```text
 %TEMP%\reverie-public-verify\
   public_verify_report.json
+  public_verify_summary.md
   public_demo\
     backend_profile.json
     environment_report.json

@@ -217,6 +217,87 @@ def _review_items(functions_audit_report: dict[str, Any] | None) -> list[dict[st
     return items
 
 
+def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
+    checks = report.get("checks", {})
+    publish_gate = report.get("publish_gate", {})
+    lines = [
+        "# Reverie Studio Public Verification",
+        "",
+        f"Overall status: `{report.get('overall_status', 'unknown')}`",
+        f"Publish gate: `{publish_gate.get('status', 'unknown')}`",
+        f"Created at: `{report.get('created_at', '')}`",
+        "",
+        "This report is public-safe. It does not contain credentials, generated media,",
+        "voice data, model weights, or upload tokens.",
+        "",
+        "## Machine Checks",
+        "",
+    ]
+    for check in publish_gate.get("machine_checks", []):
+        lines.append(
+            f"- `{check.get('id', 'unknown')}`: `{check.get('status', 'unknown')}` - "
+            f"{check.get('evidence', '')}"
+        )
+
+    manual_items = publish_gate.get("manual_review_items", [])
+    if manual_items:
+        lines.extend(["", "## Manual Review Before Publishing", ""])
+        for item in manual_items:
+            lines.append(
+                f"- `{item.get('id', 'unknown')}`: `{item.get('status', 'unknown')}` - "
+                f"{item.get('required_before_public_existing_repo', item.get('evidence', ''))}"
+            )
+
+    failures = report.get("failures") or []
+    if failures:
+        lines.extend(["", "## Blocking Failures", ""])
+        lines.extend(f"- {failure}" for failure in failures)
+
+    warnings = report.get("warnings") or []
+    if warnings:
+        lines.extend(["", "## Warnings", ""])
+        lines.extend(f"- {warning}" for warning in warnings)
+
+    functions_audit = checks.get("functions_audit", {})
+    vulnerabilities = functions_audit.get("vulnerabilities") or {}
+    lines.extend(
+        [
+            "",
+            "## Artifacts",
+            "",
+            "- JSON report: `public_verify_report.json`",
+            "- Public demo manifest: `public_demo/run_manifest.json`",
+            "- Public demo pipeline report: `public_demo/pipeline_report.md`",
+        ]
+    )
+    if functions_audit.get("status") not in {None, "not_run"}:
+        lines.extend(
+            [
+                "",
+                "## Optional Functions Audit",
+                "",
+                f"- Status: `{functions_audit.get('status')}`",
+                f"- Total: `{_safe_int(vulnerabilities.get('total'))}`",
+                f"- Moderate: `{_safe_int(vulnerabilities.get('moderate'))}`",
+                f"- High: `{_safe_int(vulnerabilities.get('high'))}`",
+                f"- Critical: `{_safe_int(vulnerabilities.get('critical'))}`",
+            ]
+        )
+
+    lines.extend(
+        [
+            "",
+            "## Next Actions",
+            "",
+            "- If `overall_status` is `fail`, fix blocking failures before publishing.",
+            "- If `publish_gate` is `review_required`, complete the manual review items before making an existing private repository public.",
+            "- Keep credentials, generated media, voice data, and model weights outside git.",
+            "",
+        ]
+    )
+    path.write_text("\n".join(lines), encoding="utf-8")
+
+
 def _build_publish_gate(
     *,
     failures: list[str],
@@ -396,6 +477,7 @@ def run_public_verification(
         json.dumps(report, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
+    _write_public_verify_summary(out / "public_verify_summary.md", report)
     return report
 
 
@@ -457,6 +539,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Public verification: {report['overall_status'].upper()}")
         print(f"Publish gate: {report['publish_gate']['status'].upper()}")
         print(f"Report: {Path(report['output_dir']) / 'public_verify_report.json'}")
+        print(f"Summary: {Path(report['output_dir']) / 'public_verify_summary.md'}")
         for failure in report["failures"]:
             print(f"- FAIL: {failure}")
         for warning in report["warnings"]:

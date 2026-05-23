@@ -39,6 +39,11 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
     assert "firebase_functions_dependency_audit" in review_ids
     written = json.loads((tmp_path / "public_verify_report.json").read_text(encoding="utf-8"))
     assert written["schema"] == "reverie.public_verify.v1"
+    summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
+    assert "Overall status: `pass`" in summary
+    assert "Publish gate: `review_required`" in summary
+    assert "Manual Review Before Publishing" in summary
+    assert "public_demo/pipeline_report.md" in summary
 
 
 def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
@@ -132,6 +137,9 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     assert report["publish_gate"]["status"] == "review_required"
     assert report["checks"]["functions_audit"]["status"] == "review_required"
     assert report["checks"]["functions_audit"]["vulnerabilities"]["moderate"] == 9
+    summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
+    assert "Optional Functions Audit" in summary
+    assert "Moderate: `9`" in summary
     functions_check = [
         check for check in report["publish_gate"]["machine_checks"]
         if check["id"] == "firebase_functions_dependency_audit"

@@ -102,6 +102,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "tests/test_public_verify.py" in workflow
     assert "public_verify_report.json" in public_demo
+    assert "public_verify_summary.md" in public_demo
     assert "publish_gate" in public_demo
     assert "python scripts/public_verify.py --out <temp folder>" in backend_profiles
 
