@@ -90,3 +90,29 @@ def test_content_scan_detects_huggingface_and_npm_tokens(tmp_path):
         "package_tokens.txt: content pattern matched: huggingface_token",
         "package_tokens.txt: content pattern matched: npm_token",
     ]
+
+
+def test_content_scan_detects_discord_and_telegram_webhooks(tmp_path):
+    snapshot_check = _load_snapshot_check()
+    secret_file = tmp_path / "webhooks.txt"
+    discord_webhook = (
+        "https://discord"
+        ".com/api/webhooks/123456789012345678/"
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+    )
+    telegram_webhook = (
+        "https://api.telegram"
+        ".org/bot123456789:"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwx/sendMessage"
+    )
+    secret_file.write_text(
+        f"DISCORD_WEBHOOK={discord_webhook}\nTELEGRAM_WEBHOOK={telegram_webhook}\n",
+        encoding="utf-8",
+    )
+
+    findings = snapshot_check._scan_contents(tmp_path, [Path("webhooks.txt")])
+
+    assert findings == [
+        "webhooks.txt: content pattern matched: discord_webhook",
+        "webhooks.txt: content pattern matched: telegram_bot_token",
+    ]

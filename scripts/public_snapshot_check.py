@@ -88,6 +88,8 @@ CONTENT_PATTERNS = {
     "npm_token": re.compile(r"npm_[A-Za-z0-9]{20,}"),
     "google_oauth_token": re.compile(r"ya29\.[A-Za-z0-9_-]+"),
     "slack_token": re.compile(r"xox[baprs]-[A-Za-z0-9-]{20,}"),
+    "discord_webhook": re.compile(r"https://discord(?:app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]{40,}"),
+    "telegram_bot_token": re.compile(r"bot[0-9]{6,}:[A-Za-z0-9_-]{30,}"),
     "private_key_block": re.compile(r"BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY"),
     "private_user": re.compile(r"(kky86|aftersleep123|C:\\Users\\kky86|C:/Users/kky86)"),
     "private_project_path": re.compile(r"(C:\\Anti reverie|C:/Anti reverie|D:\\AI)"),

@@ -107,6 +107,8 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "env-like credential/token filenames" in security
     assert "credential/token/service-account filenames" in checklist
     assert "Slack token" in security
+    assert "Discord webhook" in security
+    assert "Telegram bot token" in security
     assert "AWS key" in security
     assert "Stripe live key" in security
     assert "Hugging Face token" in security
