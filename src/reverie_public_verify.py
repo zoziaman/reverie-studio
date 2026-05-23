@@ -1095,6 +1095,14 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Publish gate: {report['publish_gate']['status'].upper()}")
         print(f"Report: {output_dir / 'public_verify_report.json'}")
         print(f"Summary: {output_dir / 'public_verify_summary.md'}")
+        release_options = report.get("publish_gate", {}).get("release_options") or []
+        if release_options:
+            print("Release options:")
+            for option in release_options:
+                print(
+                    f"- {option.get('id', 'unknown')}: {option.get('status', 'unknown')} - "
+                    f"{option.get('action', '')}"
+                )
         for failure in report["failures"]:
             print(f"- FAIL: {failure}")
         for warning in report["warnings"]:

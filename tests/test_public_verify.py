@@ -237,6 +237,42 @@ def test_public_verify_summary_explains_history_block_release_options(tmp_path, 
     assert "Do not make the existing repository public" in summary
 
 
+def test_public_verify_cli_prints_release_options(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        public_verify,
+        "run_public_verification",
+        lambda *args, **kwargs: {
+            "overall_status": "fail",
+            "failures": ["git history filename scan reported release-blocking findings"],
+            "warnings": [],
+            "publish_gate": {
+                "status": "blocked",
+                "release_options": [
+                    {
+                        "id": "history_free_export",
+                        "status": "available",
+                        "action": "Use the history-free public export for public distribution.",
+                    },
+                    {
+                        "id": "existing_repo_history",
+                        "status": "blocked",
+                        "action": "Do not make the existing repository public.",
+                    },
+                ],
+            },
+        },
+    )
+
+    exit_code = public_verify.main(["--out", str(tmp_path)])
+
+    stdout = capsys.readouterr().out
+    assert exit_code == 1
+    assert "Release options:" in stdout
+    assert "history_free_export: available" in stdout
+    assert "existing_repo_history: blocked" in stdout
+    assert "Do not make the existing repository public" in stdout
+
+
 def test_public_verify_fails_on_python_compile_error(tmp_path, monkeypatch):
     monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
     monkeypatch.setattr(
