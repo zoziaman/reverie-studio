@@ -1278,7 +1278,7 @@ class HybridLicenseValidator:
 
                 return valid, msg
             except Exception as e:
-                logger.warning(f"[HybridValidator] Cloud Functions 실패, 폴백 시도: {e}")
+                logger.warning(f"[HybridValidator] Cloud Functions 실패, 폴백 시도: {redact_sensitive_text(e)}")
 
         # 2. Firebase Admin SDK 직접 접근 (폴백)
         if self.online_validator.is_available():
@@ -1288,7 +1288,7 @@ class HybridLicenseValidator:
                     self._update_ownership_cache(pack_id, True)
                 return valid, msg
             except Exception as e:
-                logger.warning(f"[HybridValidator] Firebase 직접 접근 실패: {e}")
+                logger.warning(f"[HybridValidator] Firebase 직접 접근 실패: {redact_sensitive_text(e)}")
 
         # 3. 오프라인 폴백 - 로컬 캐시 확인
         return self._check_ownership_offline(pack_id)
@@ -1368,7 +1368,7 @@ class HybridLicenseValidator:
                     self._cache_owned_packs(packs)
                     return packs
             except Exception as e:
-                logger.warning(f"[HybridValidator] Cloud Functions 패키지 목록 조회 실패: {e}")
+                logger.warning(f"[HybridValidator] Cloud Functions 패키지 목록 조회 실패: {redact_sensitive_text(e)}")
 
         # 2. Firebase Admin SDK 직접 접근 (폴백)
         if self.online_validator.is_available():
@@ -1377,7 +1377,7 @@ class HybridLicenseValidator:
                 self._cache_owned_packs(packs)
                 return packs
             except Exception as e:
-                logger.warning(f"[HybridValidator] Firebase 직접 조회 실패: {e}")
+                logger.warning(f"[HybridValidator] Firebase 직접 조회 실패: {redact_sensitive_text(e)}")
 
         # 3. 오프라인 폴백
         return self._get_cached_packs()

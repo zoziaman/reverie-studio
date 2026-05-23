@@ -1,6 +1,11 @@
 import logging
+from types import SimpleNamespace
 
-from utils.firebase_license import CloudFunctionsClient, _redact_license_key_for_log
+from utils.firebase_license import (
+    CloudFunctionsClient,
+    HybridLicenseValidator,
+    _redact_license_key_for_log,
+)
 
 
 class _FakeResponse:
@@ -144,3 +149,107 @@ def test_get_pack_key_error_response_redacts_api_key(monkeypatch, caplog):
     assert result is None
     assert api_key not in caplog.text
     assert "key=<redacted>" in caplog.text
+
+
+def _make_hybrid_validator():
+    validator = object.__new__(HybridLicenseValidator)
+    validator.data_dir = "C:/tmp/reverie-license-test"
+    validator._load_saved_license_key = lambda: "TEST-1234-5678-ABCD"
+    validator._check_ownership_offline = lambda pack_id: (False, "offline")
+    validator._get_cached_packs = lambda: []
+    validator._update_ownership_cache = lambda pack_id, owned: None
+    validator._cache_owned_packs = lambda packs: None
+    validator.online_validator = SimpleNamespace(
+        is_available=lambda: False,
+        check_package_ownership=lambda *args, **kwargs: (False, "unused"),
+        get_owned_packs=lambda *args, **kwargs: [],
+    )
+    return validator
+
+
+def test_hybrid_package_ownership_cloud_fallback_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("h" * 32)
+    validator = _make_hybrid_validator()
+
+    cloud = SimpleNamespace(
+        is_available=True,
+        check_package_ownership=lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError(f"cloud ownership failed for ?key={api_key}")
+        ),
+    )
+    monkeypatch.setattr("utils.firebase_license.get_cloud_functions_client", lambda: cloud)
+
+    caplog.set_level(logging.WARNING)
+
+    valid, message = validator.check_package_ownership("horror")
+
+    assert valid is False
+    assert message == "offline"
+    assert api_key not in caplog.text
+    assert "key=<redacted>" in caplog.text
+
+
+def test_hybrid_package_ownership_direct_firebase_fallback_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("d" * 32)
+    validator = _make_hybrid_validator()
+    validator.online_validator = SimpleNamespace(
+        is_available=lambda: True,
+        check_package_ownership=lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError(f"direct firebase failed for GEMINI_API_KEY={api_key}")
+        ),
+    )
+
+    cloud = SimpleNamespace(is_available=False)
+    monkeypatch.setattr("utils.firebase_license.get_cloud_functions_client", lambda: cloud)
+
+    caplog.set_level(logging.WARNING)
+
+    valid, message = validator.check_package_ownership("horror")
+
+    assert valid is False
+    assert message == "offline"
+    assert api_key not in caplog.text
+    assert "GEMINI_API_KEY=<redacted>" in caplog.text
+
+
+def test_hybrid_owned_packs_cloud_fallback_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("q" * 32)
+    validator = _make_hybrid_validator()
+
+    cloud = SimpleNamespace(
+        is_available=True,
+        get_owned_packs=lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError(f"cloud packs failed for ?key={api_key}")
+        ),
+    )
+    monkeypatch.setattr("utils.firebase_license.get_cloud_functions_client", lambda: cloud)
+
+    caplog.set_level(logging.WARNING)
+
+    packs = validator.get_owned_packs()
+
+    assert packs == []
+    assert api_key not in caplog.text
+    assert "key=<redacted>" in caplog.text
+
+
+def test_hybrid_owned_packs_direct_firebase_fallback_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("z" * 32)
+    validator = _make_hybrid_validator()
+    validator.online_validator = SimpleNamespace(
+        is_available=lambda: True,
+        get_owned_packs=lambda *args, **kwargs: (_ for _ in ()).throw(
+            RuntimeError(f"direct packs failed for GEMINI_API_KEY={api_key}")
+        ),
+    )
+
+    cloud = SimpleNamespace(is_available=False)
+    monkeypatch.setattr("utils.firebase_license.get_cloud_functions_client", lambda: cloud)
+
+    caplog.set_level(logging.WARNING)
+
+    packs = validator.get_owned_packs()
+
+    assert packs == []
+    assert api_key not in caplog.text
+    assert "GEMINI_API_KEY=<redacted>" in caplog.text
