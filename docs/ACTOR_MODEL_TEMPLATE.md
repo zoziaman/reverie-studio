@@ -111,7 +111,10 @@ The starter actor template requires:
 - `talking_seated`
 
 These names are keys, not required public files. Local users can generate or
-curate private images under `variants/`.
+curate private images under `variants/`. Asset keys must stay filename-safe:
+use letters, numbers, underscores, or hyphens only. Do not put `/`, `\`, `.`,
+absolute paths, or `..` in variant, mouth, eye, or episode-derived variant
+keys.
 
 ## Mouth And Eye Shapes
 
@@ -157,6 +160,8 @@ reverie-actor-model-requests layer-spec assets/actor_models/actor_adult_woman_01
 The layer spec writes schema `reverie.actor_model.layer_spec.v1` and expands the
 actor's required variants, mouth shapes, and eye shapes into compositable layer
 entries. It does not create PNGs, call image models, or include private paths.
+Validation rejects naming policies or target paths that would escape the actor
+model package.
 
 ## Public-Safe Boundary
 

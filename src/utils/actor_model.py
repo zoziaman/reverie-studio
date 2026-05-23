@@ -6,7 +6,7 @@ import json
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from typing import Any, Optional
 
 from PIL import Image, ImageDraw
@@ -50,6 +50,7 @@ PRIVATE_TEXT_PATTERNS = (
     re.compile(r"-----BEGIN (RSA |EC |OPENSSH |PRIVATE )?PRIVATE KEY-----"),
 )
 ACTOR_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+ASSET_KEY_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*$")
 DEFAULT_REQUIRED_VARIANTS = (
     "neutral_standing",
     "talking_standing",
@@ -182,6 +183,37 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item).strip() for item in value if isinstance(item, str) and str(item).strip()]
+
+
+def _is_safe_asset_key(value: str) -> bool:
+    return bool(ASSET_KEY_PATTERN.fullmatch(value))
+
+
+def _validate_asset_keys(field_name: str, values: list[str], result: ActorModelValidationResult) -> None:
+    for value in values:
+        if not _is_safe_asset_key(value):
+            result.add_error(
+                f"{field_name} contains unsafe asset key '{value}'; "
+                "use letters, numbers, underscores, or hyphens only"
+            )
+
+
+def _safe_actor_asset_path(actor_dir: Path, relative_path: str) -> Path:
+    path_text = str(relative_path or "").strip().replace("\\", "/")
+    if not path_text:
+        raise ValueError("actor asset target_relative_path is required")
+    raw_path = Path(path_text)
+    windows_path = PureWindowsPath(path_text)
+    if raw_path.is_absolute() or windows_path.is_absolute() or windows_path.drive:
+        raise ValueError(f"actor asset path must be relative: {relative_path}")
+    if any(part in {"", ".", ".."} for part in path_text.split("/")):
+        raise ValueError(f"actor asset path must stay inside actor model package: {relative_path}")
+
+    actor_root = actor_dir.resolve()
+    target_path = (actor_root / raw_path).resolve()
+    if target_path != actor_root and actor_root not in target_path.parents:
+        raise ValueError(f"actor asset path must stay inside actor model package: {relative_path}")
+    return target_path
 
 
 def _coerce_string_list(value: Any, default: tuple[str, ...]) -> list[str]:
@@ -385,6 +417,25 @@ def _validate_layering_contract(data: Mapping[str, Any], result: ActorModelValid
         for required_layer in ("variant_base", "eye_layer", "mouth_layer"):
             if required_layer not in layer_order:
                 result.add_error(f"layering_contract.layer_order must include {required_layer}")
+
+    naming_policy = contract.get("naming_policy")
+    if not isinstance(naming_policy, Mapping):
+        result.add_error("layering_contract.naming_policy must be an object")
+        return
+    for key, placeholder, sample in (
+        ("variant", "variant_key", "neutral_standing"),
+        ("mouth_shape", "mouth_shape_key", "mouth_closed"),
+        ("eye_shape", "eye_shape_key", "eyes_open"),
+    ):
+        pattern = str(naming_policy.get(key) or "").strip()
+        if not pattern:
+            result.add_error(f"layering_contract.naming_policy.{key} must be a non-empty string")
+            continue
+        target = _target_from_naming_policy(pattern, **{placeholder: sample})
+        try:
+            _safe_actor_asset_path(Path("_actor_model_package"), target)
+        except ValueError:
+            result.add_error(f"layering_contract.naming_policy.{key} must resolve inside actor model package")
 
 
 def _variant_groups(variants: list[str], mouth_shapes: list[str], eye_shapes: list[str]) -> dict[str, list[str]]:
@@ -659,6 +710,9 @@ def _validation_from_contract(actor_path: Path, actor_data: Mapping[str, Any]) -
         result.add_error("mouth_shapes must be a non-empty string list")
     if not result.eye_shapes:
         result.add_error("eye_shapes must be a non-empty string list")
+    _validate_asset_keys("required_variants", result.required_variants, result)
+    _validate_asset_keys("mouth_shapes", result.mouth_shapes, result)
+    _validate_asset_keys("eye_shapes", result.eye_shapes, result)
     return result
 
 
@@ -784,6 +838,9 @@ def validate_actor_model_package(
         result.add_error("mouth_shapes must be a non-empty string list")
     if not result.eye_shapes:
         result.add_error("eye_shapes must be a non-empty string list")
+    _validate_asset_keys("required_variants", result.required_variants, result)
+    _validate_asset_keys("mouth_shapes", result.mouth_shapes, result)
+    _validate_asset_keys("eye_shapes", result.eye_shapes, result)
 
     _validate_layering_contract(data, result)
     _validate_public_boundary(data, result)
@@ -1832,7 +1889,7 @@ def scaffold_actor_model_sample_assets(
     skipped_count = 0
     for request in requests:
         target_relative_path = str(request["target_relative_path"])
-        target_path = actor_dir / target_relative_path
+        target_path = _safe_actor_asset_path(actor_dir, target_relative_path)
         target_path.parent.mkdir(parents=True, exist_ok=True)
         existed_before = target_path.is_file()
         if existed_before and not force:
@@ -2240,10 +2297,15 @@ def build_actor_episode_asset_plan(
         mouth_shape_key = _mouth_shape_for_scene(scene)
         eye_shape_key = _eye_shape_for_emotion(emotion)
 
-        variant_request = actor_variant_requests.get(actor_id, {}).get(variant_key)
+        variant_key_is_safe = _is_safe_asset_key(variant_key)
+        if not variant_key_is_safe:
+            errors.append(f"scene {scene_id or index} variant_key '{variant_key}' is unsafe")
+            variant_key = ""
+
+        variant_request = actor_variant_requests.get(actor_id, {}).get(variant_key) if variant_key_is_safe else None
         mouth_request = actor_mouth_requests.get(actor_id, {}).get(mouth_shape_key, {})
         eye_request = actor_eye_requests.get(actor_id, {}).get(eye_shape_key, {})
-        if not variant_request and actor_id:
+        if variant_key_is_safe and not variant_request and actor_id:
             missing_key = f"{actor_id}:{variant_key}"
             missing_variants.append(missing_key)
             errors.append(f"scene {scene_id or index} actor {actor_id} missing variant {variant_key}")
@@ -2271,7 +2333,7 @@ def build_actor_episode_asset_plan(
         "schema": "reverie.pack.actor_episode_asset_plan.v1",
         "pack_id": pack_id,
         "episode_id": str(normalized_episode.get("episode_id") or ""),
-        "is_valid": contract_result.is_valid and not missing_variants,
+        "is_valid": contract_result.is_valid and not missing_variants and not errors,
         "actor_count": len(actors),
         "scene_count": len(scenes),
         "missing_variant_count": len(missing_variants),
@@ -2331,6 +2393,8 @@ def _actor_dir_from_episode_asset_plan(
     actor_root: Optional[Path | str],
     repo_root: Optional[Path | str],
 ) -> Path:
+    if not ACTOR_ID_PATTERN.fullmatch(actor_id):
+        raise ValueError(f"episode asset plan actor_id is unsafe: {actor_id}")
     if actor_root is not None:
         return _resolve_actor_root(actor_root, repo_root) / actor_id
     actor_data = asset_plan.get("actors", {}).get(actor_id)
@@ -2396,7 +2460,22 @@ def build_actor_episode_asset_coverage_report(
                 )
                 continue
 
-            target_path = actor_dir / relative_path
+            try:
+                target_path = _safe_actor_asset_path(actor_dir, relative_path)
+            except ValueError:
+                missing_assets.append(asset_ref)
+                errors.append(f"scene {scene_id} {asset_type} path is unsafe")
+                expected_assets.append(
+                    {
+                        "scene_id": scene_id,
+                        "actor_id": actor_id,
+                        "asset_type": asset_type,
+                        "key": key,
+                        "target_relative_path": relative_path,
+                        "exists": False,
+                    }
+                )
+                continue
             exists = target_path.is_file()
             if exists:
                 existing_count += 1
@@ -2465,6 +2544,8 @@ def _build_episode_variant_request(
     shot_types: list[str],
     repo_root: Optional[Path | str],
 ) -> dict[str, Any]:
+    if not _is_safe_asset_key(variant_key):
+        raise ValueError(f"episode variant key is unsafe: {variant_key}")
     validation = validate_actor_model_package(actor_model_path, repo_root=repo_root, allow_local_media=True)
     if not validation.is_valid:
         raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
@@ -2637,6 +2718,8 @@ def _actor_dir_from_variant_request(
     actor_id = str(request.get("actor_id") or "").strip()
     if not actor_id:
         raise ValueError("episode variant request actor_id is required")
+    if not ACTOR_ID_PATTERN.fullmatch(actor_id):
+        raise ValueError(f"episode variant request actor_id is unsafe: {actor_id}")
     if actor_root is not None:
         return _resolve_actor_root(actor_root, repo_root) / actor_id
 
@@ -2673,7 +2756,7 @@ def build_actor_episode_variant_coverage_report(
             raise ValueError("episode variant request requires actor_id, key, and target_relative_path")
 
         actor_dir = _actor_dir_from_variant_request(request, actor_root=actor_root, repo_root=repo_root)
-        target_path = actor_dir / target_relative_path
+        target_path = _safe_actor_asset_path(actor_dir, target_relative_path)
         exists = target_path.is_file()
         if exists:
             existing_count += 1
@@ -2743,6 +2826,8 @@ def _actor_path_for_promotion(
     actor_root: Optional[Path | str],
     repo_root: Optional[Path | str],
 ) -> Path:
+    if not ACTOR_ID_PATTERN.fullmatch(actor_id):
+        raise ValueError(f"episode variant promotion actor_id is unsafe: {actor_id}")
     if actor_root is not None:
         return _resolve_actor_root(actor_root, repo_root) / actor_id / "actor.json"
     source_path = str(asset.get("source_actor_model_path") or "").strip()
@@ -2883,6 +2968,8 @@ def _actor_path_from_promotion_actor(
     actor_root: Optional[Path | str],
     repo_root: Optional[Path | str],
 ) -> Path:
+    if not ACTOR_ID_PATTERN.fullmatch(actor_id):
+        raise ValueError(f"episode variant promotion actor_id is unsafe: {actor_id}")
     if actor_root is not None:
         return _resolve_actor_root(actor_root, repo_root) / actor_id / "actor.json"
     actor_model_path = str(actor_plan.get("actor_model_path") or "").strip()
@@ -3003,7 +3090,7 @@ def build_actor_asset_coverage_report(
     existing_count = 0
     for request in requests:
         relative_path = str(request["target_relative_path"])
-        target_path = actor_dir / relative_path
+        target_path = _safe_actor_asset_path(actor_dir, relative_path)
         exists = target_path.is_file()
         if exists:
             existing_count += 1

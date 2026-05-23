@@ -54,6 +54,40 @@ def test_validate_actor_model_package_accepts_public_safe_template():
     assert "neutral_standing" in result.required_variants
 
 
+def test_validate_actor_model_package_rejects_pathlike_asset_keys(tmp_path):
+    actor_model = _actor_model_module()
+    actor_dir = tmp_path / "actor_adult_woman_01"
+    shutil.copytree(ACTOR_MODEL_PATH.parent, actor_dir)
+    actor_path = actor_dir / "actor.json"
+    actor = json.loads(actor_path.read_text(encoding="utf-8"))
+    actor["required_variants"].append("../escape")
+    actor["mouth_shapes"].append("mouth/open")
+    actor_path.write_text(json.dumps(actor), encoding="utf-8")
+
+    result = actor_model.validate_actor_model_package(actor_path)
+
+    assert result.is_valid is False
+    assert any("required_variants" in error and "unsafe asset key" in error for error in result.errors)
+    assert any("mouth_shapes" in error and "unsafe asset key" in error for error in result.errors)
+    with pytest.raises(ValueError, match="unsafe asset key"):
+        actor_model.build_actor_asset_request_manifest(actor_path)
+
+
+def test_validate_actor_model_package_rejects_escaping_naming_policy(tmp_path):
+    actor_model = _actor_model_module()
+    actor_dir = tmp_path / "actor_adult_woman_01"
+    shutil.copytree(ACTOR_MODEL_PATH.parent, actor_dir)
+    actor_path = actor_dir / "actor.json"
+    actor = json.loads(actor_path.read_text(encoding="utf-8"))
+    actor["layering_contract"]["naming_policy"]["variant"] = "../{variant_key}.png"
+    actor_path.write_text(json.dumps(actor), encoding="utf-8")
+
+    result = actor_model.validate_actor_model_package(actor_path)
+
+    assert result.is_valid is False
+    assert any("naming_policy.variant" in error for error in result.errors)
+
+
 def test_pack_validator_accepts_actor_model_path_when_contract_matches():
     validator = PackValidator(repo_root=ROOT)
 
@@ -1291,6 +1325,50 @@ def test_actor_episode_asset_plan_flags_missing_scene_variant(tmp_path):
     assert "surprised_jumping" in manifest["errors"][0]
 
 
+def test_actor_episode_asset_plan_rejects_unsafe_scene_variant_key(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "variant_key": "../escape",
+                "emotion": "happy",
+                "pose": "standing",
+                "shot_type": "wide",
+            }
+        ],
+    }
+
+    manifest = actor_model.build_actor_episode_asset_plan(plan, episode, actor_root=actor_root)
+
+    assert manifest["is_valid"] is False
+    assert manifest["missing_variant_count"] == 0
+    assert manifest["scenes"][0]["variant_key"] == ""
+    assert manifest["scenes"][0]["target_relative_path"] == ""
+    assert any("variant_key" in error and "unsafe" in error for error in manifest["errors"])
+
+
 def test_actor_model_cli_writes_episode_asset_plan(tmp_path, capsys):
     actor_model = _actor_model_module()
     actor_root = tmp_path / "actor_models"
@@ -1705,6 +1783,44 @@ def test_actor_episode_variant_coverage_report_tracks_generated_supplement_asset
     assert ready_report["existing_count"] == 1
     assert ready_report["missing_count"] == 0
     assert ready_report["ready_for_episode"] is True
+
+
+def test_actor_episode_variant_coverage_rejects_escaping_target_path(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    actor_model.scaffold_actor_model(
+        "actor_daily_adult_man_01",
+        actor_root=actor_root,
+        display_name="Daily Adult Man 01",
+        age_band="adult",
+        gender_presentation="man",
+    )
+    request_manifest = {
+        "schema": "reverie.pack.actor_episode.variant_requests.v1",
+        "pack_id": "daily_life_toon",
+        "episode_id": "daily_life_toon_ep001",
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "requests": [
+            {
+                "request_id": "actor_daily_adult_man_01__variant__escape",
+                "request_type": "variant",
+                "actor_id": "actor_daily_adult_man_01",
+                "key": "escape",
+                "target_relative_path": "../escape.png",
+            }
+        ],
+    }
+
+    with pytest.raises(ValueError, match="stay inside actor model package"):
+        actor_model.build_actor_episode_variant_coverage_report(
+            request_manifest,
+            actor_root=actor_root,
+        )
 
 
 def test_actor_model_cli_writes_episode_variant_coverage_report(tmp_path, capsys):

@@ -140,3 +140,5 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "asset coverage" in text
     assert "pack-coverage" in text
     assert "public-safe" in text
+    assert "filename-safe" in text
+    assert "escape the actor" in text
