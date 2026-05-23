@@ -32,7 +32,7 @@ chain is reviewed.
 | Personal identifiers absent | PASS | Focused scan found no real user-home paths or private identifiers in tracked release files; remaining phone-like strings are test fixtures for policy checks. |
 | Public pack files reviewed | PASS | `assets/packs/` scan found no live API keys, local machine paths, or private key material. Packs are prompts/templates only unless users add their own assets locally. |
 | Public verifier artifacts safe | PASS | `public_verify.py`, `reverie_doctor`, and `reverie_demo` write JSON/JSONL/Markdown reports outside the repository and do not read credentials, call cloud services, start local services, upload, or generate media. |
-| Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain`; release review should use a clean branch/export before publishing. |
+| Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain` as counts and path fingerprints, not raw local path names; release review should use a clean branch/export before publishing. |
 | Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` reduced audit output to 9 moderate production dependency findings; the remaining suggested fix requires a breaking `firebase-admin` / `firebase-functions` path. |
 | License boundary explicit | PASS | README and LICENSE state MIT for repository code/docs, while excluding rights to third-party local assets. |
 

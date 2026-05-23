@@ -7,7 +7,7 @@ import reverie_public_verify as public_verify
 
 
 @pytest.fixture(autouse=True)
-def _python_compile_passes(monkeypatch):
+def _default_machine_checks_pass(monkeypatch, request):
     monkeypatch.setattr(
         public_verify,
         "_run_python_compile",
@@ -20,6 +20,8 @@ def _python_compile_passes(monkeypatch):
         },
         raising=False,
     )
+    if request.node.name == "test_workspace_state_does_not_report_raw_local_paths":
+        return
     monkeypatch.setattr(
         public_verify,
         "_run_workspace_state",
@@ -28,8 +30,9 @@ def _python_compile_passes(monkeypatch):
             "command": ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
             "returncode": 0,
             "dirty_count": 0,
-            "changed_paths": [],
-            "truncated_changed_paths": 0,
+            "status_counts": {},
+            "changed_path_fingerprints": [],
+            "truncated_changed_path_fingerprints": 0,
         },
         raising=False,
     )
@@ -144,8 +147,12 @@ def test_public_verify_reports_dirty_workspace_for_release_review(tmp_path, monk
             "command": ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
             "returncode": 0,
             "dirty_count": 2,
-            "changed_paths": ["M README.md", "?? local.secret"],
-            "truncated_changed_paths": 0,
+            "status_counts": {"M": 1, "??": 1},
+            "changed_path_fingerprints": [
+                {"status": "M", "fingerprint": "abc123"},
+                {"status": "??", "fingerprint": "def456"},
+            ],
+            "truncated_changed_path_fingerprints": 0,
         },
     )
 
@@ -161,6 +168,27 @@ def test_public_verify_reports_dirty_workspace_for_release_review(tmp_path, monk
     assert "dirty_count=2" in workspace_check["evidence"]
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
     assert "`workspace_state`: `review_required`" in summary
+
+
+def test_workspace_state_does_not_report_raw_local_paths(monkeypatch):
+    class Completed:
+        returncode = 0
+        stdout = "?? C:/Users/alice/local.secret\n M docs/PUBLIC_DEMO.md\n"
+        stderr = ""
+
+    monkeypatch.setattr(public_verify.subprocess, "run", lambda *args, **kwargs: Completed())
+
+    report = public_verify._run_workspace_state()
+    serialized = json.dumps(report)
+
+    assert report["status"] == "review_required"
+    assert report["dirty_count"] == 2
+    assert report["status_counts"] == {"??": 1, "M": 1}
+    assert "changed_paths" not in report
+    assert report["changed_path_fingerprints"][0]["fingerprint"]
+    assert "local.secret" not in serialized
+    assert "C:/Users/alice" not in serialized
+    assert "docs/PUBLIC_DEMO.md" not in serialized
 
 
 def test_public_verify_refuses_repo_output_by_default():

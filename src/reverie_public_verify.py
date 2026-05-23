@@ -8,6 +8,7 @@ outside the repository by default.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import shutil
@@ -142,15 +143,24 @@ def _run_workspace_state() -> dict[str, Any]:
         text=True,
     )
     changed_paths = [line for line in completed.stdout.splitlines() if line.strip()]
+    status_counts: dict[str, int] = {}
+    fingerprints = []
+    for line in changed_paths:
+        status_code = line[:2].strip() or line[:2]
+        status_counts[status_code] = status_counts.get(status_code, 0) + 1
+        fingerprints.append({
+            "status": status_code,
+            "fingerprint": hashlib.sha256(line.encode("utf-8")).hexdigest()[:16],
+        })
     if completed.returncode != 0:
         return {
             "status": "error",
             "command": command,
             "returncode": completed.returncode,
             "dirty_count": len(changed_paths),
-            "changed_paths": changed_paths[:50],
-            "truncated_changed_paths": max(0, len(changed_paths) - 50),
-            "stdout_tail": _tail(completed.stdout or ""),
+            "status_counts": status_counts,
+            "changed_path_fingerprints": fingerprints[:50],
+            "truncated_changed_path_fingerprints": max(0, len(fingerprints) - 50),
             "stderr_tail": _tail(completed.stderr or ""),
         }
     return {
@@ -158,8 +168,9 @@ def _run_workspace_state() -> dict[str, Any]:
         "command": command,
         "returncode": completed.returncode,
         "dirty_count": len(changed_paths),
-        "changed_paths": changed_paths[:50],
-        "truncated_changed_paths": max(0, len(changed_paths) - 50),
+        "status_counts": status_counts,
+        "changed_path_fingerprints": fingerprints[:50],
+        "truncated_changed_path_fingerprints": max(0, len(fingerprints) - 50),
     }
 
 

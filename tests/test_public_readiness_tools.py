@@ -100,6 +100,8 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "publish_gate.manual_review_items" in checklist
     assert "workspace_state" in security
     assert "workspace_state" in checklist
+    assert "path fingerprints" in security
+    assert "raw local path names" in checklist
     assert "9 moderate" in security
     assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "tests/test_public_verify.py" in workflow
@@ -107,6 +109,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "public_verify_summary.md" in public_demo
     assert "publish_gate" in public_demo
     assert "workspace_state" in public_demo
+    assert "path fingerprints" in public_demo
     assert "python scripts/public_verify.py --out <temp folder>" in backend_profiles
 
 
