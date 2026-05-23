@@ -19,6 +19,7 @@ from collections import Counter, defaultdict
 from enum import Enum
 
 from utils.gemini_compat import GEMINI_AVAILABLE, configure_gemini, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 # 내부 모듈
 from .trend_collector import (
@@ -272,7 +273,7 @@ class TrendReporter:
                     self.gemini_model = get_gemini_model("gemini-1.5-flash")
                 logger.info("Gemini 모델 초기화 완료")
             except Exception as e:
-                logger.warning(f"Gemini 초기화 실패: {e}")
+                logger.warning(f"Gemini 초기화 실패: {redact_sensitive_text(e)}")
 
         # 데이터 디렉토리
         if data_dir is None:
@@ -770,7 +771,7 @@ class TrendReporter:
             return summary.strip(), recommendations[:5]
 
         except Exception as e:
-            logger.warning(f"Gemini 인사이트 생성 실패: {e}")
+            logger.warning(f"Gemini 인사이트 생성 실패: {redact_sensitive_text(e)}")
             return self._generate_fallback_insights(genre_rankings, golden_zone, current_events)
 
     def _build_insight_prompt(
