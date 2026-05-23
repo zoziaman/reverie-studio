@@ -213,6 +213,20 @@ created in a separate local directory. The output is still only a work order:
 it lists prompt text and target PNG paths, but does not create images, voice
 samples, model weights, or runtime artifacts.
 
+Before rendering an omnibus episode, map scene roles to fixed actor assets with
+`episode-asset-plan`:
+
+```bash
+reverie-actor-model-requests episode-asset-plan data/actor_asset_requests/daily_life_toon.actor_roster_plan.json data/episodes/daily_life_toon_ep001.json --repo-root . --output data/actor_asset_requests/daily_life_toon_ep001.episode_asset_plan.json --fail-on-invalid
+```
+
+The episode JSON should contain `episode_id`, `role_casting`, and `scenes`.
+Each scene is checked against `docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md`, then
+mapped to a concrete actor variant such as `variants/happy_standing.png`.
+Dialogue scenes also receive a default mouth layer target such as
+`face_parts/mouth_small_open.png`. Missing scene variants are reported before
+the run reaches ComfyUI, SD WebUI, or the renderer.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash

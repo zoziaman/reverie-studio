@@ -1249,6 +1249,226 @@ def write_actor_roster_asset_request_manifest(
     return output
 
 
+def _scene_value(scene: Any, key: str, default: Any = "") -> Any:
+    if isinstance(scene, Mapping):
+        return scene.get(key, default)
+    return getattr(scene, key, default)
+
+
+def _normalize_scene_emotion(value: Any) -> str:
+    emotion = str(value or "neutral").strip().lower().replace("-", "_") or "neutral"
+    aliases = {
+        "fear": "scared",
+        "fearful": "scared",
+        "afraid": "scared",
+        "sadness": "sad",
+        "concerned": "worried",
+        "anxious": "worried",
+        "talk": "talking",
+        "speaking": "talking",
+    }
+    return aliases.get(emotion, emotion)
+
+
+def _normalize_scene_pose(value: Any) -> str:
+    pose = str(value or "standing").strip().lower().replace("-", "_") or "standing"
+    aliases = {
+        "sit": "seated",
+        "sitting": "seated",
+        "front": "standing",
+        "forward": "standing",
+        "idle": "standing",
+    }
+    return aliases.get(pose, pose)
+
+
+def _scene_has_dialogue(scene: Any) -> bool:
+    for key in ("line", "dialogue", "text", "speech"):
+        if str(_scene_value(scene, key, "") or "").strip():
+            return True
+    return bool(_scene_value(scene, "is_speaking", False))
+
+
+def _mouth_shape_for_scene(scene: Any) -> str:
+    return "mouth_small_open" if _scene_has_dialogue(scene) else "mouth_closed"
+
+
+def _eye_shape_for_emotion(emotion: str) -> str:
+    if emotion == "angry":
+        return "eyes_angry"
+    if emotion in {"worried", "sad", "scared"}:
+        return "eyes_worried"
+    return "eyes_open"
+
+
+def _asset_request_index(actor_manifest: Mapping[str, Any], request_type: str) -> dict[str, dict[str, Any]]:
+    return {
+        str(request.get("key") or ""): dict(request)
+        for request in actor_manifest.get("requests", [])
+        if isinstance(request, Mapping) and request.get("request_type") == request_type
+    }
+
+
+def _videotoon_contract_helpers() -> tuple[Any, Any]:
+    try:
+        from utils.videotoon_contract import DEFAULT_REQUIRED_SCENE_FIELDS, validate_episode_actor_contract
+    except ModuleNotFoundError:
+        from .videotoon_contract import DEFAULT_REQUIRED_SCENE_FIELDS, validate_episode_actor_contract
+    return DEFAULT_REQUIRED_SCENE_FIELDS, validate_episode_actor_contract
+
+
+def build_actor_episode_asset_plan(
+    roster_plan: Mapping[str, Any],
+    episode: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Map episode scenes to fixed actor variant assets before generation."""
+    if not isinstance(episode, Mapping):
+        raise ValueError("episode must contain a JSON object")
+    patch = _validate_roster_plan(roster_plan)
+    pack_id = str(roster_plan.get("pack_id") or "").strip()
+    if not pack_id:
+        raise ValueError("actor roster plan pack_id is required")
+
+    actor_pool = patch["actor_pool"]
+    role_contract = dict(patch["role_casting_contract"])
+    assignment_key = str(role_contract.get("assignment_key") or "role_casting")
+    normalized_episode = copy.deepcopy(dict(episode))
+    if not isinstance(normalized_episode.get(assignment_key), Mapping):
+        seed = roster_plan.get("episode_cast_seed")
+        if isinstance(seed, Mapping) and isinstance(seed.get("role_casting"), Mapping):
+            normalized_episode[assignment_key] = copy.deepcopy(dict(seed["role_casting"]))
+
+    required_fields = role_contract.get("required_scene_fields")
+    if not isinstance(required_fields, list):
+        required_fields = None
+    default_required_fields, validate_episode_actor_contract = _videotoon_contract_helpers()
+    contract_result = validate_episode_actor_contract(
+        normalized_episode,
+        actor_pool,
+        assignment_key=assignment_key,
+        strict_actor_refs=bool(role_contract.get("strict_actor_refs", True)),
+        allow_background_extras=bool(role_contract.get("allow_background_extras", True)),
+        required_scene_fields=required_fields or default_required_fields,
+    )
+
+    actor_variant_requests: dict[str, dict[str, dict[str, Any]]] = {}
+    actor_mouth_requests: dict[str, dict[str, dict[str, Any]]] = {}
+    actor_eye_requests: dict[str, dict[str, dict[str, Any]]] = {}
+    actors: dict[str, Any] = {}
+    for actor_id, actor_data in actor_pool.items():
+        actor_key = str(actor_id or "").strip()
+        if not actor_key or not isinstance(actor_data, Mapping):
+            continue
+        actor_model_path = _actor_model_path_from_roster_actor(
+            actor_key,
+            actor_data,
+            actor_root=actor_root,
+            repo_root=repo_root,
+        )
+        actor_manifest = build_actor_asset_request_manifest(actor_model_path, repo_root=repo_root)
+        actor_variant_requests[actor_key] = _asset_request_index(actor_manifest, "variant")
+        actor_mouth_requests[actor_key] = _asset_request_index(actor_manifest, "mouth_shape")
+        actor_eye_requests[actor_key] = _asset_request_index(actor_manifest, "eye_shape")
+        actors[actor_key] = {
+            "actor_id": actor_key,
+            "preset_id": str(actor_data.get("preset_id") or ""),
+            "source_actor_model_path": actor_manifest["source_actor_model_path"],
+            "request_count": actor_manifest["request_count"],
+        }
+
+    scenes_input = normalized_episode.get("scenes") or []
+    if not isinstance(scenes_input, list):
+        scenes_input = []
+
+    scenes: list[dict[str, Any]] = []
+    errors = list(contract_result.errors)
+    missing_variants: list[str] = []
+    for index, scene in enumerate(scenes_input):
+        scene_id = str(_scene_value(scene, "scene_id", f"scene_{index + 1:04d}") or "").strip()
+        role_id = str(_scene_value(scene, "role_id", "") or "").strip()
+        actor_id = str(_scene_value(scene, "actor_id", "") or "").strip()
+        emotion = _normalize_scene_emotion(_scene_value(scene, "emotion", "neutral"))
+        pose = _normalize_scene_pose(_scene_value(scene, "pose", "standing"))
+        variant_key = str(_scene_value(scene, "variant_key", "") or "").strip() or f"{emotion}_{pose}"
+        mouth_shape_key = _mouth_shape_for_scene(scene)
+        eye_shape_key = _eye_shape_for_emotion(emotion)
+
+        variant_request = actor_variant_requests.get(actor_id, {}).get(variant_key)
+        mouth_request = actor_mouth_requests.get(actor_id, {}).get(mouth_shape_key, {})
+        eye_request = actor_eye_requests.get(actor_id, {}).get(eye_shape_key, {})
+        if not variant_request and actor_id:
+            missing_key = f"{actor_id}:{variant_key}"
+            missing_variants.append(missing_key)
+            errors.append(f"scene {scene_id or index} actor {actor_id} missing variant {variant_key}")
+
+        scenes.append(
+            {
+                "scene_id": scene_id,
+                "role_id": role_id,
+                "actor_id": actor_id,
+                "emotion": emotion,
+                "pose": pose,
+                "shot_type": str(_scene_value(scene, "shot_type", "") or "").strip(),
+                "variant_key": variant_key,
+                "variant_available": bool(variant_request),
+                "asset_request_id": str(variant_request.get("request_id", "")) if variant_request else "",
+                "target_relative_path": str(variant_request.get("target_relative_path", "")) if variant_request else "",
+                "mouth_shape_key": mouth_shape_key,
+                "mouth_target_relative_path": str(mouth_request.get("target_relative_path", "")),
+                "eye_shape_key": eye_shape_key,
+                "eye_target_relative_path": str(eye_request.get("target_relative_path", "")),
+            }
+        )
+
+    return {
+        "schema": "reverie.pack.actor_episode_asset_plan.v1",
+        "pack_id": pack_id,
+        "episode_id": str(normalized_episode.get("episode_id") or ""),
+        "is_valid": contract_result.is_valid and not missing_variants,
+        "actor_count": len(actors),
+        "scene_count": len(scenes),
+        "missing_variant_count": len(missing_variants),
+        "missing_variants": missing_variants,
+        "errors": errors,
+        "warnings": list(contract_result.warnings),
+        "role_casting": copy.deepcopy(dict(normalized_episode.get(assignment_key) or {})),
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "actors": actors,
+        "scenes": scenes,
+    }
+
+
+def write_actor_episode_asset_plan(
+    roster_plan_path: Path | str,
+    episode_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write an episode scene-to-actor-asset plan."""
+    roster_plan = _load_json_object(roster_plan_path, "actor roster plan")
+    episode = _load_json_object(episode_path, "episode")
+    manifest = build_actor_episode_asset_plan(
+        roster_plan,
+        episode,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_coverage_report(
     actor_model_path: Path | str,
     *,
@@ -1504,6 +1724,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     roster_request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     roster_request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    episode_asset_parser = subparsers.add_parser(
+        "episode-asset-plan",
+        help="Map episode scenes to fixed actor variant assets before generation.",
+    )
+    episode_asset_parser.add_argument("roster_plan_path", help="Input actor roster plan JSON path.")
+    episode_asset_parser.add_argument("episode_path", help="Input episode JSON with role_casting and scenes.")
+    episode_asset_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    episode_asset_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    episode_asset_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    episode_asset_parser.add_argument("--fail-on-invalid", action="store_true", help="Exit 1 when the asset plan is invalid.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -1627,6 +1858,30 @@ def main(argv: Optional[list[str]] = None) -> int:
                 repo_root=args.repo_root,
             )
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "episode-asset-plan":
+        if args.output:
+            output = write_actor_episode_asset_plan(
+                args.roster_plan_path,
+                args.episode_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            manifest = json.loads(Path(output).read_text(encoding="utf-8"))
+            print(f"Wrote episode asset plan: {output}")
+        else:
+            roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
+            episode = _load_json_object(args.episode_path, "episode")
+            manifest = build_actor_episode_asset_plan(
+                roster_plan,
+                episode,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        if args.fail_on_invalid and not manifest["is_valid"]:
+            return 1
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

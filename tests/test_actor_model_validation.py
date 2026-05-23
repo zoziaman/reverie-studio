@@ -925,3 +925,172 @@ def test_actor_model_cli_writes_roster_asset_request_manifest(tmp_path, capsys):
     assert manifest["actor_count"] == 1
     assert manifest["request_count"] == 18
     assert "actor roster asset requests" in captured.out
+
+
+def test_build_actor_episode_asset_plan_maps_scene_roles_to_actor_variants(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            },
+            {
+                "role_id": "witness",
+                "preset_id": "daily_middle_woman",
+                "actor_id": "actor_daily_middle_woman_01",
+            },
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "happy",
+                "pose": "standing",
+                "shot_type": "medium_close",
+                "line": "I can explain everything.",
+            },
+            {
+                "scene_id": "s002",
+                "role_id": "witness",
+                "actor_id": "actor_daily_middle_woman_01",
+                "emotion": "worried",
+                "pose": "standing",
+                "shot_type": "close",
+            },
+        ],
+    }
+
+    manifest = actor_model.build_actor_episode_asset_plan(plan, episode, actor_root=actor_root)
+    first_scene = manifest["scenes"][0]
+
+    assert manifest["schema"] == "reverie.pack.actor_episode_asset_plan.v1"
+    assert manifest["pack_id"] == "daily_life_toon"
+    assert manifest["episode_id"] == "daily_life_toon_ep001"
+    assert manifest["is_valid"] is True
+    assert manifest["scene_count"] == 2
+    assert manifest["missing_variant_count"] == 0
+    assert first_scene["variant_key"] == "happy_standing"
+    assert first_scene["target_relative_path"] == "variants/happy_standing.png"
+    assert first_scene["mouth_shape_key"] == "mouth_small_open"
+    assert first_scene["mouth_target_relative_path"] == "face_parts/mouth_small_open.png"
+
+
+def test_actor_episode_asset_plan_flags_missing_scene_variant(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "surprised",
+                "pose": "jumping",
+                "shot_type": "wide",
+            }
+        ],
+    }
+
+    manifest = actor_model.build_actor_episode_asset_plan(plan, episode, actor_root=actor_root)
+
+    assert manifest["is_valid"] is False
+    assert manifest["missing_variant_count"] == 1
+    assert manifest["missing_variants"] == ["actor_daily_adult_man_01:surprised_jumping"]
+    assert "surprised_jumping" in manifest["errors"][0]
+
+
+def test_actor_model_cli_writes_episode_asset_plan(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    episode_path = tmp_path / "daily_life_toon.episode.json"
+    output_path = tmp_path / "daily_life_toon.episode_asset_plan.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode_path.write_text(
+        json.dumps(
+            {
+                "episode_id": "daily_life_toon_ep001",
+                "role_casting": plan["episode_cast_seed"]["role_casting"],
+                "scenes": [
+                    {
+                        "scene_id": "s001",
+                        "role_id": "protagonist",
+                        "actor_id": "actor_daily_adult_man_01",
+                        "emotion": "neutral",
+                        "pose": "standing",
+                        "shot_type": "medium",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = actor_model.main(
+        [
+            "episode-asset-plan",
+            str(plan_path),
+            str(episode_path),
+            "--actor-root",
+            str(actor_root),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert manifest["is_valid"] is True
+    assert manifest["scene_count"] == 1
+    assert "episode asset plan" in captured.out
