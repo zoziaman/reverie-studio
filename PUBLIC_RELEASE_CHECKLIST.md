@@ -22,7 +22,9 @@ clean release branch/export. `--with-history-scan` now gives redacted git
 history filenames evidence and blocks this recovered branch for direct public
 conversion. `python scripts\public_export.py --out <temp>` creates a
 history-free zip archive from the current tracked snapshot and writes
-`public_export_manifest.json`; `--with-public-export` records the same archive
+`public_export_manifest.json`; its `release_guidance` block identifies the
+archive as the public distribution path and keeps existing git history as a
+separate reviewed choice. `--with-public-export` records the same archive
 verification in `public_verify_report.json`.
 Read `publish_gate.release_options` before publishing: `history_free_export`
 is the clean distribution path when available, while `existing_repo_history`
@@ -48,7 +50,7 @@ history being made public.
 | Backend profile boundary documented | PASS | `docs/BACKEND_PROFILES.md` and `src/reverie_backends.py` describe dry-run, local SoVITS, local Supertonic, and opt-in cloud profiles. |
 | Public quality gate available | PASS | The dry-run writes `quality_gate.json` with score, threshold, review requirements, and no media inspection. |
 | One-command public verifier available | PASS | `python scripts\public_verify.py --out <temp>` writes `public_verify_report.json` outside the repository, refuses repo-internal output by default, and reports `workspace_state` plus snapshot findings as counts/fingerprints so dirty branches and blocking findings are visible before release without copying raw local path names into the report. Nested public demo artifacts also use a repo-relative `pack_path` and `<public_demo_output>` placeholder. `--with-public-export` also creates and verifies the history-free source archive under the verifier output. `python scripts\public_snapshot_check.py --json` provides the same redacted snapshot summary for automation. |
-| History-free public export available | PASS | From a clean workspace, `python scripts\public_export.py --out <temp>` refuses repo-internal output by default, writes `reverie-public-snapshot.zip`, and records `git_history_included=false`, `tracked_file_count`, `archive_file_count`, `archive_sha256`, `archive_integrity`, clean `workspace_state`, and the redacted snapshot summary in `public_export_manifest.json`. `python scripts\public_export.py --verify --out <temp>` rechecks the zip against the manifest after creation or transfer. |
+| History-free public export available | PASS | From a clean workspace, `python scripts\public_export.py --out <temp>` refuses repo-internal output by default, writes `reverie-public-snapshot.zip`, and records `git_history_included=false`, `release_guidance`, `tracked_file_count`, `archive_file_count`, `archive_sha256`, `archive_integrity`, clean `workspace_state`, and the redacted snapshot summary in `public_export_manifest.json`. `python scripts\public_export.py --verify --out <temp>` rechecks the zip and the release guidance against the manifest after creation or transfer. |
 | Firebase Functions syntax check | PASS | After `npm --prefix functions ci`, `python scripts\public_verify.py --with-functions-syntax --out <temp>` loads the optional `functions/index.js` entrypoint through Node and records public-safe status in `checks.functions_syntax`. |
 | CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public verifier and focused public tests on `main` and `codex/public-snapshot-clean`. |
 | Firebase Functions dependency audit | PASS | `npm --prefix functions audit --package-lock-only --omit=dev --json` reports 0 production vulnerabilities after the lockfile refresh and root `uuid` override. `public_verify.py --with-functions-audit` records structured counts and direct dependency versions without embedding raw npm output. |
@@ -90,7 +92,8 @@ only when `python scripts\public_verify.py --with-pytest --with-functions-audit 
 passes for the exact branch/export being published, or when
 `python scripts\public_export.py --out <temp>` produces a history-free archive
 whose `public_export_manifest.json` has `git_history_included=false` and a
-passing `public_snapshot` from a clean workspace, then
+`release_guidance` block that points to `history_free_export`, plus a passing
+`public_snapshot` from a clean workspace, then
 `python scripts\public_export.py --verify --out <temp>` passes. The publish set
 must have no real secrets, no personal data, no local runtime state, and no
 generated or third-party assets that should remain user-provided. Treat

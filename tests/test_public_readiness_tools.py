@@ -122,6 +122,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "--with-functions-syntax" in checklist
     assert "checks.functions_syntax" in checklist
     assert "git_history_included" in checklist
+    assert "release_guidance" in checklist
     assert "archive_integrity" in checklist
     assert "archive_sha256" in checklist
     assert "clean workspace" in checklist
@@ -131,6 +132,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "publish_gate.release_options" in security
     assert "history_free_export" in security
     assert "existing_repo_history" in security
+    assert "release_guidance" in security
     assert "Snapshot findings" in security
     assert "snapshot findings as counts/fingerprints" in checklist
     assert "env-like credential/token filenames" in security
@@ -188,6 +190,7 @@ def test_readme_documents_public_export_workflow():
     assert "public_export_manifest.json" in readme
     assert "archive_sha256" in readme
     assert "git_history_included=false" in readme
+    assert "release_guidance" in readme
     assert "publish_gate.release_options" in readme
     assert "history_free_export" in readme
     assert "existing_repo_history" in readme

@@ -20,6 +20,16 @@ SNAPSHOT_CHECK_PATH = REPO_ROOT / "scripts" / "public_snapshot_check.py"
 DEFAULT_EXPORT_OUT = Path(tempfile.gettempdir()) / "reverie-public-export"
 ARCHIVE_NAME = "reverie-public-snapshot.zip"
 MANIFEST_NAME = "public_export_manifest.json"
+RELEASE_GUIDANCE = {
+    "distribution_path": "history_free_export",
+    "use_archive_for_public_distribution": True,
+    "existing_repo_history_included": False,
+    "existing_repo_history_requires_review": True,
+    "next_actions": [
+        "Distribute the generated source archive, not the private-history checkout.",
+        "Run public_verify.py with --with-history-scan before publishing existing repository history.",
+    ],
+}
 
 
 def _load_public_snapshot_check() -> ModuleType:
@@ -148,6 +158,7 @@ def create_public_export(
         "archive_file_count": archive_file_count,
         "archive_sha256": _sha256_file(archive_path),
         "archive_integrity": archive_integrity,
+        "release_guidance": RELEASE_GUIDANCE,
         "git_history_included": False,
         "workspace_state": workspace_state,
         "public_snapshot": snapshot_report,
@@ -212,6 +223,9 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             "actual": actual_archive_count,
         },
         "archive_integrity": actual_integrity,
+        "release_guidance": {
+            "status": _check_status(manifest.get("release_guidance") == RELEASE_GUIDANCE),
+        },
         "git_history_included": {
             "status": _check_status(manifest.get("git_history_included") is False),
         },

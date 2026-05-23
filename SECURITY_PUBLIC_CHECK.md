@@ -20,7 +20,10 @@ intentionally reviewed or rewritten. `python scripts\public_export.py --out
 <temp>` creates a history-free zip archive plus `public_export_manifest.json`
 from the current tracked snapshot after the snapshot check passes, and
 `public_verify.py --with-public-export` records that export verification in the
-public verifier report. After `npm --prefix functions ci`,
+public verifier report. The export manifest also includes `release_guidance`,
+which marks the archive as the history-free public distribution path and keeps
+existing repository history as a separate review item. After `npm --prefix
+functions ci`,
 `--with-functions-syntax` records whether `functions/index.js` loads under Node
 without embedding stack traces or local paths. `--with-functions-audit` now
 records 0 production vulnerabilities for the optional functions package,
@@ -43,7 +46,7 @@ history passes `--with-history-scan`.
 | Personal identifiers absent | PASS | Focused scan found no real user-home paths or private identifiers in tracked release files; remaining phone-like strings are test fixtures for policy checks. |
 | Public pack files reviewed | PASS | `assets/packs/` scan found no live API keys, local machine paths, or private key material. Packs are prompts/templates only unless users add their own assets locally. |
 | Public verifier artifacts safe | PASS | `public_verify.py`, `reverie_doctor`, and `reverie_demo` write JSON/JSONL/Markdown reports outside the repository and do not read credentials, call cloud services, start local services, upload, or generate media. Snapshot findings in `public_verify_report.json` are summarized as counts and fingerprints rather than raw paths; public demo artifacts use repo-relative `pack_path` and `<public_demo_output>` placeholders instead of raw workspace/temp paths; run `scripts/public_snapshot_check.py` directly for local raw file locations. |
-| Clean public export available | PASS | From a clean workspace, `python scripts\public_export.py --out <temp>` refuses repo-internal output by default, reruns the tracked snapshot check, writes `reverie-public-snapshot.zip`, and records `git_history_included=false`, `archive_sha256`, clean `workspace_state`, archive integrity, and counts in `public_export_manifest.json`. `python scripts\public_verify.py --with-public-export --out <temp>` also creates, verifies, and summarizes the history-free archive under `checks.public_export`. |
+| Clean public export available | PASS | From a clean workspace, `python scripts\public_export.py --out <temp>` refuses repo-internal output by default, reruns the tracked snapshot check, writes `reverie-public-snapshot.zip`, and records `git_history_included=false`, `release_guidance`, `archive_sha256`, clean `workspace_state`, archive integrity, and counts in `public_export_manifest.json`. `python scripts\public_verify.py --with-public-export --out <temp>` also creates, verifies, and summarizes the history-free archive under `checks.public_export`. |
 | Firebase Functions syntax check | PASS | After `npm --prefix functions ci`, `python scripts\public_verify.py --with-functions-syntax --out <temp>` loads `functions/index.js` through Node and records only status, public-safe command text, return code, and generic detail in `checks.functions_syntax`. |
 | Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain` as counts and path fingerprints, not raw local path names; release review should use a clean branch/export before publishing. |
 | Git history filename scan | NEEDS REVIEW | `python scripts\public_verify.py --with-history-scan --out <temp>` reuses the public snapshot path rules against historical filenames and reports only counts/fingerprints. On this recovered branch it blocks direct public conversion because historical blocked roots, media/model extensions, and credential-like filenames still exist in old commits. |

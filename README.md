@@ -287,10 +287,13 @@ python scripts\public_export.py --verify --out "$env:TEMP\reverie-public-export"
 Get-Content "$env:TEMP\reverie-public-export\public_export_manifest.json"
 ```
 
-The export manifest records `git_history_included=false`, `archive_sha256`,
-archive integrity checks, clean workspace state, and the redacted public
-snapshot summary. `public_verify.py --with-public-export` records the same
-history-free export and verification result in `public_verify_report.json`.
+The export manifest records `git_history_included=false`, `release_guidance`,
+`archive_sha256`, archive integrity checks, clean workspace state, and the
+redacted public snapshot summary. `release_guidance` marks the archive as the
+history-free distribution path and reminds maintainers not to publish existing
+repository history until it has been scanned. `public_verify.py --with-public-export`
+records the same history-free export and verification result in
+`public_verify_report.json`.
 `--with-functions-syntax` requires `npm --prefix functions ci` first and records
 whether `functions/index.js` loads under Node without embedding stack traces or
 local paths in the public report.

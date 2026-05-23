@@ -139,6 +139,16 @@ def test_public_export_writes_archive_and_manifest(tmp_path, monkeypatch):
         "contains_unsafe_paths": False,
         "count_matches_tracked_files": True,
     }
+    assert manifest["release_guidance"] == {
+        "distribution_path": "history_free_export",
+        "use_archive_for_public_distribution": True,
+        "existing_repo_history_included": False,
+        "existing_repo_history_requires_review": True,
+        "next_actions": [
+            "Distribute the generated source archive, not the private-history checkout.",
+            "Run public_verify.py with --with-history-scan before publishing existing repository history.",
+        ],
+    }
     assert manifest["workspace_state"]["status"] == "pass"
     assert manifest["public_snapshot"]["status"] == "pass"
     assert str(tmp_path.resolve()) not in json.dumps(manifest)
@@ -247,6 +257,16 @@ def test_public_export_verify_passes_for_matching_archive(tmp_path):
             "contains_unsafe_paths": False,
             "count_matches_tracked_files": True,
         },
+        "release_guidance": {
+            "distribution_path": "history_free_export",
+            "use_archive_for_public_distribution": True,
+            "existing_repo_history_included": False,
+            "existing_repo_history_requires_review": True,
+            "next_actions": [
+                "Distribute the generated source archive, not the private-history checkout.",
+                "Run public_verify.py with --with-history-scan before publishing existing repository history.",
+            ],
+        },
         "git_history_included": False,
         "workspace_state": {"status": "pass", "dirty_count": 0},
         "public_snapshot": {"status": "pass", "finding_count": 0},
@@ -260,7 +280,37 @@ def test_public_export_verify_passes_for_matching_archive(tmp_path):
     assert report["archive_path"] == "reverie-public-snapshot.zip"
     assert report["checks"]["archive_sha256"]["status"] == "pass"
     assert report["checks"]["archive_integrity"]["status"] == "pass"
+    assert report["checks"]["release_guidance"]["status"] == "pass"
     assert str(tmp_path.resolve()) not in json.dumps(report)
+
+
+def test_public_export_verify_fails_without_release_guidance(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("README.md", "# demo\n")
+    manifest = {
+        "schema": "reverie.public_export.v1",
+        "archive_path": "reverie-public-snapshot.zip",
+        "manifest_path": "public_export_manifest.json",
+        "tracked_file_count": 1,
+        "archive_file_count": 1,
+        "archive_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+        "archive_integrity": {
+            "status": "pass",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": True,
+        },
+        "git_history_included": False,
+        "workspace_state": {"status": "pass", "dirty_count": 0},
+        "public_snapshot": {"status": "pass", "finding_count": 0},
+    }
+    (tmp_path / "public_export_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["checks"]["release_guidance"]["status"] == "fail"
 
 
 def test_public_export_verify_fails_for_checksum_mismatch(tmp_path):
