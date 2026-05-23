@@ -847,8 +847,9 @@ class PackageManager:
             logger.info(f"[PackageManager] 패키지 가져오기 완료: {package.package_name}")
 
         except Exception as e:
-            logger.error(f"[PackageManager] 패키지 가져오기 실패: {e}")
-            result.error = str(e)
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PackageManager] 패키지 가져오기 실패: {safe_error}")
+            result.error = safe_error
 
         return result
 

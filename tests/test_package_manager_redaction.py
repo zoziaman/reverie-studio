@@ -31,3 +31,22 @@ def test_export_package_failure_redacts_secret_in_log_and_return(monkeypatch, tm
     assert secret not in caplog.text
     assert "<redacted-github-token>" in message
     assert "<redacted-github-token>" in caplog.text
+
+
+def test_import_package_failure_redacts_secret_in_log_and_result(monkeypatch, caplog):
+    secret = "npm_" + ("n" * 28)
+    manager = object.__new__(PackageManager)
+
+    def fail_get_pack_id(_package_path):
+        raise RuntimeError(f"package scan failed for NPM_TOKEN={secret}")
+
+    monkeypatch.setattr(manager, "_get_pack_id_from_file", fail_get_pack_id)
+    caplog.set_level(logging.ERROR)
+
+    result = manager.import_package("broken.revpack")
+
+    assert result.success is False
+    assert secret not in result.error
+    assert secret not in caplog.text
+    assert "NPM_TOKEN=<redacted>" in result.error
+    assert "NPM_TOKEN=<redacted>" in caplog.text
