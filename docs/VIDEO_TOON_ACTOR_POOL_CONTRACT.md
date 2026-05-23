@@ -172,6 +172,12 @@ final preflight, and the prepare report. The prepare report includes `missing_as
 through many omnibus roles while each episode lists only the actor/background
 assets still missing for render readiness.
 
+Use `reverie-videotoon-render-plan from-prepare ...` after prepare to convert
+those checked artifacts into `reverie.pack.videotoon_render_plan.v1`: a
+scene-level composition graph with background plate, actor base variant, eye
+layer, and mouth layer entries. This is the handoff shape for Remotion or any
+other renderer, while remaining public-safe JSON only.
+
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 
 `PackValidator(repo_root=...)` validates `actor_model_path` when it is present.

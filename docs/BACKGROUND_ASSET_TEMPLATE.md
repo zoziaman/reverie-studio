@@ -138,6 +138,10 @@ specs, background requests, background coverage, final preflight, and a prepare
 report with `missing_assets` and `next_actions` so the next local asset work is
 visible without reading every coverage file manually.
 
+After prepare, use `reverie-videotoon-render-plan from-prepare ...` to convert
+the checked actor and background artifacts into a scene composition plan for
+Remotion or another renderer.
+
 ## Public Boundary
 
 Background request manifests and coverage reports must not contain:

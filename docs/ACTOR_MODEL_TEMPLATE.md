@@ -414,3 +414,15 @@ canvas, anchors, layer order, and target PNG paths that were checked during
 preflight. That is the working loop for this gold model: create or place only
 the missing local actor variants, mouth layers, eye layers, and background
 plates, rerun prepare, then render when the report is ready.
+
+To turn the prepare bundle into a renderer-facing scene graph, run:
+
+```bash
+reverie-videotoon-render-plan from-prepare data/actor_asset_requests/prepare/daily_life_toon_ep001/daily_life_toon_ep001.prepare_report.json --output data/actor_asset_requests/prepare/daily_life_toon_ep001/daily_life_toon_ep001.render_plan.json
+```
+
+The render plan writes schema `reverie.pack.videotoon_render_plan.v1`. It
+contains scene-level `background_plate`, `variant_base`, `eye_layer`, and
+`mouth_layer` composition layers for Remotion or another renderer to consume.
+It is still public-safe JSON only; no PNGs, audio, video, private paths, or
+model weights are produced.
