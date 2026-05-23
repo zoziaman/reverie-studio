@@ -120,16 +120,44 @@ def _functions_audit_status(vulnerabilities: dict[str, Any]) -> str:
 
 def _functions_audit_evidence(functions_audit_report: dict[str, Any]) -> str:
     counts = functions_audit_report.get("vulnerabilities") or {}
+    fix_advice = functions_audit_report.get("fix_advice") or {}
+    force_targets = fix_advice.get("force_fix_targets") or []
     return (
         "functions npm audit status={status}, total={total}, moderate={moderate}, "
-        "high={high}, critical={critical}"
+        "high={high}, critical={critical}, direct_fix_count={direct_fix_count}, "
+        "force_fix_required={force_fix_required}, force_fix_targets={force_fix_targets}"
     ).format(
         status=functions_audit_report.get("status", "unknown"),
         total=_safe_int(counts.get("total")),
         moderate=_safe_int(counts.get("moderate")),
         high=_safe_int(counts.get("high")),
         critical=_safe_int(counts.get("critical")),
+        direct_fix_count=_safe_int(fix_advice.get("direct_fix_count")),
+        force_fix_required=str(bool(fix_advice.get("force_fix_required"))).lower(),
+        force_fix_targets="|".join(str(target) for target in force_targets),
     )
+
+
+def _functions_audit_fix_advice(payload: dict[str, Any]) -> dict[str, Any]:
+    direct_fix_count = 0
+    force_fix_targets = set()
+    for vulnerability in (payload.get("vulnerabilities") or {}).values():
+        fix_available = vulnerability.get("fixAvailable")
+        if fix_available is True:
+            direct_fix_count += 1
+            continue
+        if not isinstance(fix_available, dict):
+            continue
+        name = fix_available.get("name")
+        version = fix_available.get("version")
+        if name and version and fix_available.get("isSemVerMajor"):
+            force_fix_targets.add(f"{name}@{version}")
+
+    return {
+        "direct_fix_count": direct_fix_count,
+        "force_fix_required": bool(force_fix_targets),
+        "force_fix_targets": sorted(force_fix_targets),
+    }
 
 
 def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
@@ -150,6 +178,7 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
         "--prefix",
         str(FUNCTIONS_DIR),
         "audit",
+        "--package-lock-only",
         "--omit=dev",
         "--json",
     ]
@@ -201,6 +230,7 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
         "vulnerabilities": vulnerabilities,
         "vulnerability_names": names[:25],
         "truncated_vulnerability_names": max(0, len(names) - 25),
+        "fix_advice": _functions_audit_fix_advice(payload),
         "stdout_tail": _tail(completed.stdout or "", limit=1200),
         "stderr_tail": _tail(completed.stderr or "", limit=1200),
     }
@@ -271,6 +301,8 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         ]
     )
     if functions_audit.get("status") not in {None, "not_run"}:
+        fix_advice = functions_audit.get("fix_advice") or {}
+        force_fix_targets = fix_advice.get("force_fix_targets") or []
         lines.extend(
             [
                 "",
@@ -281,8 +313,11 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
                 f"- Moderate: `{_safe_int(vulnerabilities.get('moderate'))}`",
                 f"- High: `{_safe_int(vulnerabilities.get('high'))}`",
                 f"- Critical: `{_safe_int(vulnerabilities.get('critical'))}`",
+                f"- Direct fix count: `{_safe_int(fix_advice.get('direct_fix_count'))}`",
             ]
         )
+        if force_fix_targets:
+            lines.append(f"- Force-fix targets: `{', '.join(force_fix_targets)}`")
 
     lines.extend(
         [

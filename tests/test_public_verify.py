@@ -101,6 +101,8 @@ def test_public_verify_can_run_pytest_when_requested(tmp_path, monkeypatch):
 
 
 def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
+    captured_commands = []
+
     class Completed:
         returncode = 1
         stdout = json.dumps({
@@ -115,8 +117,34 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
                 }
             },
             "vulnerabilities": {
-                "firebase-admin": {"severity": "moderate"},
-                "uuid": {"severity": "moderate"},
+                "firebase-admin": {
+                    "severity": "moderate",
+                    "fixAvailable": {
+                        "name": "firebase-admin",
+                        "version": "10.3.0",
+                        "isSemVerMajor": True,
+                    },
+                },
+                "uuid": {
+                    "severity": "moderate",
+                    "fixAvailable": {
+                        "name": "firebase-admin",
+                        "version": "10.3.0",
+                        "isSemVerMajor": True,
+                    },
+                },
+                "firebase-functions": {
+                    "severity": "moderate",
+                    "fixAvailable": {
+                        "name": "firebase-functions",
+                        "version": "4.9.0",
+                        "isSemVerMajor": True,
+                    },
+                },
+                "gaxios": {
+                    "severity": "moderate",
+                    "fixAvailable": True,
+                },
             },
         })
         stderr = ""
@@ -129,19 +157,32 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
     monkeypatch.setattr(public_verify.shutil, "which", lambda command: "npm")
-    monkeypatch.setattr(public_verify.subprocess, "run", lambda *args, **kwargs: Completed())
+
+    def fake_run(command, *args, **kwargs):
+        captured_commands.append(command)
+        return Completed()
+
+    monkeypatch.setattr(public_verify.subprocess, "run", fake_run)
 
     report = public_verify.run_public_verification(tmp_path, with_functions_audit=True)
 
+    assert "--package-lock-only" in captured_commands[0]
     assert report["overall_status"] == "pass"
     assert report["publish_gate"]["status"] == "review_required"
     assert report["checks"]["functions_audit"]["status"] == "review_required"
     assert report["checks"]["functions_audit"]["vulnerabilities"]["moderate"] == 9
+    assert report["checks"]["functions_audit"]["fix_advice"] == {
+        "direct_fix_count": 1,
+        "force_fix_required": True,
+        "force_fix_targets": ["firebase-admin@10.3.0", "firebase-functions@4.9.0"],
+    }
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
     assert "Optional Functions Audit" in summary
     assert "Moderate: `9`" in summary
+    assert "Force-fix targets: `firebase-admin@10.3.0, firebase-functions@4.9.0`" in summary
     functions_check = [
         check for check in report["publish_gate"]["machine_checks"]
         if check["id"] == "firebase_functions_dependency_audit"
     ][0]
     assert "total=9" in functions_check["evidence"]
+    assert "force_fix_required=true" in functions_check["evidence"]
