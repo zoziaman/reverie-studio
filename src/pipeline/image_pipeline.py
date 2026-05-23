@@ -372,7 +372,7 @@ class ImagePipeline:
                 break
             except (requests.RequestException, ConnectionError, json.JSONDecodeError, ValueError) as e:
                 delay = 1.0 * (2 ** attempt) * (0.5 + random.random())
-                logger.warning(f"[SD] 옵션 조회 실패. 재시도 {attempt+1}/3, {delay:.1f}초 대기. 에러: {e}")
+                logger.warning(f"[SD] 옵션 조회 실패. 재시도 {attempt+1}/3, {delay:.1f}초 대기. 에러: {redact_sensitive_text(e)}")
                 if attempt < 2:
                     time.sleep(delay)
 
@@ -428,7 +428,7 @@ class ImagePipeline:
 
                 except (requests.RequestException, ConnectionError, json.JSONDecodeError, ValueError) as e:
                     delay = 2.0 * (2 ** attempt) * (0.5 + random.random())
-                    logger.warning(f"[SD] 모델 스위칭 실패. 재시도 {attempt+1}/3, {delay:.1f}초 대기. 에러: {e}")
+                    logger.warning(f"[SD] 모델 스위칭 실패. 재시도 {attempt+1}/3, {delay:.1f}초 대기. 에러: {redact_sensitive_text(e)}")
                     if attempt < 2:
                         time.sleep(delay)
             else:
@@ -448,7 +448,7 @@ class ImagePipeline:
                 )
                 logger.info(f"[SD] VAE 적용 완료: {target_vae}")
             except (requests.RequestException, ConnectionError) as e:
-                logger.warning(f"[SD] VAE 적용 실패 (계속 진행): {e}")
+                logger.warning(f"[SD] VAE 적용 실패 (계속 진행): {redact_sensitive_text(e)}")
         elif target_vae:
             logger.info(f"[SD] 이미 올바른 VAE 장착: {current_vae}")
 

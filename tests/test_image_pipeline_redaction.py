@@ -56,3 +56,45 @@ def test_safe_fallback_image_failure_redacts_api_key_and_keeps_placeholder(monke
     assert output_path.exists()
     assert api_key not in caplog.text
     assert "GEMINI_API_KEY=<redacted>" in caplog.text
+
+
+def test_set_sd_model_options_failure_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("o" * 32)
+
+    def fail_get(*args, **kwargs):
+        raise requests.RequestException(f"options lookup failed for ?key={api_key}")
+
+    pipeline = _make_pipeline()
+    monkeypatch.setattr("pipeline.image_pipeline.requests.get", fail_get)
+    monkeypatch.setattr("pipeline.image_pipeline.time.sleep", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(pipeline, "boot_sd_webui", lambda: False)
+
+    caplog.set_level(logging.WARNING)
+
+    pipeline.set_sd_model()
+
+    assert api_key not in caplog.text
+    assert "key=<redacted>" in caplog.text
+
+
+def test_set_sd_model_switch_failure_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("s" * 32)
+
+    class OptionsResponse:
+        def json(self):
+            return {"sd_model_checkpoint": "other-model.safetensors", "sd_vae": ""}
+
+    def fail_post(*args, **kwargs):
+        raise requests.RequestException(f"model switch failed for GEMINI_API_KEY={api_key}")
+
+    pipeline = _make_pipeline()
+    monkeypatch.setattr("pipeline.image_pipeline.requests.get", lambda *args, **kwargs: OptionsResponse())
+    monkeypatch.setattr("pipeline.image_pipeline.requests.post", fail_post)
+    monkeypatch.setattr("pipeline.image_pipeline.time.sleep", lambda *_args, **_kwargs: None)
+
+    caplog.set_level(logging.WARNING)
+
+    pipeline.set_sd_model()
+
+    assert api_key not in caplog.text
+    assert "GEMINI_API_KEY=<redacted>" in caplog.text
