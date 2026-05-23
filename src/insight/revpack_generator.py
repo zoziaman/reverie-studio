@@ -26,6 +26,7 @@ from pathlib import Path
 from dataclasses import dataclass, asdict, field
 from typing import Dict, List, Optional, Tuple, Any
 from datetime import datetime
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -740,8 +741,9 @@ class RevpackGenerator:
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
         except Exception as e:
-            logger.error(f"[RevpackGenerator] .revpack 생성 실패: {e}")
-            return False, f"생성 실패: {str(e)}", None
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[RevpackGenerator] .revpack 생성 실패: {safe_error}")
+            return False, f"생성 실패: {safe_error}", None
 
     def _safe_filename(self, name: str) -> str:
         """안전한 파일명 생성"""
@@ -1151,8 +1153,9 @@ class RevpackGenerator:
         except json.JSONDecodeError as e:
             return False, f"JSON 파싱 오류: {e}", None
         except Exception as e:
-            logger.error(f"[RevpackLoader] 로드 실패: {e}")
-            return False, f"로드 실패: {str(e)}", None
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[RevpackLoader] 로드 실패: {safe_error}")
+            return False, f"로드 실패: {safe_error}", None
 
     def _load_new_format_pack(
         self,
@@ -1254,8 +1257,9 @@ class RevpackGenerator:
             return True, f"패키지 로드 완료: {manifest.get('pack_name', revpack_path.name)}", result
 
         except Exception as e:
-            logger.error(f"[RevpackLoader] 새 형식 팩 로드 실패: {e}")
-            return False, f"새 형식 팩 로드 실패: {str(e)}", None
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[RevpackLoader] 새 형식 팩 로드 실패: {safe_error}")
+            return False, f"새 형식 팩 로드 실패: {safe_error}", None
 
     def revpack_to_plan_data(
         self,
