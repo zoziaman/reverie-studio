@@ -78,6 +78,27 @@ DEFAULT_ROLE_RANGE = (
     "neighbor",
 )
 DEFAULT_PRESET_CATALOG_PATH = Path("assets") / "actor_model_presets" / "catalog.json"
+GOLD_TEMPLATE_GOAL_ID = "gold_reusable_video_toon_actor_v1"
+DEFAULT_TEMPLATE_GOAL_ID = "reusable_video_toon_actor_v1"
+DEFAULT_REUSE_SURFACES = (
+    "pack_actor_pool",
+    "episode_role_casting",
+    "scene_variant_selection",
+    "mouth_flap_layering",
+    "eye_blink_layering",
+    "thumbnail_composition",
+    "omnibus_role_swap",
+)
+DEFAULT_REUSE_CONTEXTS = (
+    "daily_life",
+    "mystery",
+    "family",
+    "office",
+    "school",
+    "saguk",
+    "thumbnail",
+    "shorts",
+)
 PRESET_REQUIRED_FIELDS = (
     "display_name",
     "age_band",
@@ -93,6 +114,27 @@ DEFAULT_ROLE_CASTING_CONTRACT = {
     "allow_background_extras": True,
     "assignment_key": "role_casting",
     "required_scene_fields": ["scene_id", "role_id", "actor_id", "emotion", "shot_type"],
+}
+DEFAULT_REUSE_CONTRACT = {
+    "identity_is_fixed": True,
+    "roles_may_change_by_episode": True,
+    "background_may_change_by_episode": True,
+    "wardrobe_policy": "base_silhouette_locked_pack_overrides_only",
+    "allowed_pack_overrides": [
+        "small accessory",
+        "outerwear color",
+        "occupation prop",
+        "genre-safe wardrobe detail",
+    ],
+    "must_not_change": [
+        "age band",
+        "face shape",
+        "hair silhouette",
+        "body proportions",
+        "primary clothing silhouette",
+        "stable voice slot",
+    ],
+    "requires_asset_coverage_before_render": True,
 }
 
 
@@ -198,6 +240,73 @@ def _write_text_file(path: Path, text: str) -> None:
 
 def _default_display_name(actor_id: str) -> str:
     return " ".join(part.capitalize() for part in actor_id.split("_"))
+
+
+def _default_template_goal(actor_id: str, *, is_primary_template: bool = False) -> dict[str, Any]:
+    goal_id = GOLD_TEMPLATE_GOAL_ID if is_primary_template else DEFAULT_TEMPLATE_GOAL_ID
+    return {
+        "goal_id": goal_id,
+        "is_primary_template": is_primary_template,
+        "target_actor_id": actor_id,
+        "target_use": "single fixed video-toon actor reusable across packs, episodes, roles, dialogue layers, and thumbnails",
+        "reuse_surfaces": list(DEFAULT_REUSE_SURFACES),
+    }
+
+
+def _normalize_template_goal(actor_id: str, value: Any) -> dict[str, Any]:
+    goal = _default_template_goal(actor_id)
+    if isinstance(value, Mapping):
+        for key in ("goal_id", "target_actor_id", "target_use"):
+            if str(value.get(key) or "").strip():
+                goal[key] = str(value[key]).strip()
+        if isinstance(value.get("is_primary_template"), bool):
+            goal["is_primary_template"] = bool(value["is_primary_template"])
+        surfaces = _string_list(value.get("reuse_surfaces"))
+        if surfaces:
+            goal["reuse_surfaces"] = surfaces
+    return goal
+
+
+def _normalize_reuse_contract(value: Any) -> dict[str, Any]:
+    contract = copy.deepcopy(DEFAULT_REUSE_CONTRACT)
+    if isinstance(value, Mapping):
+        for key in (
+            "identity_is_fixed",
+            "roles_may_change_by_episode",
+            "background_may_change_by_episode",
+            "requires_asset_coverage_before_render",
+        ):
+            if isinstance(value.get(key), bool):
+                contract[key] = bool(value[key])
+        if str(value.get("wardrobe_policy") or "").strip():
+            contract["wardrobe_policy"] = str(value["wardrobe_policy"]).strip()
+        for key in ("allowed_pack_overrides", "must_not_change"):
+            items = _string_list(value.get(key))
+            if items:
+                contract[key] = items
+    return contract
+
+
+def _variant_groups(variants: list[str], mouth_shapes: list[str], eye_shapes: list[str]) -> dict[str, list[str]]:
+    core_expressions = {"neutral", "talking", "blink"}
+    core_variants: list[str] = []
+    emotion_variants: list[str] = []
+    poses: list[str] = []
+    for variant in variants:
+        expression, pose = _variant_parts(variant)
+        if expression in core_expressions:
+            core_variants.append(variant)
+        else:
+            emotion_variants.append(variant)
+        if pose and pose not in poses:
+            poses.append(pose)
+    return {
+        "core_variants": core_variants,
+        "emotion_variants": emotion_variants,
+        "poses": poses,
+        "mouth_shapes": list(mouth_shapes),
+        "eye_shapes": list(eye_shapes),
+    }
 
 
 def _identity_prompt_text(
@@ -536,6 +645,28 @@ def validate_actor_model_package(
     elif not _string_list(identity_lock.get("must_not_change")):
         result.add_error("identity_lock.must_not_change must be a non-empty string list")
 
+    template_goal = data.get("template_goal")
+    if not isinstance(template_goal, Mapping):
+        result.add_error("template_goal must be an object")
+    else:
+        if not str(template_goal.get("goal_id") or "").strip():
+            result.add_error("template_goal.goal_id must be a non-empty string")
+        if not _string_list(template_goal.get("reuse_surfaces")):
+            result.add_error("template_goal.reuse_surfaces must be a non-empty string list")
+
+    reuse_contract = data.get("reuse_contract")
+    if not isinstance(reuse_contract, Mapping):
+        result.add_error("reuse_contract must be an object")
+    else:
+        for field_name in (
+            "identity_is_fixed",
+            "roles_may_change_by_episode",
+            "background_may_change_by_episode",
+            "requires_asset_coverage_before_render",
+        ):
+            if not isinstance(reuse_contract.get(field_name), bool):
+                result.add_error(f"reuse_contract.{field_name} must be a boolean")
+
     result.required_variants = _string_list(data.get("required_variants"))
     result.mouth_shapes = _string_list(data.get("mouth_shapes"))
     result.eye_shapes = _string_list(data.get("eye_shapes"))
@@ -613,6 +744,8 @@ def scaffold_actor_model(
         "age_band": clean_age_band,
         "gender_presentation": clean_gender,
         "role_range": roles,
+        "template_goal": _default_template_goal(actor_id),
+        "reuse_contract": copy.deepcopy(DEFAULT_REUSE_CONTRACT),
         "identity_lock": {
             "face_shape": f"consistent {clean_age_band} {clean_gender} face shape",
             "hair": "fixed hair silhouette chosen during local asset generation",
@@ -748,6 +881,93 @@ def scaffold_actor_model_from_preset(
         eye_shapes=preset.get("eye_shapes"),
         force=force,
     )
+
+
+def build_actor_reuse_template_manifest(
+    actor_model_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+    contexts: Optional[list[str] | str] = None,
+) -> dict[str, Any]:
+    """Build a portable manifest that treats one actor model as a reusable template target."""
+    actor_path, actor_data = _load_actor_contract(actor_model_path, repo_root)
+    validation = validate_actor_model_package(actor_path, repo_root=repo_root)
+    if not validation.is_valid:
+        raise ValueError("actor model package is invalid: " + "; ".join(validation.errors))
+
+    role_range = _coerce_string_list(actor_data.get("role_range"), DEFAULT_ROLE_RANGE)
+    usage_contexts = _coerce_string_list(contexts, DEFAULT_REUSE_CONTEXTS)
+    if not usage_contexts:
+        usage_contexts = list(DEFAULT_REUSE_CONTEXTS)
+
+    template_goal = _normalize_template_goal(validation.actor_id, actor_data.get("template_goal"))
+    reuse_contract = _normalize_reuse_contract(actor_data.get("reuse_contract"))
+    reuse_surfaces = _string_list(template_goal.get("reuse_surfaces")) or list(DEFAULT_REUSE_SURFACES)
+    actor_model_relative_path = _relative_to_root(actor_path, repo_root)
+
+    reuse_slots: list[dict[str, Any]] = []
+    for context_id in usage_contexts:
+        for role_id in role_range:
+            reuse_slots.append(
+                {
+                    "context_id": context_id,
+                    "role_id": role_id,
+                    "actor_id": validation.actor_id,
+                    "actor_model_path": actor_model_relative_path,
+                    "identity_is_fixed": bool(reuse_contract["identity_is_fixed"]),
+                    "roles_may_change": bool(reuse_contract["roles_may_change_by_episode"]),
+                    "background_may_change": bool(reuse_contract["background_may_change_by_episode"]),
+                }
+            )
+
+    asset_requests = _build_asset_requests_from_contract(actor_path, validation)
+    asset_targets = [
+        {
+            "request_type": request["request_type"],
+            "key": request["key"],
+            "target_relative_path": request["target_relative_path"],
+            **({"expression": request["expression"]} if "expression" in request else {}),
+            **({"pose": request["pose"]} if "pose" in request else {}),
+        }
+        for request in asset_requests
+    ]
+
+    return {
+        "schema": "reverie.actor_model.reuse_template.v1",
+        "actor_id": validation.actor_id,
+        "actor_model_path": actor_model_relative_path,
+        "template_goal": template_goal,
+        "reuse_contract": reuse_contract,
+        "reuse_surfaces": reuse_surfaces,
+        "usage_contexts": usage_contexts,
+        "role_range": role_range,
+        "variant_groups": _variant_groups(validation.required_variants, validation.mouth_shapes, validation.eye_shapes),
+        "reuse_slots": reuse_slots,
+        "asset_targets": asset_targets,
+        "asset_target_count": len(asset_targets),
+        "ready_for_asset_generation": validation.is_valid,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def write_actor_reuse_template_manifest(
+    actor_model_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+    contexts: Optional[list[str] | str] = None,
+) -> Path:
+    """Write a reusable actor-template manifest and return the output path."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    manifest = build_actor_reuse_template_manifest(actor_model_path, repo_root=repo_root, contexts=contexts)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
 
 
 def _normalize_roster_assignment(assignment: Mapping[str, Any]) -> dict[str, Any]:
@@ -2461,6 +2681,20 @@ def main(argv: Optional[list[str]] = None) -> int:
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    reuse_parser = subparsers.add_parser(
+        "reuse-template",
+        help="Build a portable manifest for reusing one actor model across packs and episode roles.",
+    )
+    reuse_parser.add_argument("actor_model_path", help="Path to actor.json")
+    reuse_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    reuse_parser.add_argument(
+        "--context",
+        action="append",
+        default=None,
+        help="Usage context to include, for example daily_life or mystery. Can be repeated.",
+    )
+    reuse_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     coverage_parser = subparsers.add_parser("coverage", help="Report missing local actor assets.")
     coverage_parser.add_argument("actor_model_path", help="Path to actor.json")
     coverage_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -2728,6 +2962,23 @@ def main(argv: Optional[list[str]] = None) -> int:
         if args.output:
             output = write_actor_asset_request_manifest(args.actor_model_path, args.output, repo_root=args.repo_root)
             print(f"Wrote actor asset requests for {manifest['actor_id']}: {output}")
+        else:
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "reuse-template":
+        manifest = build_actor_reuse_template_manifest(
+            args.actor_model_path,
+            repo_root=args.repo_root,
+            contexts=args.context,
+        )
+        if args.output:
+            output = write_actor_reuse_template_manifest(
+                args.actor_model_path,
+                args.output,
+                repo_root=args.repo_root,
+                contexts=args.context,
+            )
+            print(f"Wrote actor reuse template for {manifest['actor_id']}: {output}")
         else:
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return 0

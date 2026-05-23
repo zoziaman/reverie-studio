@@ -14,6 +14,42 @@
     "office_worker",
     "mystery_support"
   ],
+  "template_goal": {
+    "goal_id": "gold_reusable_video_toon_actor_v1",
+    "is_primary_template": true,
+    "target_actor_id": "actor_adult_woman_01",
+    "target_use": "single fixed video-toon actor reusable across packs, episodes, roles, dialogue layers, and thumbnails",
+    "reuse_surfaces": [
+      "pack_actor_pool",
+      "episode_role_casting",
+      "scene_variant_selection",
+      "mouth_flap_layering",
+      "eye_blink_layering",
+      "thumbnail_composition",
+      "omnibus_role_swap"
+    ]
+  },
+  "reuse_contract": {
+    "identity_is_fixed": true,
+    "roles_may_change_by_episode": true,
+    "background_may_change_by_episode": true,
+    "wardrobe_policy": "base_silhouette_locked_pack_overrides_only",
+    "allowed_pack_overrides": [
+      "small accessory",
+      "outerwear color",
+      "occupation prop",
+      "genre-safe wardrobe detail"
+    ],
+    "must_not_change": [
+      "age band",
+      "face shape",
+      "hair silhouette",
+      "body proportions",
+      "primary clothing silhouette",
+      "stable voice slot"
+    ],
+    "requires_asset_coverage_before_render": true
+  },
   "identity_lock": {
     "face_shape": "consistent adult Korean woman face shape",
     "hair": "short or medium neat dark hair, fixed per generated actor",

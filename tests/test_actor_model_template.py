@@ -20,6 +20,12 @@ def test_actor_model_template_public_safe_package_exists():
     assert actor["required_variants"]
     assert actor["mouth_shapes"]
     assert actor["eye_shapes"]
+    assert actor["template_goal"]["goal_id"] == "gold_reusable_video_toon_actor_v1"
+    assert actor["template_goal"]["is_primary_template"] is True
+    assert "omnibus_role_swap" in actor["template_goal"]["reuse_surfaces"]
+    assert actor["reuse_contract"]["identity_is_fixed"] is True
+    assert actor["reuse_contract"]["roles_may_change_by_episode"] is True
+    assert actor["reuse_contract"]["requires_asset_coverage_before_render"] is True
 
     public_boundary = actor["public_release_boundary"]
     assert public_boundary["contains_real_actor_media"] is False
@@ -107,6 +113,8 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "episode-variant-promotions" in text
     assert "apply-episode-variant-promotions" in text
     assert "apply-roster-plan" in text
+    assert "reuse-template" in text
+    assert "gold_reusable_video_toon_actor_v1" in text
     assert "actor_model_presets" in text
     assert "asset coverage" in text
     assert "pack-coverage" in text

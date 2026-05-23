@@ -7,6 +7,8 @@
     "actor_id",
     "template_version",
     "readiness_state",
+    "template_goal",
+    "reuse_contract",
     "identity_lock",
     "required_variants",
     "mouth_shapes",
@@ -44,6 +46,77 @@
       "items": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "template_goal": {
+      "type": "object",
+      "required": ["goal_id", "is_primary_template", "target_actor_id", "target_use", "reuse_surfaces"],
+      "additionalProperties": true,
+      "properties": {
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "is_primary_template": {
+          "type": "boolean"
+        },
+        "target_actor_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_use": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reuse_surfaces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "reuse_contract": {
+      "type": "object",
+      "required": [
+        "identity_is_fixed",
+        "roles_may_change_by_episode",
+        "background_may_change_by_episode",
+        "requires_asset_coverage_before_render"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "identity_is_fixed": {
+          "type": "boolean"
+        },
+        "roles_may_change_by_episode": {
+          "type": "boolean"
+        },
+        "background_may_change_by_episode": {
+          "type": "boolean"
+        },
+        "wardrobe_policy": {
+          "type": "string"
+        },
+        "allowed_pack_overrides": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "must_not_change": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requires_asset_coverage_before_render": {
+          "type": "boolean"
+        }
       }
     },
     "identity_lock": {

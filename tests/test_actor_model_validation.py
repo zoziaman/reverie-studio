@@ -551,6 +551,70 @@ def test_actor_model_cli_scaffold_preset_creates_package(tmp_path, capsys):
     assert "mystery_senior_man" in captured.out
 
 
+def test_build_actor_reuse_template_manifest_marks_gold_actor_as_portable_target():
+    actor_model = _actor_model_module()
+
+    manifest = actor_model.build_actor_reuse_template_manifest(
+        ACTOR_MODEL_PATH,
+        repo_root=ROOT,
+        contexts=["daily_life", "mystery"],
+    )
+
+    assert manifest["schema"] == "reverie.actor_model.reuse_template.v1"
+    assert manifest["actor_id"] == "actor_adult_woman_01"
+    assert manifest["actor_model_path"] == "assets/actor_models/actor_adult_woman_01/actor.json"
+    assert manifest["template_goal"]["goal_id"] == "gold_reusable_video_toon_actor_v1"
+    assert manifest["reuse_contract"]["identity_is_fixed"] is True
+    assert manifest["reuse_contract"]["roles_may_change_by_episode"] is True
+    assert manifest["usage_contexts"] == ["daily_life", "mystery"]
+    assert {"pack_actor_pool", "omnibus_role_swap", "mouth_flap_layering"}.issubset(
+        set(manifest["reuse_surfaces"])
+    )
+    assert "happy_standing" in manifest["variant_groups"]["emotion_variants"]
+    assert "standing" in manifest["variant_groups"]["poses"]
+    assert "mouth_closed" in manifest["variant_groups"]["mouth_shapes"]
+    assert "eyes_open" in manifest["variant_groups"]["eye_shapes"]
+    assert any(
+        slot["context_id"] == "mystery"
+        and slot["role_id"] == "victim"
+        and slot["actor_id"] == "actor_adult_woman_01"
+        and slot["identity_is_fixed"] is True
+        for slot in manifest["reuse_slots"]
+    )
+    assert any(
+        target["target_relative_path"] == "variants/neutral_standing.png"
+        for target in manifest["asset_targets"]
+    )
+    assert manifest["public_release_boundary"]["contains_generated_media"] is False
+
+
+def test_actor_model_cli_writes_reuse_template_manifest(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    output_path = tmp_path / "actor_adult_woman_01.reuse_template.json"
+
+    exit_code = actor_model.main(
+        [
+            "reuse-template",
+            str(ACTOR_MODEL_PATH),
+            "--repo-root",
+            str(ROOT),
+            "--context",
+            "daily_life",
+            "--context",
+            "mystery",
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert manifest["schema"] == "reverie.actor_model.reuse_template.v1"
+    assert manifest["usage_contexts"] == ["daily_life", "mystery"]
+    assert "actor_adult_woman_01" in captured.out
+
+
 def test_build_pack_actor_roster_plan_maps_presets_to_actor_pool_and_casting():
     actor_model = _actor_model_module()
 

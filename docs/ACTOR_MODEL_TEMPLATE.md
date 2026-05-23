@@ -22,6 +22,19 @@ This actor is a reusable adult Korean woman video-toon actor. The same actor can
 be cast as a lead, support character, witness, neighbor, victim, office worker,
 or mystery support role across different packs and episodes.
 
+This first package is also the current gold target:
+
+```text
+gold_reusable_video_toon_actor_v1
+```
+
+The gold target rule is simple: the actor identity stays fixed, while episode
+roles, backgrounds, scene contexts, and pack use cases may change. That makes
+one model usable as a lead in a daily-life episode, a witness in a mystery
+episode, a thumbnail subject, or a dialogue-layer source without redefining the
+face, age band, hair silhouette, body proportions, clothing silhouette, or
+stable voice slot.
+
 ## Folder Shape
 
 ```text
@@ -49,8 +62,8 @@ samples, checkpoints, LoRA files, local paths, session logs, and credentials.
 ## actor.json
 
 `actor.json` is the stable source of truth for one actor's identity lock,
-required variants, mouth shapes, eye shapes, voice slot, and public release
-boundary.
+template goal, reuse contract, required variants, mouth shapes, eye shapes,
+voice slot, and public release boundary.
 
 Packs may reference the actor from `settings.motiontoon.actor_pool`:
 
@@ -69,6 +82,18 @@ Packs may reference the actor from `settings.motiontoon.actor_pool`:
 
 The pack can narrow required variants for a channel, but it should not redefine
 the actor's age band, face shape, body proportions, or stable voice.
+
+Use `reuse-template` to export the portable version of that single-model goal:
+
+```bash
+reverie-actor-model-requests reuse-template assets/actor_models/actor_adult_woman_01/actor.json --repo-root . --context daily_life --context mystery --output data/actor_asset_requests/actor_adult_woman_01.reuse_template.json
+```
+
+The reuse template expands the actor into context/role slots for
+`pack_actor_pool`, `episode_role_casting`, `scene_variant_selection`,
+`mouth_flap_layering`, `eye_blink_layering`, `thumbnail_composition`, and
+`omnibus_role_swap`. It writes a public-safe JSON manifest only; it does not
+generate images, mouth layers, voice samples, checkpoints, or local output.
 
 ## Required Variants
 
