@@ -21,6 +21,8 @@ from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, Future
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -364,9 +366,10 @@ class SDModelManager:
 
             except Exception as e:
                 self._loading_model = None
-                logger.error(f"[SDModelManager] 모델 로딩 예외: {e}")
+                safe_error = redact_sensitive_text(e)
+                logger.error(f"[SDModelManager] 모델 로딩 예외: {safe_error}")
                 if on_complete:
-                    on_complete(False, str(e))
+                    on_complete(False, safe_error)
                 return False
 
         return self._executor.submit(_load_task)
