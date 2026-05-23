@@ -227,6 +227,16 @@ Dialogue scenes also receive a default mouth layer target such as
 `face_parts/mouth_small_open.png`. Missing scene variants are reported before
 the run reaches ComfyUI, SD WebUI, or the renderer.
 
+Check all scene-level actor files before rendering with `episode-asset-coverage`:
+
+```bash
+reverie-actor-model-requests episode-asset-coverage data/actor_asset_requests/daily_life_toon_ep001.episode_asset_plan.json --repo-root . --output data/actor_asset_requests/daily_life_toon_ep001.episode_asset_coverage.json --fail-on-missing
+```
+
+This verifies every scene's actor variant, mouth layer, and eye layer target
+exists locally. It is the broad render-readiness check; the supplemental
+`episode-variant-*` commands below handle missing actor variants specifically.
+
 When `episode-asset-plan` reports missing variants, turn those gaps into a
 deduplicated supplemental request manifest:
 

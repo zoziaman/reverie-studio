@@ -127,6 +127,8 @@ preflight between episode planning and rendering. It reads a roster plan plus an
 episode JSON, validates role-to-actor references, and maps each scene to the
 fixed actor variant, mouth layer, and eye layer expected by the actor model
 package. Missing scene variants are reported before image generation begins.
+Use `episode-asset-coverage` as the broad render-readiness gate: it verifies
+each scene's fixed actor variant, mouth layer, and eye layer exist locally.
 Use `episode-variant-requests` to convert those missing variants into
 deduplicated local generation requests without mutating the public actor
 package contract.

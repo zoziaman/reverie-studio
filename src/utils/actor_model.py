@@ -1469,6 +1469,147 @@ def write_actor_episode_asset_plan(
     return output
 
 
+def _validate_episode_asset_plan(asset_plan: Mapping[str, Any]) -> None:
+    if not isinstance(asset_plan, Mapping):
+        raise ValueError("episode asset plan must be an object")
+    if asset_plan.get("schema") != "reverie.pack.actor_episode_asset_plan.v1":
+        raise ValueError("episode asset plan schema must be reverie.pack.actor_episode_asset_plan.v1")
+    if not isinstance(asset_plan.get("actors", {}), Mapping):
+        raise ValueError("episode asset plan actors must be an object")
+    if not isinstance(asset_plan.get("scenes", []), list):
+        raise ValueError("episode asset plan scenes must be a list")
+
+
+def _actor_dir_from_episode_asset_plan(
+    asset_plan: Mapping[str, Any],
+    actor_id: str,
+    *,
+    actor_root: Optional[Path | str],
+    repo_root: Optional[Path | str],
+) -> Path:
+    if actor_root is not None:
+        return _resolve_actor_root(actor_root, repo_root) / actor_id
+    actor_data = asset_plan.get("actors", {}).get(actor_id)
+    if not isinstance(actor_data, Mapping):
+        raise ValueError(f"episode asset plan actors.{actor_id} is required")
+    source_path = str(actor_data.get("source_actor_model_path") or "").strip()
+    if not source_path:
+        raise ValueError(f"episode asset plan actors.{actor_id}.source_actor_model_path is required")
+    actor_path, path_error = _resolve_actor_path(source_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    return actor_path.parent
+
+
+def _episode_scene_asset_specs(scene: Mapping[str, Any]) -> list[tuple[str, str, str]]:
+    return [
+        ("variant", str(scene.get("variant_key") or ""), str(scene.get("target_relative_path") or "")),
+        ("mouth_shape", str(scene.get("mouth_shape_key") or ""), str(scene.get("mouth_target_relative_path") or "")),
+        ("eye_shape", str(scene.get("eye_shape_key") or ""), str(scene.get("eye_target_relative_path") or "")),
+    ]
+
+
+def build_actor_episode_asset_coverage_report(
+    asset_plan: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Report local file coverage for every scene asset referenced by an episode plan."""
+    _validate_episode_asset_plan(asset_plan)
+    expected_assets: list[dict[str, Any]] = []
+    missing_assets: list[str] = []
+    errors = list(asset_plan.get("errors") or [])
+    existing_count = 0
+
+    for scene in asset_plan.get("scenes", []):
+        if not isinstance(scene, Mapping):
+            continue
+        scene_id = str(scene.get("scene_id") or "")
+        actor_id = str(scene.get("actor_id") or "").strip()
+        if not actor_id:
+            errors.append(f"scene {scene_id} actor_id is required for asset coverage")
+            continue
+        actor_dir = _actor_dir_from_episode_asset_plan(
+            asset_plan,
+            actor_id,
+            actor_root=actor_root,
+            repo_root=repo_root,
+        )
+        for asset_type, key, relative_path in _episode_scene_asset_specs(scene):
+            asset_ref = f"{scene_id}:{actor_id}:{asset_type}:{key or '<missing-key>'}"
+            if not key or not relative_path:
+                missing_assets.append(asset_ref)
+                expected_assets.append(
+                    {
+                        "scene_id": scene_id,
+                        "actor_id": actor_id,
+                        "asset_type": asset_type,
+                        "key": key,
+                        "target_relative_path": relative_path,
+                        "exists": False,
+                    }
+                )
+                continue
+
+            target_path = actor_dir / relative_path
+            exists = target_path.is_file()
+            if exists:
+                existing_count += 1
+            else:
+                missing_assets.append(asset_ref)
+            expected_assets.append(
+                {
+                    "scene_id": scene_id,
+                    "actor_id": actor_id,
+                    "asset_type": asset_type,
+                    "key": key,
+                    "target_relative_path": relative_path,
+                    "exists": exists,
+                }
+            )
+
+    expected_count = len(expected_assets)
+    missing_count = expected_count - existing_count
+    coverage_ratio = round(existing_count / expected_count, 4) if expected_count else 1.0
+    ready_for_render = bool(asset_plan.get("is_valid")) and missing_count == 0 and not errors
+    return {
+        "schema": "reverie.pack.actor_episode.asset_coverage.v1",
+        "pack_id": str(asset_plan.get("pack_id") or ""),
+        "episode_id": str(asset_plan.get("episode_id") or ""),
+        "source_asset_plan_valid": bool(asset_plan.get("is_valid")),
+        "scene_count": int(asset_plan.get("scene_count") or len(asset_plan.get("scenes", []))),
+        "expected_count": expected_count,
+        "existing_count": existing_count,
+        "missing_count": missing_count,
+        "coverage_ratio": coverage_ratio,
+        "ready_for_render": ready_for_render,
+        "errors": errors,
+        "missing_assets": missing_assets,
+        "expected_assets": expected_assets,
+    }
+
+
+def write_actor_episode_asset_coverage_report(
+    asset_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write episode scene asset coverage and return the output path."""
+    asset_plan = _load_json_object(asset_plan_path, "episode asset plan")
+    report = build_actor_episode_asset_coverage_report(
+        asset_plan,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def _build_episode_variant_request(
     actor_model_path: Path | str,
     *,
@@ -2266,6 +2407,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     episode_asset_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
     episode_asset_parser.add_argument("--fail-on-invalid", action="store_true", help="Exit 1 when the asset plan is invalid.")
 
+    episode_asset_coverage_parser = subparsers.add_parser(
+        "episode-asset-coverage",
+        help="Report missing local variant, mouth, and eye assets for an episode asset plan.",
+    )
+    episode_asset_coverage_parser.add_argument("asset_plan_path", help="Input episode asset plan JSON path.")
+    episode_asset_coverage_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    episode_asset_coverage_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    episode_asset_coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    episode_asset_coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any scene asset is missing.")
+
     episode_variant_parser = subparsers.add_parser(
         "episode-variant-requests",
         help="Build supplemental variant requests for episode scenes missing actor assets.",
@@ -2451,6 +2602,31 @@ def main(argv: Optional[list[str]] = None) -> int:
             )
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
         if args.fail_on_invalid and not manifest["is_valid"]:
+            return 1
+        return 0
+    if args.command == "episode-asset-coverage":
+        if args.output:
+            output = write_actor_episode_asset_coverage_report(
+                args.asset_plan_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            report = json.loads(Path(output).read_text(encoding="utf-8"))
+            print(
+                f"Wrote episode asset coverage: {output} "
+                f"(missing {report['missing_count']}/{report['expected_count']})"
+            )
+        else:
+            asset_plan = _load_json_object(args.asset_plan_path, "episode asset plan")
+            report = build_actor_episode_asset_coverage_report(
+                asset_plan,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(f"episode scene assets missing {report['missing_count']}/{report['expected_count']}")
+        if args.fail_on_missing and report["missing_count"]:
             return 1
         return 0
     if args.command == "episode-variant-requests":

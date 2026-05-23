@@ -101,6 +101,7 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "roster-plan" in text
     assert "roster-asset-requests" in text
     assert "episode-asset-plan" in text
+    assert "episode-asset-coverage" in text
     assert "episode-variant-requests" in text
     assert "episode-variant-coverage" in text
     assert "episode-variant-promotions" in text
