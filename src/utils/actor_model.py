@@ -1628,6 +1628,120 @@ def write_actor_episode_variant_request_manifest(
     return output
 
 
+def _validate_episode_variant_request_manifest(manifest: Mapping[str, Any]) -> None:
+    if not isinstance(manifest, Mapping):
+        raise ValueError("episode variant request manifest must be an object")
+    if manifest.get("schema") != "reverie.pack.actor_episode.variant_requests.v1":
+        raise ValueError("episode variant request manifest schema must be reverie.pack.actor_episode.variant_requests.v1")
+    boundary = manifest.get("public_release_boundary")
+    if not isinstance(boundary, Mapping):
+        raise ValueError("episode variant request manifest public_release_boundary must be an object")
+    for field_name in ("contains_generated_media", "contains_voice_samples", "contains_model_weights", "contains_private_paths"):
+        if boundary.get(field_name) is not False:
+            raise ValueError(f"episode variant request manifest public_release_boundary.{field_name} must be false")
+    if not isinstance(manifest.get("requests", []), list):
+        raise ValueError("episode variant request manifest requests must be a list")
+
+
+def _actor_dir_from_variant_request(
+    request: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str],
+    repo_root: Optional[Path | str],
+) -> Path:
+    actor_id = str(request.get("actor_id") or "").strip()
+    if not actor_id:
+        raise ValueError("episode variant request actor_id is required")
+    if actor_root is not None:
+        return _resolve_actor_root(actor_root, repo_root) / actor_id
+
+    source_path = str(request.get("source_actor_model_path") or "").strip()
+    if not source_path:
+        raise ValueError(f"episode variant request {actor_id} source_actor_model_path is required without actor_root")
+    actor_path, path_error = _resolve_actor_path(source_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    return actor_path.parent
+
+
+def build_actor_episode_variant_coverage_report(
+    request_manifest: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Report whether supplemental episode variant request outputs exist locally."""
+    _validate_episode_variant_request_manifest(request_manifest)
+    expected_assets: list[dict[str, Any]] = []
+    missing_variants: list[str] = []
+    existing_count = 0
+
+    for request in request_manifest.get("requests", []):
+        if not isinstance(request, Mapping):
+            continue
+        if request.get("request_type") != "variant":
+            continue
+        actor_id = str(request.get("actor_id") or "").strip()
+        variant_key = str(request.get("key") or "").strip()
+        target_relative_path = str(request.get("target_relative_path") or "").strip()
+        if not actor_id or not variant_key or not target_relative_path:
+            raise ValueError("episode variant request requires actor_id, key, and target_relative_path")
+
+        actor_dir = _actor_dir_from_variant_request(request, actor_root=actor_root, repo_root=repo_root)
+        target_path = actor_dir / target_relative_path
+        exists = target_path.is_file()
+        if exists:
+            existing_count += 1
+        else:
+            missing_variants.append(f"{actor_id}:{variant_key}")
+        expected_assets.append(
+            {
+                "request_id": str(request.get("request_id") or ""),
+                "actor_id": actor_id,
+                "key": variant_key,
+                "target_relative_path": target_relative_path,
+                "scene_ids": list(request.get("scene_ids") or []),
+                "exists": exists,
+            }
+        )
+
+    expected_count = len(expected_assets)
+    missing_count = expected_count - existing_count
+    coverage_ratio = round(existing_count / expected_count, 4) if expected_count else 1.0
+    return {
+        "schema": "reverie.pack.actor_episode.variant_coverage.v1",
+        "pack_id": str(request_manifest.get("pack_id") or ""),
+        "episode_id": str(request_manifest.get("episode_id") or ""),
+        "expected_count": expected_count,
+        "existing_count": existing_count,
+        "missing_count": missing_count,
+        "coverage_ratio": coverage_ratio,
+        "ready_for_episode": missing_count == 0,
+        "missing_variants": missing_variants,
+        "expected_assets": expected_assets,
+    }
+
+
+def write_actor_episode_variant_coverage_report(
+    request_manifest_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write supplemental episode variant coverage and return the output path."""
+    request_manifest = _load_json_object(request_manifest_path, "episode variant request manifest")
+    report = build_actor_episode_variant_coverage_report(
+        request_manifest,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_coverage_report(
     actor_model_path: Path | str,
     *,
@@ -1904,6 +2018,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     episode_variant_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     episode_variant_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    episode_variant_coverage_parser = subparsers.add_parser(
+        "episode-variant-coverage",
+        help="Report missing local assets for supplemental episode variant requests.",
+    )
+    episode_variant_coverage_parser.add_argument("request_manifest_path", help="Input episode variant request manifest JSON path.")
+    episode_variant_coverage_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    episode_variant_coverage_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    episode_variant_coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    episode_variant_coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any requested variant is missing.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -2072,6 +2196,31 @@ def main(argv: Optional[list[str]] = None) -> int:
                 repo_root=args.repo_root,
             )
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "episode-variant-coverage":
+        if args.output:
+            output = write_actor_episode_variant_coverage_report(
+                args.request_manifest_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            report = json.loads(Path(output).read_text(encoding="utf-8"))
+            print(
+                f"Wrote episode variant coverage: {output} "
+                f"(missing {report['missing_count']}/{report['expected_count']})"
+            )
+        else:
+            request_manifest = _load_json_object(args.request_manifest_path, "episode variant request manifest")
+            report = build_actor_episode_variant_coverage_report(
+                request_manifest,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(f"episode variants missing {report['missing_count']}/{report['expected_count']}")
+        if args.fail_on_missing and report["missing_count"]:
+            return 1
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

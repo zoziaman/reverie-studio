@@ -130,6 +130,8 @@ package. Missing scene variants are reported before image generation begins.
 Use `episode-variant-requests` to convert those missing variants into
 deduplicated local generation requests without mutating the public actor
 package contract.
+Use `episode-variant-coverage` after local generation to verify those
+supplemental `variants/*.png` files exist before rendering the episode.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 

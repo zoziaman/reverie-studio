@@ -240,6 +240,17 @@ expression. It does not mutate `actor.json`; review the request manifest, create
 the local PNG, then decide whether that variant should be promoted into the
 actor package's durable `required_variants`.
 
+After the supplemental PNGs are generated locally, check episode readiness with
+`episode-variant-coverage`:
+
+```bash
+reverie-actor-model-requests episode-variant-coverage data/actor_asset_requests/daily_life_toon_ep001.episode_variant_requests.json --repo-root . --output data/actor_asset_requests/daily_life_toon_ep001.episode_variant_coverage.json --fail-on-missing
+```
+
+This report verifies the requested `variants/*.png` files exist under each
+actor package. It is useful for one-off episode variants that should not yet be
+added to durable `required_variants`.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash

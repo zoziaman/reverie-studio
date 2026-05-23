@@ -1257,3 +1257,134 @@ def test_actor_model_cli_writes_episode_variant_request_manifest(tmp_path, capsy
     assert manifest["request_count"] == 1
     assert manifest["requests"][0]["key"] == "surprised_jumping"
     assert "episode variant requests" in captured.out
+
+
+def test_actor_episode_variant_coverage_report_tracks_generated_supplement_assets(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "surprised",
+                "pose": "jumping",
+                "shot_type": "wide",
+            }
+        ],
+    }
+    request_manifest = actor_model.build_actor_episode_variant_request_manifest(
+        plan,
+        episode,
+        actor_root=actor_root,
+    )
+
+    missing_report = actor_model.build_actor_episode_variant_coverage_report(
+        request_manifest,
+        actor_root=actor_root,
+    )
+    target = actor_root / "actor_daily_adult_man_01" / "variants" / "surprised_jumping.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(b"local generated placeholder")
+    ready_report = actor_model.build_actor_episode_variant_coverage_report(
+        request_manifest,
+        actor_root=actor_root,
+    )
+
+    assert missing_report["schema"] == "reverie.pack.actor_episode.variant_coverage.v1"
+    assert missing_report["expected_count"] == 1
+    assert missing_report["missing_count"] == 1
+    assert missing_report["ready_for_episode"] is False
+    assert missing_report["missing_variants"] == ["actor_daily_adult_man_01:surprised_jumping"]
+    assert ready_report["existing_count"] == 1
+    assert ready_report["missing_count"] == 0
+    assert ready_report["ready_for_episode"] is True
+
+
+def test_actor_model_cli_writes_episode_variant_coverage_report(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    episode_path = tmp_path / "daily_life_toon.episode.json"
+    requests_path = tmp_path / "daily_life_toon.episode_variant_requests.json"
+    coverage_path = tmp_path / "daily_life_toon.episode_variant_coverage.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode_path.write_text(
+        json.dumps(
+            {
+                "episode_id": "daily_life_toon_ep001",
+                "role_casting": plan["episode_cast_seed"]["role_casting"],
+                "scenes": [
+                    {
+                        "scene_id": "s001",
+                        "role_id": "protagonist",
+                        "actor_id": "actor_daily_adult_man_01",
+                        "emotion": "surprised",
+                        "pose": "jumping",
+                        "shot_type": "wide",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    actor_model.write_actor_episode_variant_request_manifest(
+        plan_path,
+        episode_path,
+        requests_path,
+        actor_root=actor_root,
+    )
+
+    exit_code = actor_model.main(
+        [
+            "episode-variant-coverage",
+            str(requests_path),
+            "--actor-root",
+            str(actor_root),
+            "--output",
+            str(coverage_path),
+            "--fail-on-missing",
+        ]
+    )
+    captured = capsys.readouterr()
+    report = json.loads(coverage_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 1
+    assert report["missing_count"] == 1
+    assert "episode variant coverage" in captured.out
