@@ -104,6 +104,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "workspace_state" in checklist
     assert "path fingerprints" in security
     assert "raw local path names" in checklist
+    assert "structured counts, vulnerability names, and fix advice" in security
     assert "Snapshot findings" in security
     assert "snapshot findings as counts/fingerprints" in checklist
     assert "env-like credential/token filenames" in security

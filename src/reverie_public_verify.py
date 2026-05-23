@@ -359,8 +359,6 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
         "vulnerability_names": names[:25],
         "truncated_vulnerability_names": max(0, len(names) - 25),
         "fix_advice": _functions_audit_fix_advice(payload),
-        "stdout_tail": _tail(completed.stdout or "", limit=1200),
-        "stderr_tail": _tail(completed.stderr or "", limit=1200),
     }
 
 

@@ -339,6 +339,8 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
         "--omit=dev",
         "--json",
     ]
+    assert "stdout_tail" not in report["checks"]["functions_audit"]
+    assert "stderr_tail" not in report["checks"]["functions_audit"]
     assert str(public_verify.FUNCTIONS_DIR) not in json.dumps(report["checks"]["functions_audit"])
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
     assert "Optional Functions Audit" in summary
