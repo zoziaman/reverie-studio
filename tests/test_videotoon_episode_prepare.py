@@ -115,6 +115,12 @@ def test_videotoon_episode_prepare_writes_all_preflight_artifacts(tmp_path):
     assert report["artifacts"]["background_coverage"] == "daily_life_toon_ep001.background_coverage.json"
     assert report["artifacts"]["preflight"] == "daily_life_toon_ep001.preflight.json"
     assert preflight["missing_count"] == 4
+    assert report["missing_assets"] == preflight["missing_assets"]
+    assert any(action["action_id"] == "create_missing_actor_assets" for action in report["next_actions"])
+    assert any(action["action_id"] == "create_missing_background_assets" for action in report["next_actions"])
+    assert any(action["action_id"] == "rerun_prepare" for action in report["next_actions"])
+    assert "C:" + "/Users/" not in json.dumps(report)
+    assert "C:" + "\\Users\\" not in json.dumps(report)
     assert background_requests["schema"] == "reverie.background_library.episode_asset_requests.v1"
     assert background_requests["request_count"] == 1
     assert not any(output_dir.rglob("*.png"))
@@ -146,6 +152,7 @@ def test_videotoon_episode_prepare_cli_writes_report_and_can_fail(tmp_path, caps
     assert report["schema"] == "reverie.pack.videotoon_episode_prepare.v1"
     assert report["ready_for_render"] is False
     assert "video-toon episode prepare bundle" in captured.out
+    assert "next actions: create_missing_actor_assets, create_missing_background_assets, rerun_prepare" in captured.out
 
 
 def test_pyproject_exposes_videotoon_episode_prepare_cli():

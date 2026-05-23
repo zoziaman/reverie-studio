@@ -161,7 +161,10 @@ render gate before assembling a video-toon episode.
 Use `reverie-videotoon-prepare episode ...` when you want the whole JSON
 preflight bundle written in one pass: actor asset plan, actor asset coverage,
 episode background requests, episode background coverage, final preflight, and
-the prepare report.
+the prepare report. The prepare report includes `missing_assets` and
+`next_actions`, so a fixed actor model such as `actor_adult_woman_01` can move
+through many omnibus roles while each episode lists only the actor/background
+assets still missing for render readiness.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 

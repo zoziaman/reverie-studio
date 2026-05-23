@@ -358,3 +358,19 @@ reverie-actor-model-requests pack-coverage assets/packs/daily_life_toon/settings
 `pack-coverage` scans `settings.motiontoon.actor_pool` for every
 `actor_model_path`, runs actor asset coverage for each one, and returns one
 pack-level readiness result.
+
+## One-Actor Episode Prepare
+
+After a pack casts the gold actor into an episode role, use the one-command
+prepare bundle to check the actor template and the referenced background plates
+together:
+
+```bash
+reverie-videotoon-prepare episode data/actor_asset_requests/daily_life_toon.actor_roster_plan.json data/episodes/daily_life_toon_ep001.json assets/packs/daily_life_toon/settings.json --repo-root . --output-dir data/actor_asset_requests/prepare/daily_life_toon_ep001 --fail-on-not-ready
+```
+
+The prepare report keeps `actor_adult_woman_01` as the fixed identity target,
+then reports episode-specific `missing_assets` and `next_actions`. That is the
+working loop for this gold model: create or place only the missing local actor
+variants, mouth layers, eye layers, and background plates, rerun prepare, then
+render when the report is ready.

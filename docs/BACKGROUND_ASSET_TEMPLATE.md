@@ -133,7 +133,9 @@ reverie-videotoon-prepare episode data/actor_asset_requests/daily_life_toon.acto
 ```
 
 This command still writes JSON reports only. It does not generate actor images,
-background images, voices, or video files.
+background images, voices, or video files. The prepare report includes
+`missing_assets` and `next_actions` so the next local asset work is visible
+without reading every coverage file manually.
 
 ## Public Boundary
 

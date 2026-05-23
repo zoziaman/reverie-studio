@@ -28,6 +28,56 @@ def _safe_artifact_stem(episode: dict[str, Any]) -> str:
     return "".join(char if char.isalnum() or char in {"_", "-"} else "_" for char in raw)
 
 
+def _build_next_actions(
+    *,
+    actor_missing_count: int,
+    background_missing_count: int,
+    artifacts: dict[str, str],
+) -> list[dict[str, Any]]:
+    actions: list[dict[str, Any]] = []
+    if actor_missing_count:
+        actions.append(
+            {
+                "action_id": "create_missing_actor_assets",
+                "domain": "actor",
+                "missing_count": actor_missing_count,
+                "source_artifact": artifacts["actor_asset_coverage"],
+                "instruction": "Create or place local actor variant, mouth, and eye PNG files listed as missing, then rerun prepare.",
+            }
+        )
+    if background_missing_count:
+        actions.append(
+            {
+                "action_id": "create_missing_background_assets",
+                "domain": "background",
+                "missing_count": background_missing_count,
+                "source_artifact": artifacts["background_coverage"],
+                "request_artifact": artifacts["background_requests"],
+                "instruction": "Generate or place local background PNG files listed as missing, then rerun prepare.",
+            }
+        )
+    if actor_missing_count or background_missing_count:
+        actions.append(
+            {
+                "action_id": "rerun_prepare",
+                "domain": "preflight",
+                "command_template": (
+                    "reverie-videotoon-prepare episode <actor_roster_plan.json> "
+                    "<episode.json> <settings.json> --output-dir <prepare_dir> --fail-on-not-ready"
+                ),
+            }
+        )
+    else:
+        actions.append(
+            {
+                "action_id": "render_episode",
+                "domain": "render",
+                "instruction": "Preflight is ready; pass the prepared actor and background assets to the video-toon renderer.",
+            }
+        )
+    return actions
+
+
 def write_videotoon_episode_prepare_bundle(
     roster_plan_path: Path | str,
     episode_path: Path | str,
@@ -92,22 +142,31 @@ def write_videotoon_episode_prepare_bundle(
     actor_coverage = _load_json_object(actor_asset_coverage_path, "actor coverage report")
     background_coverage = _load_json_object(background_coverage_path, "background coverage report")
     preflight = _load_json_object(preflight_path, "preflight report")
+    artifacts = {
+        "actor_asset_plan": actor_asset_plan_path.name,
+        "actor_asset_coverage": actor_asset_coverage_path.name,
+        "background_requests": background_requests_path.name,
+        "background_coverage": background_coverage_path.name,
+        "preflight": preflight_path.name,
+        "prepare_report": prepare_report_path.name,
+    }
+    actor_missing_count = int(actor_coverage.get("missing_count") or 0)
+    background_missing_count = int(background_coverage.get("missing_count") or 0)
     report = {
         "schema": PREPARE_SCHEMA,
         "pack_id": pack_id,
         "episode_id": episode_id,
         "ready_for_render": bool(preflight.get("ready_for_render")),
         "missing_count": int(preflight.get("missing_count") or 0),
-        "actor_missing_count": int(actor_coverage.get("missing_count") or 0),
-        "background_missing_count": int(background_coverage.get("missing_count") or 0),
-        "artifacts": {
-            "actor_asset_plan": actor_asset_plan_path.name,
-            "actor_asset_coverage": actor_asset_coverage_path.name,
-            "background_requests": background_requests_path.name,
-            "background_coverage": background_coverage_path.name,
-            "preflight": preflight_path.name,
-            "prepare_report": prepare_report_path.name,
-        },
+        "actor_missing_count": actor_missing_count,
+        "background_missing_count": background_missing_count,
+        "missing_assets": list(preflight.get("missing_assets") or []),
+        "artifacts": artifacts,
+        "next_actions": _build_next_actions(
+            actor_missing_count=actor_missing_count,
+            background_missing_count=background_missing_count,
+            artifacts=artifacts,
+        ),
         "public_release_boundary": {
             "contains_generated_media": False,
             "contains_voice_samples": False,
@@ -155,6 +214,8 @@ def main(argv: Optional[list[str]] = None) -> int:
             f"Wrote video-toon episode prepare bundle for {report['episode_id']}: "
             f"{Path(args.output_dir)} (missing {report['missing_count']})"
         )
+        next_action_ids = ", ".join(action["action_id"] for action in report["next_actions"])
+        print(f"next actions: {next_action_ids}")
         if args.fail_on_not_ready and not report["ready_for_render"]:
             return 1
         return 0
