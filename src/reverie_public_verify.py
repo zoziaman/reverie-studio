@@ -132,6 +132,37 @@ def _run_python_compile(timeout_seconds: int = 60) -> dict[str, Any]:
         }
 
 
+def _run_workspace_state() -> dict[str, Any]:
+    command = ["git", "status", "--porcelain=v1", "--untracked-files=normal"]
+    completed = subprocess.run(
+        command,
+        cwd=REPO_ROOT,
+        capture_output=True,
+        check=False,
+        text=True,
+    )
+    changed_paths = [line for line in completed.stdout.splitlines() if line.strip()]
+    if completed.returncode != 0:
+        return {
+            "status": "error",
+            "command": command,
+            "returncode": completed.returncode,
+            "dirty_count": len(changed_paths),
+            "changed_paths": changed_paths[:50],
+            "truncated_changed_paths": max(0, len(changed_paths) - 50),
+            "stdout_tail": _tail(completed.stdout or ""),
+            "stderr_tail": _tail(completed.stderr or ""),
+        }
+    return {
+        "status": "review_required" if changed_paths else "pass",
+        "command": command,
+        "returncode": completed.returncode,
+        "dirty_count": len(changed_paths),
+        "changed_paths": changed_paths[:50],
+        "truncated_changed_paths": max(0, len(changed_paths) - 50),
+    }
+
+
 def _safe_int(value: Any) -> int:
     try:
         return int(value or 0)
@@ -366,6 +397,7 @@ def _build_publish_gate(
     *,
     failures: list[str],
     snapshot_findings: list[str],
+    workspace_report: dict[str, Any],
     demo_safety: dict[str, Any],
     environment_status: str | None,
     python_compile_report: dict[str, Any],
@@ -380,6 +412,13 @@ def _build_publish_gate(
                 "public_snapshot_check finding_count=0"
                 if not snapshot_findings
                 else "public_snapshot_check findings present"
+            ),
+        },
+        {
+            "id": "workspace_state",
+            "status": workspace_report["status"],
+            "evidence": "git status dirty_count={dirty_count}".format(
+                dirty_count=_safe_int(workspace_report.get("dirty_count")),
             ),
         },
         {
@@ -464,6 +503,7 @@ def run_public_verification(
 
     snapshot_check = _load_public_snapshot_check()
     snapshot_findings = snapshot_check.run_check(repo_root)
+    workspace_report = _run_workspace_state()
     environment_report = build_environment_report(repo_root)
     python_compile_report = _run_python_compile()
     demo_manifest = run_demo(
@@ -484,6 +524,8 @@ def run_public_verification(
     warnings: list[str] = []
     if snapshot_findings:
         failures.append("public_snapshot_check reported release-blocking findings")
+    if workspace_report["status"] == "error":
+        failures.append("workspace_state check failed")
 
     demo_safety = demo_manifest.get("safety", {})
     if demo_safety.get("uses_credentials") or demo_safety.get("calls_external_services"):
@@ -522,6 +564,7 @@ def run_public_verification(
         "publish_gate": _build_publish_gate(
             failures=failures,
             snapshot_findings=snapshot_findings,
+            workspace_report=workspace_report,
             demo_safety=demo_safety,
             environment_status=environment_report.get("overall_status"),
             python_compile_report=python_compile_report,
@@ -534,6 +577,7 @@ def run_public_verification(
                 "finding_count": len(snapshot_findings),
                 "findings": snapshot_findings,
             },
+            "workspace_state": workspace_report,
             "environment_doctor": {
                 "status": environment_report.get("overall_status"),
                 "report_path": str(demo_out / "environment_report.json"),

@@ -12,11 +12,12 @@ NEEDS REVIEW
 
 The current tracked publish set has a one-command public verifier that scans
 tracked files, runs the local setup doctor, executes the no-credential dry-run,
-and can include pytest evidence. Remaining review items are git history and the
-Firebase Functions dependency audit: do not convert an existing private
-repository to public until old commits have also been scanned or replaced by a
-clean release branch/export, and do not treat the optional functions surface as
-production-ready until the residual moderate audit chain is reviewed.
+checks the current workspace state, and can include pytest evidence. Remaining
+review items are git history and the Firebase Functions dependency audit: do not
+convert an existing private repository to public until old commits have also
+been scanned or replaced by a clean release branch/export, and do not treat the
+optional functions surface as production-ready until the residual moderate audit
+chain is reviewed.
 
 ## Checklist
 
@@ -31,6 +32,7 @@ production-ready until the residual moderate audit chain is reviewed.
 | Personal identifiers absent | PASS | Focused scan found no real user-home paths or private identifiers in tracked release files; remaining phone-like strings are test fixtures for policy checks. |
 | Public pack files reviewed | PASS | `assets/packs/` scan found no live API keys, local machine paths, or private key material. Packs are prompts/templates only unless users add their own assets locally. |
 | Public verifier artifacts safe | PASS | `public_verify.py`, `reverie_doctor`, and `reverie_demo` write JSON/JSONL/Markdown reports outside the repository and do not read credentials, call cloud services, start local services, upload, or generate media. |
+| Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain`; release review should use a clean branch/export before publishing. |
 | Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` reduced audit output to 9 moderate production dependency findings; the remaining suggested fix requires a breaking `firebase-admin` / `firebase-functions` path. |
 | License boundary explicit | PASS | README and LICENSE state MIT for repository code/docs, while excluding rights to third-party local assets. |
 

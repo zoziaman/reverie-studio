@@ -20,6 +20,19 @@ def _python_compile_passes(monkeypatch):
         },
         raising=False,
     )
+    monkeypatch.setattr(
+        public_verify,
+        "_run_workspace_state",
+        lambda: {
+            "status": "pass",
+            "command": ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+            "returncode": 0,
+            "dirty_count": 0,
+            "changed_paths": [],
+            "truncated_changed_paths": 0,
+        },
+        raising=False,
+    )
 
 
 def _safe_demo_manifest() -> dict:
@@ -48,9 +61,12 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
 
     assert report["overall_status"] == "pass"
     assert report["checks"]["public_snapshot"]["status"] == "pass"
+    assert report["checks"]["workspace_state"]["status"] == "pass"
     assert report["checks"]["python_compile"]["status"] == "pass"
     assert report["checks"]["pytest"]["status"] == "not_run"
     assert report["publish_gate"]["status"] == "review_required"
+    check_ids = {check["id"] for check in report["publish_gate"]["machine_checks"]}
+    assert "workspace_state" in check_ids
     review_ids = {item["id"] for item in report["publish_gate"]["manual_review_items"]}
     assert "existing_git_history" in review_ids
     assert "firebase_functions_dependency_audit" in review_ids
@@ -110,6 +126,41 @@ def test_public_verify_fails_on_python_compile_error(tmp_path, monkeypatch):
     assert report["publish_gate"]["status"] == "blocked"
     assert report["checks"]["python_compile"]["status"] == "fail"
     assert any("python_compile failed" in failure for failure in report["failures"])
+
+
+def test_public_verify_reports_dirty_workspace_for_release_review(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_workspace_state",
+        lambda: {
+            "status": "review_required",
+            "command": ["git", "status", "--porcelain=v1", "--untracked-files=normal"],
+            "returncode": 0,
+            "dirty_count": 2,
+            "changed_paths": ["M README.md", "?? local.secret"],
+            "truncated_changed_paths": 0,
+        },
+    )
+
+    report = public_verify.run_public_verification(tmp_path)
+
+    assert report["overall_status"] == "pass"
+    assert report["checks"]["workspace_state"]["status"] == "review_required"
+    workspace_check = [
+        check for check in report["publish_gate"]["machine_checks"]
+        if check["id"] == "workspace_state"
+    ][0]
+    assert workspace_check["status"] == "review_required"
+    assert "dirty_count=2" in workspace_check["evidence"]
+    summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
+    assert "`workspace_state`: `review_required`" in summary
 
 
 def test_public_verify_refuses_repo_output_by_default():
