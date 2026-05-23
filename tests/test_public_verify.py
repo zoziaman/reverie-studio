@@ -198,6 +198,45 @@ def test_public_verify_blocks_on_history_filename_findings(tmp_path, monkeypatch
     assert "client_secret_alice.json" not in serialized
 
 
+def test_public_verify_summary_explains_history_block_release_options(tmp_path, monkeypatch):
+    class SnapshotCheck:
+        def run_check(self, root):
+            return []
+
+        def run_history_filename_check(self, root):
+            return ["private/data.wav: historical blocked extension: .wav"]
+
+        def build_json_report(self, findings):
+            return {
+                "schema": "reverie.public_snapshot_check.v1",
+                "status": "fail" if findings else "pass",
+                "finding_count": len(findings),
+                "finding_types": {"historical blocked extension": len(findings)},
+                "finding_fingerprints": [{"reason": "historical blocked extension", "fingerprint": "abc123"}],
+                "truncated_finding_fingerprints": 0,
+            }
+
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: SnapshotCheck())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+
+    report = public_verify.run_public_verification(tmp_path, with_history_scan=True)
+
+    summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
+    release_options = report["publish_gate"]["release_options"]
+
+    assert report["publish_gate"]["status"] == "blocked"
+    assert any(option["id"] == "history_free_export" for option in release_options)
+    assert any(option["id"] == "existing_repo_history" for option in release_options)
+    assert "Public Release Options" in summary
+    assert "history-free public export" in summary
+    assert "Do not make the existing repository public" in summary
+
+
 def test_public_verify_fails_on_python_compile_error(tmp_path, monkeypatch):
     monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
     monkeypatch.setattr(
