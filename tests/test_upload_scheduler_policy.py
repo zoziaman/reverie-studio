@@ -101,3 +101,46 @@ def test_scheduler_redacts_secret_in_feedback_registration_error(monkeypatch, tm
     assert secret not in item["feedback_error"]
     assert "HF_TOKEN=<redacted>" in item["feedback_error"]
     assert secret not in "\n".join(logs)
+
+
+def test_scheduler_redacts_secret_in_queue_save_error(monkeypatch, tmp_path, caplog):
+    import builtins
+
+    from utils.upload_scheduler import UploadScheduler
+
+    secret = "sk-" + ("q" * 32)
+    scheduler = UploadScheduler(str(tmp_path), channel_type="senior")
+
+    def failing_open(*args, **kwargs):
+        raise RuntimeError(f"queue save failed for YOUTUBE_TOKEN={secret}")
+
+    monkeypatch.setattr(builtins, "open", failing_open)
+    caplog.set_level("ERROR")
+
+    scheduler._save_queue()
+
+    assert secret not in caplog.text
+    assert "YOUTUBE_TOKEN=<redacted>" in caplog.text
+
+
+def test_scheduler_redacts_secret_in_config_load_error(monkeypatch, tmp_path, caplog):
+    import builtins
+
+    from utils.upload_scheduler import UploadScheduler
+
+    secret = "sk-" + ("c" * 32)
+    scheduler = UploadScheduler(str(tmp_path), channel_type="senior")
+    config_path = tmp_path / "upload_scheduler_config.json"
+    config_path.write_text("{}", encoding="utf-8")
+
+    def failing_open(*args, **kwargs):
+        raise RuntimeError(f"config load failed for OPENAI_API_KEY={secret}")
+
+    monkeypatch.setattr(builtins, "open", failing_open)
+    caplog.set_level("WARNING")
+
+    config = scheduler._load_config()
+
+    assert config["policy_safe_uploads"] is True
+    assert secret not in caplog.text
+    assert "OPENAI_API_KEY=<redacted>" in caplog.text

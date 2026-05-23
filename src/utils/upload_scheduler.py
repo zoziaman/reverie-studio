@@ -90,7 +90,7 @@ class UploadScheduler:
                 with open(self.queue_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
-                logger.warning(f"대기열 로드 실패: {e}")
+                logger.warning(f"대기열 로드 실패: {redact_sensitive_text(e)}")
         return []
 
     def _save_queue(self):
@@ -99,7 +99,7 @@ class UploadScheduler:
             with open(self.queue_path, 'w', encoding='utf-8') as f:
                 json.dump(self.queue, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            logger.error(f"대기열 저장 실패: {e}")
+            logger.error(f"대기열 저장 실패: {redact_sensitive_text(e)}")
 
     def _load_history(self) -> List[Dict[str, Any]]:
         """업로드 히스토리 로드"""
@@ -108,7 +108,7 @@ class UploadScheduler:
                 with open(self.history_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
-                logger.warning(f"히스토리 로드 실패: {e}")
+                logger.warning(f"히스토리 로드 실패: {redact_sensitive_text(e)}")
         return []
 
     def _save_history(self):
@@ -117,7 +117,7 @@ class UploadScheduler:
             with open(self.history_path, 'w', encoding='utf-8') as f:
                 json.dump(self.history[-100:], f, ensure_ascii=False, indent=2)
         except Exception as e:
-            logger.error(f"히스토리 저장 실패: {e}")
+            logger.error(f"히스토리 저장 실패: {redact_sensitive_text(e)}")
 
     def _load_config(self) -> Dict[str, Any]:
         """설정 로드"""
@@ -140,7 +140,7 @@ class UploadScheduler:
                     loaded = json.load(f)
                     default_config.update(loaded)
             except Exception as e:
-                logger.warning(f"설정 로드 실패: {e}")
+                logger.warning(f"설정 로드 실패: {redact_sensitive_text(e)}")
 
         if default_config.get("policy_safe_uploads", True):
             default_config["daily_upload_limit"] = min(int(default_config.get("daily_upload_limit", 2) or 2), 2)
@@ -154,7 +154,7 @@ class UploadScheduler:
             with open(self.config_path, 'w', encoding='utf-8') as f:
                 json.dump(self.config, f, ensure_ascii=False, indent=2)
         except Exception as e:
-            logger.error(f"설정 저장 실패: {e}")
+            logger.error(f"설정 저장 실패: {redact_sensitive_text(e)}")
 
     def _log(self, message: str, level: str = "info"):
         """로그 기록"""
