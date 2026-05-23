@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, asdict
 from pathlib import Path
+from utils.secret_redaction import redact_sensitive_text
 
 # Google API
 try:
@@ -196,11 +197,11 @@ class TrendCollector:
             logger.info(f"[{country_code}] {len(videos)}개 영상 수집 완료")
 
         except HttpError as e:
-            error_msg = f"YouTube API 오류: {e}"
+            error_msg = f"YouTube API 오류: {redact_sensitive_text(e)}"
             logger.error(error_msg)
             errors.append(error_msg)
         except Exception as e:
-            error_msg = f"수집 중 오류: {e}"
+            error_msg = f"수집 중 오류: {redact_sensitive_text(e)}"
             logger.error(error_msg)
             errors.append(error_msg)
 
@@ -248,14 +249,15 @@ class TrendCollector:
                 )
                 results[code] = result
             except Exception as e:
-                logger.error(f"[{code}] 수집 실패: {e}")
+                safe_error = redact_sensitive_text(e)
+                logger.error(f"[{code}] 수집 실패: {safe_error}")
                 results[code] = CollectionResult(
                     country_code=code,
                     country_name=SUPPORTED_COUNTRIES.get(code, {}).get('name', code),
                     collected_at=datetime.now().isoformat(),
                     total_videos=0,
                     videos=[],
-                    errors=[str(e)]
+                    errors=[safe_error]
                 )
 
         return results
@@ -292,7 +294,8 @@ class TrendCollector:
                 all_videos.extend(result.videos)
                 all_errors.extend(result.errors)
             except Exception as e:
-                all_errors.append(f"카테고리 {cat_id} 수집 실패: {e}")
+                safe_error = redact_sensitive_text(e)
+                all_errors.append(f"카테고리 {cat_id} 수집 실패: {safe_error}")
 
         # 중복 제거 (video_id 기준)
         seen_ids = set()
