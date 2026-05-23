@@ -13,6 +13,8 @@ import time
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 # v60.1.0: API retry 상수
@@ -223,6 +225,6 @@ def create_sd_client(sd_url: str) -> Optional[SDClientWrapper]:
             logger.warning(f"[SDWrapper] SD WebUI 응답 이상: status={res.status_code}")
             return SDClientWrapper(sd_url)  # 일단 생성 (에러는 호출 시 발생)
     except Exception as e:
-        logger.warning(f"[SDWrapper] SD WebUI 연결 확인 실패: {e}")
+        logger.warning(f"[SDWrapper] SD WebUI 연결 확인 실패: {redact_sensitive_text(e)}")
         # 연결 불가해도 래퍼는 생성 (VSD가 fallback 처리)
         return SDClientWrapper(sd_url)
