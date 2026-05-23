@@ -834,6 +834,8 @@ const LayeredCutoutStack: React.FC<{
   const hasEyeSprites = Boolean(motion?.face_rig && hasSprite && eyesOpenSrc && eyesClosedSrc);
   const hasMouthSprites = Boolean(motion?.face_rig && hasSprite && mouthClosedSrc && mouthOpenSrc);
   const hasFaceSprites = hasEyeSprites || hasMouthSprites;
+  const usesFullCanvasFaceLayers =
+    (motion?.character_layer_mode || "").trim().toLowerCase() === "layered_actor_pool_v1";
   const actingPose = (motion?.acting_pose || "grounded_talk").trim().toLowerCase();
   const poseLean =
     actingPose.includes("lean") ? -0.8 :
@@ -861,6 +863,28 @@ const LayeredCutoutStack: React.FC<{
   const spriteRotation = rotationDeg * (isSimpleSprite ? 0.1 : 0.18) + (motion?.sprite_lean_deg ?? 0) + poseLean;
   const spriteTransform = `translate(-50%, -50%) translate(${translateX * 0.22 + sway + enterOffset + parallax}px, ${translateY * 0.1 + groundedBreath}px) scale(${spriteScale}) rotate(${spriteRotation}deg)`;
   const faceMotionY = Math.max(-2, Math.min(2.5, groundedBreath * 0.35 + mouthAmount * 1.2));
+  const faceLayerContainerStyle: React.CSSProperties = usesFullCanvasFaceLayers
+    ? {
+        position: "absolute",
+        inset: 0,
+        pointerEvents: "none",
+      }
+    : {
+        position: "absolute",
+        left: faceX,
+        top: faceY,
+        width: `${34 * faceScale}%`,
+        height: `${24 * faceScale}%`,
+        transform: `translate(-50%, -50%) translateY(${faceMotionY}px)`,
+        pointerEvents: "none",
+      };
+  const facePartStyle: React.CSSProperties = {
+    position: "absolute",
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "contain",
+  };
 
   return (
     <>
@@ -900,38 +924,20 @@ const LayeredCutoutStack: React.FC<{
             }}
           />
           {hasFaceSprites ? (
-            <div
-              style={{
-                position: "absolute",
-                left: faceX,
-                top: faceY,
-                width: `${34 * faceScale}%`,
-                height: `${24 * faceScale}%`,
-                transform: `translate(-50%, -50%) translateY(${faceMotionY}px)`,
-                pointerEvents: "none",
-              }}
-            >
+            <div style={faceLayerContainerStyle}>
               {hasEyeSprites ? (
                 <>
                   <Img
                     src={eyesOpenSrc!}
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
+                      ...facePartStyle,
                       opacity: 1 - blinkAmount,
                     }}
                   />
                   <Img
                     src={eyesClosedSrc!}
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
+                      ...facePartStyle,
                       opacity: blinkAmount,
                     }}
                   />
@@ -942,22 +948,14 @@ const LayeredCutoutStack: React.FC<{
                   <Img
                     src={mouthClosedSrc!}
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
+                      ...facePartStyle,
                       opacity: Math.max(0, 1 - mouthAmount),
                     }}
                   />
                   <Img
                     src={mouthOpenSrc!}
                     style={{
-                      position: "absolute",
-                      inset: 0,
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "contain",
+                      ...facePartStyle,
                       opacity: mouthAmount,
                     }}
                   />

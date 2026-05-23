@@ -336,6 +336,9 @@ def write_local_videotoon_smoke_bundle(
         width=int(width),
         height=int(height),
     )
+    remotion_props = _load_json(remotion_props_path)
+    remotion_props["showAiDisclosure"] = False
+    _write_json(remotion_props_path, remotion_props)
     videotoon_render_plan.write_videotoon_asset_work_order_from_render_plan(
         render_plan_path,
         asset_work_order_path,

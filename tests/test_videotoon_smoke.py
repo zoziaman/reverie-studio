@@ -50,6 +50,7 @@ def test_local_videotoon_smoke_bundle_creates_ready_render_inputs(tmp_path):
     assert prepare["missing_count"] == 0
     assert render_plan["ready_for_render"] is True
     assert props["schema"] == "reverie.remotion.radio_drama_props.v1"
+    assert props["showAiDisclosure"] is False
     assert props["totalFrames"] == 300
     assert props["images"][0]["foregroundPath"] == "variants/happy_standing.png"
     assert props["images"][0]["backgroundPath"] == "street_day_00.png"
@@ -163,6 +164,21 @@ def test_videotoon_smoke_cli_stage_remotion_writes_report(tmp_path, capsys):
     assert exit_code == 0
     assert report["ready_for_remotion"] is True
     assert "Remotion smoke assets" in captured.out
+
+
+def test_remotion_layered_actor_pool_uses_full_canvas_face_layers():
+    source = (ROOT / "remotion-poc" / "src" / "RadioDrama.tsx").read_text(encoding="utf-8")
+
+    assert "usesFullCanvasFaceLayers" in source
+    assert '=== "layered_actor_pool_v1"' in source
+    assert "faceLayerContainerStyle" in source
+    assert "facePartStyle" in source
+
+
+def test_videotoon_smoke_remotion_stage_output_is_gitignored():
+    gitignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+
+    assert "remotion-poc/public/videotoon_smoke/" in gitignore
 
 
 def test_pyproject_exposes_videotoon_smoke_cli():
