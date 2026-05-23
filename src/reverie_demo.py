@@ -26,6 +26,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PACK_PATH = REPO_ROOT / "examples" / "public_demo_pack.json"
 
 
+def _repo_relative_path(path: Path) -> str:
+    try:
+        return path.resolve().relative_to(REPO_ROOT.resolve()).as_posix()
+    except ValueError:
+        return "<path_outside_repo>"
+
+
 @dataclass(frozen=True)
 class DemoStage:
     name: str
@@ -452,7 +459,6 @@ def _write_report(
     path: Path,
     pack: dict,
     stages: list[DemoStage],
-    output_dir: Path,
     backend_profile: dict,
     quality_gate: dict,
     environment_report: dict,
@@ -465,7 +471,7 @@ def _write_report(
         "",
         f"Pack: `{pack['pack_id']}`",
         f"Backend profile: `{backend_profile['id']}`",
-        f"Output directory: `{output_dir}`",
+        "Output directory: `<public_demo_output>`",
         "",
         "This is a no-credential demo. It creates only JSON, JSONL, and Markdown",
         "reports. It does not create video, audio, image, subtitle, credential,",
@@ -551,7 +557,7 @@ def run_demo(
     manifest = {
         "run_id": "public-demo-dry-run",
         "created_at": now,
-        "pack_path": str(pack_path),
+        "pack_path": _repo_relative_path(pack_path),
         "pack_id": pack["pack_id"],
         "mode": "dry_run",
         "backend_profile": backend_profile,
@@ -581,7 +587,6 @@ def run_demo(
         output_dir / "pipeline_report.md",
         pack,
         stages,
-        output_dir,
         backend_profile,
         quality_gate,
         environment_report,

@@ -25,9 +25,16 @@ def test_public_demo_writes_safe_report_files(tmp_path):
     assert report_path.exists()
 
     saved = json.loads(manifest_path.read_text(encoding="utf-8"))
+    report_text = report_path.read_text(encoding="utf-8")
+    serialized = json.dumps(saved)
+
     assert saved["pack_id"] == "public_demo"
+    assert saved["pack_path"] == "examples/public_demo_pack.json"
     assert any(stage["name"] == "upload_gate" for stage in saved["stages"])
     assert any(stage["status"] == "blocked_for_review" for stage in saved["stages"])
+    assert "Output directory: `<public_demo_output>`" in report_text
+    assert str(DEFAULT_PACK_PATH.resolve()) not in serialized
+    assert str(Path(tmp_path).resolve()) not in report_text
 
 
 def test_public_demo_writes_named_stage_artifacts(tmp_path):
