@@ -53,3 +53,40 @@ def test_update_thumbnail_failure_redacts_api_key_in_log_and_return(monkeypatch,
     assert api_key not in result["error"]
     assert "GEMINI_API_KEY=<redacted>" in caplog.text
     assert "GEMINI_API_KEY=<redacted>" in result["error"]
+
+
+def test_update_video_metadata_failure_redacts_api_key_in_log_and_return(monkeypatch, caplog):
+    api_key = "AIza" + ("m" * 32)
+
+    class FailingRequest:
+        def execute(self):
+            raise RuntimeError(f"metadata update failed for ?key={api_key}")
+
+    class FakeVideos:
+        def update(self, **kwargs):
+            return FailingRequest()
+
+    class FakeService:
+        def videos(self):
+            return FakeVideos()
+
+    uploader = YouTubeUploader(channel_type="horror")
+    uploader.service = FakeService()
+    monkeypatch.setattr(
+        uploader,
+        "get_video_info",
+        lambda video_id: {
+            "video_id": video_id,
+            "title": "old title",
+            "description": "old description",
+        },
+    )
+    caplog.set_level(logging.ERROR)
+
+    result = uploader.update_video_metadata("video123", title="new title")
+
+    assert result["success"] is False
+    assert api_key not in caplog.text
+    assert api_key not in result["error"]
+    assert "key=<redacted>" in caplog.text
+    assert "key=<redacted>" in result["error"]

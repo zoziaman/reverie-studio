@@ -305,7 +305,7 @@ class YouTubeUploader:
             except (ConnectionError, TimeoutError) as e:
                 if attempt < max_retries - 1:
                     delay = (2 ** attempt) * (0.5 + random.random())
-                    logger.warning(f"[UPLOAD] 연결 오류. {delay:.1f}초 후 재시도 ({attempt+1}/{max_retries}): {e}")
+                    logger.warning(f"[UPLOAD] 연결 오류. {delay:.1f}초 후 재시도 ({attempt+1}/{max_retries}): {redact_sensitive_text(e)}")
                     time.sleep(delay)
                 else:
                     raise
@@ -351,7 +351,7 @@ class YouTubeUploader:
             except HttpError as e:
                 if attempt < max_retries - 1:
                     time.sleep(3)
-                    logger.warning(f"[THUMB] 재시도: {e}")
+                    logger.warning(f"[THUMB] 재시도: {redact_sensitive_text(e)}")
                 else:
                     raise
     
@@ -531,7 +531,7 @@ class YouTubeUploader:
                     if not thumbnail_url:
                         logger.debug(f"썸네일 URL 추출 실패. 응답 구조: {list(response.keys()) if response else 'empty'}")
             except Exception as parse_err:
-                logger.warning(f"썸네일 URL 파싱 오류 (무시됨): {parse_err}")
+                logger.warning(f"썸네일 URL 파싱 오류 (무시됨): {redact_sensitive_text(parse_err)}")
 
             # v54.7.3: API 호출 자체가 성공하면 썸네일은 실제로 업데이트됨
             # thumbnail_url은 확인용일 뿐, 업로드 성공 여부와 별개
@@ -594,7 +594,7 @@ class YouTubeUploader:
             return None
 
         except Exception as e:
-            logger.error(f"영상 정보 조회 실패: {video_id} - {e}")
+            logger.error(f"영상 정보 조회 실패: {video_id} - {redact_sensitive_text(e)}")
             return None
 
     def update_video_metadata(
@@ -663,12 +663,13 @@ class YouTubeUploader:
             }
 
         except Exception as e:
-            logger.error(f"[ERROR] 메타데이터 업데이트 실패: {e}")
-            logger.error(f"메타데이터 업데이트 실패: {video_id} - {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[ERROR] 메타데이터 업데이트 실패: {safe_error}")
+            logger.error(f"메타데이터 업데이트 실패: {video_id} - {safe_error}")
             return {
                 'success': False,
                 'video_id': video_id,
-                'error': str(e)
+                'error': safe_error
             }
 
 
