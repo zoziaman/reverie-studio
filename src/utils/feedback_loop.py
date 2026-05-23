@@ -23,6 +23,7 @@ import time
 from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Callable
 from enum import Enum
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -510,11 +511,12 @@ class FeedbackLoop:
                 result["actions"].append("thumbnail_change")
                 self._log(f"자동 개선 완료: {video['title']} - 썸네일 교체")
             else:
-                result["error"] = change_result.get("error", "썸네일 교체 실패")
+                result["error"] = redact_sensitive_text(change_result.get("error", "썸네일 교체 실패"))
 
         except Exception as e:
-            result["error"] = str(e)
-            self._log(f"자동 개선 실패: {e}", "error")
+            safe_error = redact_sensitive_text(e)
+            result["error"] = safe_error
+            self._log(f"자동 개선 실패: {safe_error}", "error")
 
         return result
 
