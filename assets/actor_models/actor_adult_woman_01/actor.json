@@ -93,6 +93,41 @@
     "eyes_worried",
     "eyes_angry"
   ],
+  "layering_contract": {
+    "image_format": "png_rgba",
+    "canvas": {
+      "width": 1024,
+      "height": 1536
+    },
+    "anchor_points": {
+      "actor_root": {
+        "x": 0.5,
+        "y": 0.92
+      },
+      "head_center": {
+        "x": 0.5,
+        "y": 0.28
+      },
+      "eye_center": {
+        "x": 0.5,
+        "y": 0.25
+      },
+      "mouth_center": {
+        "x": 0.5,
+        "y": 0.38
+      }
+    },
+    "layer_order": [
+      "variant_base",
+      "eye_layer",
+      "mouth_layer"
+    ],
+    "naming_policy": {
+      "variant": "variants/{variant_key}.png",
+      "mouth_shape": "face_parts/{mouth_shape_key}.png",
+      "eye_shape": "face_parts/{eye_shape_key}.png"
+    }
+  },
   "voice_profile": {
     "recommended_slot": "female_01",
     "stable_voice_required": true

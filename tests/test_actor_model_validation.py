@@ -169,6 +169,31 @@ def test_build_actor_asset_request_manifest_expands_variants_and_face_parts():
     assert all(request["public_safe"] is True for request in requests)
 
 
+def test_build_actor_layer_spec_manifest_describes_compositable_layers():
+    actor_model = _actor_model_module()
+    actor = json.loads(ACTOR_MODEL_PATH.read_text(encoding="utf-8"))
+
+    manifest = actor_model.build_actor_layer_spec_manifest(ACTOR_MODEL_PATH, repo_root=ROOT)
+    serialized = json.dumps(manifest)
+
+    assert manifest["schema"] == "reverie.actor_model.layer_spec.v1"
+    assert manifest["actor_id"] == "actor_adult_woman_01"
+    assert manifest["source_actor_model_path"] == "assets/actor_models/actor_adult_woman_01/actor.json"
+    assert manifest["image_format"] == "png_rgba"
+    assert manifest["canvas"] == actor["layering_contract"]["canvas"]
+    assert manifest["layer_order"] == ["variant_base", "eye_layer", "mouth_layer"]
+    assert len(manifest["variant_layers"]) == len(actor["required_variants"])
+    assert len(manifest["mouth_layers"]) == len(actor["mouth_shapes"])
+    assert len(manifest["eye_layers"]) == len(actor["eye_shapes"])
+    assert manifest["variant_layers"][0]["target_relative_path"] == "variants/neutral_standing.png"
+    assert manifest["mouth_layers"][0]["anchor_key"] == "mouth_center"
+    assert manifest["mouth_layers"][0]["target_relative_path"] == "face_parts/mouth_closed.png"
+    assert manifest["eye_layers"][0]["anchor_key"] == "eye_center"
+    assert manifest["eye_layers"][0]["target_relative_path"] == "face_parts/eyes_open.png"
+    assert "C:" + "/Users/" not in serialized
+    assert "C:" + "\\Users\\" not in serialized
+
+
 def test_write_actor_asset_request_manifest_creates_json(tmp_path):
     actor_model = _actor_model_module()
     output_path = tmp_path / "actor_adult_woman_01.asset_requests.json"
@@ -216,6 +241,29 @@ def test_actor_model_cli_writes_asset_request_manifest(tmp_path, capsys):
     assert exit_code == 0
     assert output_path.exists()
     assert "actor_adult_woman_01" in captured.out
+
+
+def test_actor_model_cli_writes_layer_spec_manifest(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    output_path = tmp_path / "layer_spec.json"
+
+    exit_code = actor_model.main(
+        [
+            "layer-spec",
+            str(ACTOR_MODEL_PATH),
+            "--repo-root",
+            str(ROOT),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert manifest["schema"] == "reverie.actor_model.layer_spec.v1"
+    assert manifest["actor_id"] == "actor_adult_woman_01"
+    assert "actor layer spec" in captured.out
 
 
 def test_pyproject_exposes_actor_model_request_cli():

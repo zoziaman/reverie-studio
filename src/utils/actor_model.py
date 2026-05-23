@@ -136,6 +136,25 @@ DEFAULT_REUSE_CONTRACT = {
     ],
     "requires_asset_coverage_before_render": True,
 }
+DEFAULT_LAYERING_CONTRACT = {
+    "image_format": "png_rgba",
+    "canvas": {
+        "width": 1024,
+        "height": 1536,
+    },
+    "anchor_points": {
+        "actor_root": {"x": 0.5, "y": 0.92},
+        "head_center": {"x": 0.5, "y": 0.28},
+        "eye_center": {"x": 0.5, "y": 0.25},
+        "mouth_center": {"x": 0.5, "y": 0.38},
+    },
+    "layer_order": ["variant_base", "eye_layer", "mouth_layer"],
+    "naming_policy": {
+        "variant": "variants/{variant_key}.png",
+        "mouth_shape": "face_parts/{mouth_shape_key}.png",
+        "eye_shape": "face_parts/{eye_shape_key}.png",
+    },
+}
 
 
 @dataclass
@@ -285,6 +304,84 @@ def _normalize_reuse_contract(value: Any) -> dict[str, Any]:
             if items:
                 contract[key] = items
     return contract
+
+
+def _normalize_layering_contract(value: Any) -> dict[str, Any]:
+    contract = copy.deepcopy(DEFAULT_LAYERING_CONTRACT)
+    if not isinstance(value, Mapping):
+        return contract
+
+    if str(value.get("image_format") or "").strip():
+        contract["image_format"] = str(value["image_format"]).strip()
+    canvas = value.get("canvas")
+    if isinstance(canvas, Mapping):
+        for key in ("width", "height"):
+            try:
+                number = int(canvas.get(key) or 0)
+            except (TypeError, ValueError):
+                number = 0
+            if number > 0:
+                contract["canvas"][key] = number
+    anchors = value.get("anchor_points")
+    if isinstance(anchors, Mapping):
+        for anchor_key, anchor_value in anchors.items():
+            if not isinstance(anchor_value, Mapping):
+                continue
+            try:
+                x = float(anchor_value.get("x"))
+                y = float(anchor_value.get("y"))
+            except (TypeError, ValueError):
+                continue
+            contract["anchor_points"][str(anchor_key)] = {"x": x, "y": y}
+    layer_order = _string_list(value.get("layer_order"))
+    if layer_order:
+        contract["layer_order"] = layer_order
+    naming_policy = value.get("naming_policy")
+    if isinstance(naming_policy, Mapping):
+        for key in ("variant", "mouth_shape", "eye_shape"):
+            if str(naming_policy.get(key) or "").strip():
+                contract["naming_policy"][key] = str(naming_policy[key]).strip()
+    return contract
+
+
+def _validate_layering_contract(data: Mapping[str, Any], result: ActorModelValidationResult) -> None:
+    contract = data.get("layering_contract")
+    if not isinstance(contract, Mapping):
+        result.add_error("layering_contract must be an object")
+        return
+
+    if not str(contract.get("image_format") or "").strip():
+        result.add_error("layering_contract.image_format must be a non-empty string")
+
+    canvas = contract.get("canvas")
+    if not isinstance(canvas, Mapping):
+        result.add_error("layering_contract.canvas must be an object")
+    else:
+        for key in ("width", "height"):
+            if not isinstance(canvas.get(key), int) or int(canvas.get(key)) <= 0:
+                result.add_error(f"layering_contract.canvas.{key} must be a positive integer")
+
+    anchors = contract.get("anchor_points")
+    if not isinstance(anchors, Mapping):
+        result.add_error("layering_contract.anchor_points must be an object")
+    else:
+        for required_anchor in ("actor_root", "mouth_center", "eye_center"):
+            anchor = anchors.get(required_anchor)
+            if not isinstance(anchor, Mapping):
+                result.add_error(f"layering_contract.anchor_points.{required_anchor} must be an object")
+                continue
+            for axis in ("x", "y"):
+                value = anchor.get(axis)
+                if not isinstance(value, (int, float)):
+                    result.add_error(f"layering_contract.anchor_points.{required_anchor}.{axis} must be numeric")
+
+    layer_order = _string_list(contract.get("layer_order"))
+    if not layer_order:
+        result.add_error("layering_contract.layer_order must be a non-empty string list")
+    else:
+        for required_layer in ("variant_base", "eye_layer", "mouth_layer"):
+            if required_layer not in layer_order:
+                result.add_error(f"layering_contract.layer_order must include {required_layer}")
 
 
 def _variant_groups(variants: list[str], mouth_shapes: list[str], eye_shapes: list[str]) -> dict[str, list[str]]:
@@ -677,6 +774,7 @@ def validate_actor_model_package(
     if not result.eye_shapes:
         result.add_error("eye_shapes must be a non-empty string list")
 
+    _validate_layering_contract(data, result)
     _validate_public_boundary(data, result)
     _validate_package_files(actor_dir, result)
     return result
@@ -768,6 +866,7 @@ def scaffold_actor_model(
         "required_variants": variants,
         "mouth_shapes": mouths,
         "eye_shapes": eyes,
+        "layering_contract": copy.deepcopy(DEFAULT_LAYERING_CONTRACT),
         "voice_profile": {
             "recommended_slot": clean_voice_profile,
             "stable_voice_required": True,
@@ -1311,6 +1410,131 @@ def write_actor_roster_scaffold_report(
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
+def _target_from_naming_policy(pattern: str, **values: str) -> str:
+    target = pattern
+    for key, value in values.items():
+        target = target.replace("{" + key + "}", value)
+    return Path(target).as_posix()
+
+
+def _layer_spec_entry(
+    *,
+    actor_id: str,
+    layer_type: str,
+    key: str,
+    target_relative_path: str,
+    anchor_key: str,
+    z_index: int,
+) -> dict[str, Any]:
+    return {
+        "layer_id": f"{actor_id}__{layer_type}__{key}",
+        "layer_type": layer_type,
+        "key": key,
+        "target_relative_path": target_relative_path,
+        "anchor_key": anchor_key,
+        "z_index": z_index,
+        "public_safe": True,
+    }
+
+
+def build_actor_layer_spec_manifest(
+    actor_model_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Build a renderer-facing public-safe layer specification for one actor."""
+    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root)
+    if not validation.is_valid:
+        raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
+
+    actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    actor_data = json.loads(actor_path.read_text(encoding="utf-8"))
+    layering_contract = _normalize_layering_contract(actor_data.get("layering_contract"))
+    naming_policy = layering_contract["naming_policy"]
+    layer_order = list(layering_contract["layer_order"])
+    z_index = {layer_type: index for index, layer_type in enumerate(layer_order)}
+
+    variant_layers = [
+        _layer_spec_entry(
+            actor_id=validation.actor_id,
+            layer_type="variant_base",
+            key=variant_key,
+            target_relative_path=_target_from_naming_policy(
+                str(naming_policy["variant"]),
+                variant_key=variant_key,
+            ),
+            anchor_key="actor_root",
+            z_index=z_index.get("variant_base", 0),
+        )
+        for variant_key in validation.required_variants
+    ]
+    mouth_layers = [
+        _layer_spec_entry(
+            actor_id=validation.actor_id,
+            layer_type="mouth_layer",
+            key=mouth_shape,
+            target_relative_path=_target_from_naming_policy(
+                str(naming_policy["mouth_shape"]),
+                mouth_shape_key=mouth_shape,
+            ),
+            anchor_key="mouth_center",
+            z_index=z_index.get("mouth_layer", 2),
+        )
+        for mouth_shape in validation.mouth_shapes
+    ]
+    eye_layers = [
+        _layer_spec_entry(
+            actor_id=validation.actor_id,
+            layer_type="eye_layer",
+            key=eye_shape,
+            target_relative_path=_target_from_naming_policy(
+                str(naming_policy["eye_shape"]),
+                eye_shape_key=eye_shape,
+            ),
+            anchor_key="eye_center",
+            z_index=z_index.get("eye_layer", 1),
+        )
+        for eye_shape in validation.eye_shapes
+    ]
+
+    return {
+        "schema": "reverie.actor_model.layer_spec.v1",
+        "actor_id": validation.actor_id,
+        "template_version": actor_data.get("template_version", ""),
+        "readiness_state": actor_data.get("readiness_state", ""),
+        "source_actor_model_path": _relative_to_root(actor_path, repo_root),
+        "image_format": layering_contract["image_format"],
+        "canvas": layering_contract["canvas"],
+        "anchor_points": layering_contract["anchor_points"],
+        "layer_order": layer_order,
+        "variant_layers": variant_layers,
+        "mouth_layers": mouth_layers,
+        "eye_layers": eye_layers,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def write_actor_layer_spec_manifest(
+    actor_model_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write an actor layer specification manifest and return the output path."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    manifest = build_actor_layer_spec_manifest(actor_model_path, repo_root=repo_root)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return output
 
 
@@ -2681,6 +2905,14 @@ def main(argv: Optional[list[str]] = None) -> int:
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    layer_spec_parser = subparsers.add_parser(
+        "layer-spec",
+        help="Build a renderer-facing layer specification for one actor model.",
+    )
+    layer_spec_parser.add_argument("actor_model_path", help="Path to actor.json")
+    layer_spec_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    layer_spec_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     reuse_parser = subparsers.add_parser(
         "reuse-template",
         help="Build a portable manifest for reusing one actor model across packs and episode roles.",
@@ -2962,6 +3194,14 @@ def main(argv: Optional[list[str]] = None) -> int:
         if args.output:
             output = write_actor_asset_request_manifest(args.actor_model_path, args.output, repo_root=args.repo_root)
             print(f"Wrote actor asset requests for {manifest['actor_id']}: {output}")
+        else:
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "layer-spec":
+        manifest = build_actor_layer_spec_manifest(args.actor_model_path, repo_root=args.repo_root)
+        if args.output:
+            output = write_actor_layer_spec_manifest(args.actor_model_path, args.output, repo_root=args.repo_root)
+            print(f"Wrote actor layer spec for {manifest['actor_id']}: {output}")
         else:
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return 0

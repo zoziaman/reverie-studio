@@ -63,7 +63,7 @@ samples, checkpoints, LoRA files, local paths, session logs, and credentials.
 
 `actor.json` is the stable source of truth for one actor's identity lock,
 template goal, reuse contract, required variants, mouth shapes, eye shapes,
-voice slot, and public release boundary.
+layering contract, voice slot, and public release boundary.
 
 Packs may reference the actor from `settings.motiontoon.actor_pool`:
 
@@ -131,6 +131,32 @@ The early blink/expression support contract uses:
 
 Private local face-part files can be placed under `face_parts/` after the user
 creates them.
+
+## Layering Contract
+
+`layering_contract` defines how the generated actor assets should be composited
+after they exist locally. The first gold template uses transparent PNG layers
+on a stable `1024 x 1536` actor canvas:
+
+- `variant_base`: the reusable actor pose/expression image under `variants/`.
+- `eye_layer`: the selected eye layer under `face_parts/`.
+- `mouth_layer`: the selected mouth layer under `face_parts/`.
+
+The contract also stores normalized anchor points such as `actor_root`,
+`eye_center`, and `mouth_center`. These are template coordinates, not generated
+media, so they are safe to keep in the public repository. Local generators and
+renderers can use them to align mouth and eye layers without guessing the
+placement for every episode.
+
+Export the renderer-facing layer spec with:
+
+```bash
+reverie-actor-model-requests layer-spec assets/actor_models/actor_adult_woman_01/actor.json --repo-root . --output data/actor_asset_requests/actor_adult_woman_01.layer_spec.json
+```
+
+The layer spec writes schema `reverie.actor_model.layer_spec.v1` and expands the
+actor's required variants, mouth shapes, and eye shapes into compositable layer
+entries. It does not create PNGs, call image models, or include private paths.
 
 ## Public-Safe Boundary
 

@@ -20,6 +20,12 @@ def test_actor_model_template_public_safe_package_exists():
     assert actor["required_variants"]
     assert actor["mouth_shapes"]
     assert actor["eye_shapes"]
+    assert actor["layering_contract"]["image_format"] == "png_rgba"
+    assert actor["layering_contract"]["canvas"]["width"] == 1024
+    assert actor["layering_contract"]["canvas"]["height"] == 1536
+    assert actor["layering_contract"]["layer_order"] == ["variant_base", "eye_layer", "mouth_layer"]
+    assert "mouth_center" in actor["layering_contract"]["anchor_points"]
+    assert "eye_center" in actor["layering_contract"]["anchor_points"]
     assert actor["template_goal"]["goal_id"] == "gold_reusable_video_toon_actor_v1"
     assert actor["template_goal"]["is_primary_template"] is True
     assert "omnibus_role_swap" in actor["template_goal"]["reuse_surfaces"]
@@ -86,6 +92,7 @@ def test_actor_model_schema_documents_required_fields():
         "required_variants",
         "mouth_shapes",
         "eye_shapes",
+        "layering_contract",
         "public_release_boundary",
     }.issubset(required)
 
@@ -117,6 +124,8 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "gold_reusable_video_toon_actor_v1" in text
     assert "reverie-videotoon-prepare" in text
     assert "`next_actions`" in text
+    assert "layering_contract" in text
+    assert "layer-spec" in text
     assert "actor_model_presets" in text
     assert "asset coverage" in text
     assert "pack-coverage" in text

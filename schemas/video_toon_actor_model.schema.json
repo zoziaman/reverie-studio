@@ -13,6 +13,7 @@
     "required_variants",
     "mouth_shapes",
     "eye_shapes",
+    "layering_contract",
     "public_release_boundary"
   ],
   "additionalProperties": true,
@@ -172,6 +173,76 @@
       "items": {
         "type": "string",
         "minLength": 1
+      }
+    },
+    "layering_contract": {
+      "type": "object",
+      "required": ["image_format", "canvas", "anchor_points", "layer_order", "naming_policy"],
+      "additionalProperties": true,
+      "properties": {
+        "image_format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "canvas": {
+          "type": "object",
+          "required": ["width", "height"],
+          "additionalProperties": true,
+          "properties": {
+            "width": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "anchor_points": {
+          "type": "object",
+          "required": ["actor_root", "mouth_center", "eye_center"],
+          "additionalProperties": {
+            "type": "object",
+            "required": ["x", "y"],
+            "additionalProperties": true,
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "layer_order": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "naming_policy": {
+          "type": "object",
+          "required": ["variant", "mouth_shape", "eye_shape"],
+          "additionalProperties": true,
+          "properties": {
+            "variant": {
+              "type": "string",
+              "minLength": 1
+            },
+            "mouth_shape": {
+              "type": "string",
+              "minLength": 1
+            },
+            "eye_shape": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
       }
     },
     "voice_profile": {
