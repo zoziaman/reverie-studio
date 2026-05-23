@@ -55,7 +55,7 @@ def _analytics_load_pickle(path: str):
                 pass
         return creds
     except Exception as e:
-        logger.error(f"[Analytics] 토큰 로드 실패: {e}")
+        logger.error(f"[Analytics] 토큰 로드 실패: {redact_sensitive_text(e)}")
         return None
 
 
@@ -124,7 +124,7 @@ class YouTubeAnalytics:
             return self.service
 
         except Exception as e:
-            logger.error(f"YouTube API 초기화 실패: {e}")
+            logger.error(f"YouTube API 초기화 실패: {redact_sensitive_text(e)}")
             return None
 
     def is_authenticated(self) -> bool:
@@ -161,7 +161,7 @@ class YouTubeAnalytics:
             return None
 
         except Exception as e:
-            logger.error(f"채널 통계 조회 실패: {e}")
+            logger.error(f"채널 통계 조회 실패: {redact_sensitive_text(e)}")
             return None
 
     def get_video_stats(self, video_id: str) -> Optional[Dict[str, Any]]:
@@ -198,7 +198,7 @@ class YouTubeAnalytics:
             return None
 
         except Exception as e:
-            logger.error(f"영상 통계 조회 실패: {e}")
+            logger.error(f"영상 통계 조회 실패: {redact_sensitive_text(e)}")
             return None
 
     def get_recent_videos(self, max_results: int = 10) -> List[Dict[str, Any]]:
@@ -257,7 +257,7 @@ class YouTubeAnalytics:
             return videos
 
         except Exception as e:
-            logger.error(f"최근 영상 조회 실패: {e}")
+            logger.error(f"최근 영상 조회 실패: {redact_sensitive_text(e)}")
             return []
 
     def get_video_performance_summary(self, video_ids: List[str]) -> Dict[str, Any]:
@@ -344,7 +344,7 @@ class YouTubeAnalytics:
             return self.analytics_service
 
         except Exception as e:
-            logger.error(f"YouTube Analytics API 초기화 실패: {e}")
+            logger.error(f"YouTube Analytics API 초기화 실패: {redact_sensitive_text(e)}")
             return None
 
     def get_channel_id(self) -> Optional[str]:
@@ -372,7 +372,7 @@ class YouTubeAnalytics:
                 return self._channel_id_cache
             return None
         except Exception as e:
-            logger.error(f"채널 ID 조회 실패: {e}")
+            logger.error(f"채널 ID 조회 실패: {redact_sensitive_text(e)}")
             return None
 
     def get_video_ctr_and_retention(
@@ -437,7 +437,7 @@ class YouTubeAnalytics:
                         impressions = ctr_data.get('impressions', 0)
                         ctr = ctr_data.get('ctr', 0.0)
                 except Exception as ctr_err:
-                    logger.debug(f"CTR 데이터 조회 실패 (무시됨): {ctr_err}")
+                    logger.debug(f"CTR 데이터 조회 실패 (무시됨): {redact_sensitive_text(ctr_err)}")
 
                 return {
                     'video_id': video_id,
@@ -453,7 +453,7 @@ class YouTubeAnalytics:
             return None
 
         except Exception as e:
-            logger.error(f"영상 분석 데이터 조회 실패: {e}")
+            logger.error(f"영상 분석 데이터 조회 실패: {redact_sensitive_text(e)}")
             return None
 
     def get_video_impressions_ctr(
@@ -502,7 +502,7 @@ class YouTubeAnalytics:
 
         except Exception as e:
             # 권한 부족 등으로 실패 가능
-            logger.warning(f"CTR 데이터 조회 실패 (권한 부족 가능): {e}")
+            logger.warning(f"CTR 데이터 조회 실패 (권한 부족 가능): {redact_sensitive_text(e)}")
             return None
 
     def get_traffic_sources(
@@ -566,7 +566,7 @@ class YouTubeAnalytics:
             return results
 
         except Exception as e:
-            logger.error(f"트래픽 소스 조회 실패: {e}")
+            logger.error(f"트래픽 소스 조회 실패: {redact_sensitive_text(e)}")
             return []
 
     def get_audience_retention(
@@ -1019,7 +1019,7 @@ class YouTubeAnalytics:
         except Exception as e:
             # v54.7.3: 폴백 제거 - 데이터 분산 방지를 위해 로깅만 수행
             logger.error(
-                f"썸네일 교체 기록 실패 (FeedbackLoop 불가): {video_id} - {e}. "
+                f"썸네일 교체 기록 실패 (FeedbackLoop 불가): {video_id} - {redact_sensitive_text(e)}. "
                 f"FeedbackLoop.record_thumbnail_change()를 직접 호출하세요."
             )
 
