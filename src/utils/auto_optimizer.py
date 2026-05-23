@@ -20,6 +20,8 @@ from typing import Dict, Any, List, Optional, Callable
 import threading
 import time
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -278,8 +280,9 @@ class AutoOptimizer:
             self._log(f"최적화 사이클 완료: 분석 {result['analyzed']}개, 교체 {result['thumbnails_changed']}개")
 
         except Exception as e:
-            self._log(f"최적화 사이클 오류: {e}", "error")
-            result['errors'].append(str(e))
+            safe_error = redact_sensitive_text(e)
+            self._log(f"최적화 사이클 오류: {safe_error}", "error")
+            result['errors'].append(safe_error)
 
         return result
 
@@ -357,8 +360,9 @@ class AutoOptimizer:
                 return {'success': False, 'error': result.get('error', '업로드 실패')}
 
         except Exception as e:
-            self._log(f"[{title}] 썸네일 교체 실패: {e}", "error")
-            return {'success': False, 'error': str(e)}
+            safe_error = redact_sensitive_text(e)
+            self._log(f"[{title}] 썸네일 교체 실패: {safe_error}", "error")
+            return {'success': False, 'error': safe_error}
 
     def _find_alternative_thumbnail(self, video_id: str) -> Optional[str]:
         """대체 썸네일 찾기"""
