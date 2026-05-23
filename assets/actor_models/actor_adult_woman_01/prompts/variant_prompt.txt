@@ -1,0 +1,20 @@
+Generate the requested expression and pose for actor_adult_woman_01 while
+preserving the actor identity.
+
+Variant key format:
+expression_pose
+
+Required starter variants:
+- neutral_standing
+- talking_standing
+- blink_standing
+- happy_standing
+- sad_standing
+- angry_standing
+- worried_standing
+- scared_standing
+- neutral_seated
+- talking_seated
+
+The pose may change, but the actor's face shape, age band, hair silhouette,
+body proportions, and primary clothing silhouette must stay consistent.

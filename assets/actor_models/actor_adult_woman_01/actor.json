@@ -1,0 +1,70 @@
+{
+  "actor_id": "actor_adult_woman_01",
+  "display_name": "Adult Woman Actor 01",
+  "template_version": "actor_model_template_v1",
+  "readiness_state": "template",
+  "age_band": "adult",
+  "gender_presentation": "woman",
+  "role_range": [
+    "lead",
+    "support",
+    "victim",
+    "witness",
+    "neighbor",
+    "office_worker",
+    "mystery_support"
+  ],
+  "identity_lock": {
+    "face_shape": "consistent adult Korean woman face shape",
+    "hair": "short or medium neat dark hair, fixed per generated actor",
+    "body_type": "ordinary adult proportions, half-body video-toon friendly",
+    "signature_clothing": "simple modern cardigan or blouse silhouette",
+    "must_not_change": [
+      "age band",
+      "face shape",
+      "hair silhouette",
+      "body proportions",
+      "primary clothing silhouette"
+    ]
+  },
+  "style_contract": {
+    "visual_style": "clean Korean webtoon video-toon cutout",
+    "line_quality": "clean line art",
+    "rendering": "cel-shaded, readable expression",
+    "framing": "waist-up or half-body, centered for layered compositing"
+  },
+  "required_variants": [
+    "neutral_standing",
+    "talking_standing",
+    "blink_standing",
+    "happy_standing",
+    "sad_standing",
+    "angry_standing",
+    "worried_standing",
+    "scared_standing",
+    "neutral_seated",
+    "talking_seated"
+  ],
+  "mouth_shapes": [
+    "mouth_closed",
+    "mouth_small_open",
+    "mouth_wide_open",
+    "mouth_round"
+  ],
+  "eye_shapes": [
+    "eyes_open",
+    "eyes_closed",
+    "eyes_worried",
+    "eyes_angry"
+  ],
+  "voice_profile": {
+    "recommended_slot": "female_01",
+    "stable_voice_required": true
+  },
+  "public_release_boundary": {
+    "contains_real_actor_media": false,
+    "contains_voice_samples": false,
+    "contains_model_weights": false,
+    "contains_private_paths": false
+  }
+}

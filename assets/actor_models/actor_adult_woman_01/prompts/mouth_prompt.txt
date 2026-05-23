@@ -1,0 +1,13 @@
+Create mouth shapes for early video-toon mouth-flap assembly.
+
+Actor:
+actor_adult_woman_01
+
+Required mouth shapes:
+- mouth_closed
+- mouth_small_open
+- mouth_wide_open
+- mouth_round
+
+Keep the face, age band, head angle, hair silhouette, and line style consistent
+across all mouth shapes. Mouth shapes should be usable as layered face parts.

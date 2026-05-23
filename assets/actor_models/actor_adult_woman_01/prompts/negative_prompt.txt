@@ -1,0 +1,18 @@
+Avoid identity drift:
+- different person
+- younger or older age band
+- changed face shape
+- changed hair silhouette
+- changed body proportions
+- different clothing silhouette
+- extra people
+- cropped head
+- full-body framing when half-body is required
+- unreadable text
+- UI overlays
+- phone screen UI
+- watermark
+- logo
+- realistic photo style
+- 3D render style
+- heavy blur

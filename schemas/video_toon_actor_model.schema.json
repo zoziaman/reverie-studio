@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/reverie/video_toon_actor_model.schema.json",
+  "title": "Reverie Video-Toon Actor Model",
+  "type": "object",
+  "required": [
+    "actor_id",
+    "template_version",
+    "readiness_state",
+    "identity_lock",
+    "required_variants",
+    "mouth_shapes",
+    "eye_shapes",
+    "public_release_boundary"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "actor_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "template_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "readiness_state": {
+      "type": "string",
+      "enum": ["template", "draft", "ready_for_test", "approved", "retired"]
+    },
+    "age_band": {
+      "type": "string",
+      "minLength": 1
+    },
+    "gender_presentation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role_range": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "identity_lock": {
+      "type": "object",
+      "required": ["must_not_change"],
+      "additionalProperties": true,
+      "properties": {
+        "face_shape": {
+          "type": "string"
+        },
+        "hair": {
+          "type": "string"
+        },
+        "body_type": {
+          "type": "string"
+        },
+        "signature_clothing": {
+          "type": "string"
+        },
+        "must_not_change": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "style_contract": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "required_variants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "mouth_shapes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "eye_shapes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "voice_profile": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "public_release_boundary": {
+      "type": "object",
+      "required": [
+        "contains_real_actor_media",
+        "contains_voice_samples",
+        "contains_model_weights",
+        "contains_private_paths"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "contains_real_actor_media": {
+          "type": "boolean",
+          "const": false
+        },
+        "contains_voice_samples": {
+          "type": "boolean",
+          "const": false
+        },
+        "contains_model_weights": {
+          "type": "boolean",
+          "const": false
+        },
+        "contains_private_paths": {
+          "type": "boolean",
+          "const": false
+        }
+      }
+    }
+  }
+}

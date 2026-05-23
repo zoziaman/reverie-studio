@@ -1,0 +1,12 @@
+Create or maintain actor_adult_woman_01 as the same reusable adult Korean woman
+video-toon actor in every variant.
+
+Keep stable:
+- Adult age band.
+- Same face shape and facial proportions.
+- Same hair silhouette.
+- Same ordinary adult body proportions.
+- Same primary clothing silhouette unless a pack explicitly overrides wardrobe.
+
+Use clean Korean webtoon video-toon cutout style, readable expression, cel
+shading, and waist-up or half-body framing for layered compositing.
