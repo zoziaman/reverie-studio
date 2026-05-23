@@ -174,6 +174,32 @@ def _run_workspace_state() -> dict[str, Any]:
     }
 
 
+def _snapshot_finding_reason(finding: str) -> str:
+    _, separator, detail = finding.partition(": ")
+    if not separator:
+        return "unknown"
+    reason, _, _ = detail.partition(": ")
+    return reason or "unknown"
+
+
+def _summarize_snapshot_findings(findings: list[str]) -> dict[str, Any]:
+    finding_types: dict[str, int] = {}
+    fingerprints = []
+    for finding in findings:
+        reason = _snapshot_finding_reason(finding)
+        finding_types[reason] = finding_types.get(reason, 0) + 1
+        fingerprints.append({
+            "reason": reason,
+            "fingerprint": hashlib.sha256(finding.encode("utf-8")).hexdigest()[:16],
+        })
+    return {
+        "finding_count": len(findings),
+        "finding_types": finding_types,
+        "finding_fingerprints": fingerprints[:50],
+        "truncated_finding_fingerprints": max(0, len(fingerprints) - 50),
+    }
+
+
 def _safe_int(value: Any) -> int:
     try:
         return int(value or 0)
@@ -563,6 +589,7 @@ def run_public_verification(
         overall_status = "needs_setup"
     else:
         overall_status = "pass"
+    snapshot_report = _summarize_snapshot_findings(snapshot_findings)
 
     report = {
         "schema": "reverie.public_verify.v1",
@@ -585,8 +612,7 @@ def run_public_verification(
         "checks": {
             "public_snapshot": {
                 "status": "pass" if not snapshot_findings else "fail",
-                "finding_count": len(snapshot_findings),
-                "findings": snapshot_findings,
+                **snapshot_report,
             },
             "workspace_state": workspace_report,
             "environment_doctor": {

@@ -86,7 +86,7 @@ def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
     monkeypatch.setattr(
         public_verify,
         "_load_public_snapshot_check",
-        lambda: type("S", (), {"run_check": lambda self, root: ["secret.txt: blocked filename"]})(),
+        lambda: type("S", (), {"run_check": lambda self, root: ["config/client_secret_alice.json: blocked filename pattern: client_secret_alice.json"]})(),
     )
     monkeypatch.setattr(
         public_verify,
@@ -100,7 +100,13 @@ def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
     assert report["overall_status"] == "fail"
     assert report["publish_gate"]["status"] == "blocked"
     assert report["checks"]["public_snapshot"]["finding_count"] == 1
+    assert report["checks"]["public_snapshot"]["finding_types"] == {
+        "blocked filename pattern": 1,
+    }
+    assert report["checks"]["public_snapshot"]["finding_fingerprints"][0]["fingerprint"]
     assert "public_snapshot_check" in report["failures"][0]
+    serialized = json.dumps(report)
+    assert "client_secret_alice.json" not in serialized
 
 
 def test_public_verify_fails_on_python_compile_error(tmp_path, monkeypatch):
