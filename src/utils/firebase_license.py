@@ -213,8 +213,9 @@ class CloudFunctionsClient:
                     try:
                         error_data = response.json()
                         error_msg = error_data.get("message", error_data.get("error", str(error_data)))
-                        logger.error(f"[CloudFunctions] 서버 에러: {error_msg}")
-                        return False, error_msg
+                        safe_error = redact_sensitive_text(error_msg)
+                        logger.error(f"[CloudFunctions] 서버 에러: {safe_error}")
+                        return False, safe_error
                     except (json.JSONDecodeError, ValueError) as e:
                         logger.debug(f"[CloudFunctions] 에러 응답 JSON 파싱 실패: {e}")
                     logger.error(f"[CloudFunctions] HTTP 오류: {response.status_code}")
@@ -288,7 +289,7 @@ class CloudFunctionsClient:
                 try:
                     error_data = response.json()
                     error_msg = error_data.get("message", error_data.get("error", str(error_data)))
-                    return False, error_msg, []
+                    return False, redact_sensitive_text(error_msg), []
                 except (json.JSONDecodeError, ValueError) as e:
                     logger.debug(f"[CloudFunctions] 에러 응답 JSON 파싱 실패: {e}")
                 return False, f"서버 통신 오류 (HTTP {response.status_code})", []
@@ -342,7 +343,7 @@ class CloudFunctionsClient:
                 return None
             data = response.json()
             if "error" in data:
-                logger.warning(f"[CloudFunctions] getPackKey 오류: {data['error']}")
+                logger.warning(f"[CloudFunctions] getPackKey 오류: {redact_sensitive_text(data['error'])}")
                 return None
             pack_key = data.get("packKey")
             if pack_key:

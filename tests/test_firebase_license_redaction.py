@@ -3,6 +3,16 @@ import logging
 from utils.firebase_license import CloudFunctionsClient, _redact_license_key_for_log
 
 
+class _FakeResponse:
+    def __init__(self, status_code, payload):
+        self.status_code = status_code
+        self._payload = payload
+        self.text = str(payload)
+
+    def json(self):
+        return self._payload
+
+
 def test_redact_license_key_for_log_hides_middle_segments():
     assert _redact_license_key_for_log("TEST-1234-5678-ABCD") == "TEST-****-****-ABCD"
     assert _redact_license_key_for_log("TEST-12345-ABCDE") == "TEST-****-ABCDE"
@@ -67,6 +77,65 @@ def test_get_pack_key_exception_redacts_api_key(monkeypatch, caplog):
         raise RuntimeError(f"pack key failed for ?key={api_key}")
 
     monkeypatch.setattr("utils.firebase_license.requests.post", fail_post)
+
+    caplog.set_level(logging.WARNING)
+
+    result = client.get_pack_key("TEST-1234-5678-ABCD", "hwid", "horror")
+
+    assert result is None
+    assert api_key not in caplog.text
+    assert "key=<redacted>" in caplog.text
+
+
+def test_check_package_ownership_error_response_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("e" * 32)
+    client = CloudFunctionsClient()
+    client._available = True
+    monkeypatch.setattr(client, "_get_machine_id", lambda: "machine")
+    monkeypatch.setattr(
+        "utils.firebase_license.requests.post",
+        lambda *args, **kwargs: _FakeResponse(403, {"message": f"denied for ?key={api_key}"}),
+    )
+
+    caplog.set_level(logging.ERROR)
+
+    valid, message = client.check_package_ownership("TEST-1234-5678-ABCD", "horror")
+
+    assert valid is False
+    assert api_key not in caplog.text
+    assert api_key not in message
+    assert "key=<redacted>" in caplog.text
+    assert "key=<redacted>" in message
+
+
+def test_get_owned_packs_error_response_redacts_api_key(monkeypatch):
+    api_key = "AIza" + ("g" * 32)
+    client = CloudFunctionsClient()
+    client._available = True
+    monkeypatch.setattr(
+        "utils.firebase_license.requests.post",
+        lambda *args, **kwargs: _FakeResponse(
+            403,
+            {"error": f"owned pack denied for GEMINI_API_KEY={api_key}"},
+        ),
+    )
+
+    success, message, packs = client.get_owned_packs("TEST-1234-5678-ABCD")
+
+    assert success is False
+    assert packs == []
+    assert api_key not in message
+    assert "GEMINI_API_KEY=<redacted>" in message
+
+
+def test_get_pack_key_error_response_redacts_api_key(monkeypatch, caplog):
+    api_key = "AIza" + ("r" * 32)
+    client = CloudFunctionsClient()
+    client._available = True
+    monkeypatch.setattr(
+        "utils.firebase_license.requests.post",
+        lambda *args, **kwargs: _FakeResponse(200, {"error": f"pack key denied for ?key={api_key}"}),
+    )
 
     caplog.set_level(logging.WARNING)
 
