@@ -26,6 +26,7 @@ from reverie_doctor import build_environment_report
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT_CHECK_PATH = REPO_ROOT / "scripts" / "public_snapshot_check.py"
+SNAPSHOT_CHECK_SCHEMA = "reverie.public_snapshot_check.v1"
 DEFAULT_VERIFY_OUT = Path(tempfile.gettempdir()) / "reverie-public-verify"
 FUNCTIONS_DIR = REPO_ROOT / "functions"
 
@@ -193,11 +194,23 @@ def _summarize_snapshot_findings(findings: list[str]) -> dict[str, Any]:
             "fingerprint": hashlib.sha256(finding.encode("utf-8")).hexdigest()[:16],
         })
     return {
+        "schema": SNAPSHOT_CHECK_SCHEMA,
+        "status": "fail" if findings else "pass",
         "finding_count": len(findings),
         "finding_types": finding_types,
         "finding_fingerprints": fingerprints[:50],
         "truncated_finding_fingerprints": max(0, len(fingerprints) - 50),
     }
+
+
+def _build_snapshot_report(snapshot_check: Any, findings: list[str]) -> dict[str, Any]:
+    build_json_report = getattr(snapshot_check, "build_json_report", None)
+    if callable(build_json_report):
+        report = dict(build_json_report(findings))
+        report.setdefault("schema", SNAPSHOT_CHECK_SCHEMA)
+        report.setdefault("status", "fail" if findings else "pass")
+        return report
+    return _summarize_snapshot_findings(findings)
 
 
 def _safe_int(value: Any) -> int:
@@ -589,7 +602,7 @@ def run_public_verification(
         overall_status = "needs_setup"
     else:
         overall_status = "pass"
-    snapshot_report = _summarize_snapshot_findings(snapshot_findings)
+    snapshot_report = _build_snapshot_report(snapshot_check, snapshot_findings)
 
     report = {
         "schema": "reverie.public_verify.v1",
@@ -610,10 +623,7 @@ def run_public_verification(
             functions_audit_report=functions_audit_report,
         ),
         "checks": {
-            "public_snapshot": {
-                "status": "pass" if not snapshot_findings else "fail",
-                **snapshot_report,
-            },
+            "public_snapshot": snapshot_report,
             "workspace_state": workspace_report,
             "environment_doctor": {
                 "status": environment_report.get("overall_status"),

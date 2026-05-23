@@ -63,6 +63,7 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
     report = public_verify.run_public_verification(tmp_path)
 
     assert report["overall_status"] == "pass"
+    assert report["checks"]["public_snapshot"]["schema"] == "reverie.public_snapshot_check.v1"
     assert report["checks"]["public_snapshot"]["status"] == "pass"
     assert report["checks"]["workspace_state"]["status"] == "pass"
     assert report["checks"]["python_compile"]["status"] == "pass"
@@ -99,6 +100,8 @@ def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
 
     assert report["overall_status"] == "fail"
     assert report["publish_gate"]["status"] == "blocked"
+    assert report["checks"]["public_snapshot"]["schema"] == "reverie.public_snapshot_check.v1"
+    assert report["checks"]["public_snapshot"]["status"] == "fail"
     assert report["checks"]["public_snapshot"]["finding_count"] == 1
     assert report["checks"]["public_snapshot"]["finding_types"] == {
         "blocked filename pattern": 1,
