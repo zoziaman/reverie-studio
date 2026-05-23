@@ -5,6 +5,7 @@ import tomllib
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from config.pack_validator import PackValidator
 
@@ -305,6 +306,69 @@ def test_actor_asset_coverage_report_accepts_local_generated_assets(tmp_path):
     assert report["missing_count"] == 0
     assert report["coverage_ratio"] == 1.0
     assert report["ready_for_local_test"] is True
+
+
+def test_scaffold_actor_model_sample_assets_creates_local_placeholder_pngs_and_keeps_renderer_contract(tmp_path):
+    actor_model = _actor_model_module()
+    actor_dir = tmp_path / "actor_adult_woman_01"
+    shutil.copytree(ACTOR_MODEL_PATH.parent, actor_dir)
+    actor_path = actor_dir / "actor.json"
+
+    report = actor_model.scaffold_actor_model_sample_assets(actor_path)
+    coverage = actor_model.build_actor_asset_coverage_report(actor_path)
+    layer_spec = actor_model.build_actor_layer_spec_manifest(actor_path)
+    public_validation = actor_model.validate_actor_model_package(actor_path)
+
+    variant_path = actor_dir / "variants" / "neutral_standing.png"
+    mouth_path = actor_dir / "face_parts" / "mouth_closed.png"
+    eye_path = actor_dir / "face_parts" / "eyes_open.png"
+
+    assert report["schema"] == "reverie.actor_model.sample_assets.v1"
+    assert report["actor_id"] == "actor_adult_woman_01"
+    assert report["mode"] == "public_safe_placeholder_png"
+    assert report["creates_media"] is True
+    assert report["asset_count"] == 18
+    assert report["created_count"] == 18
+    assert report["coverage_after"]["ready_for_local_test"] is True
+    assert coverage["ready_for_local_test"] is True
+    assert layer_spec["actor_id"] == "actor_adult_woman_01"
+    assert public_validation.is_valid is False
+    assert any("forbidden media" in error for error in public_validation.errors)
+
+    with Image.open(variant_path) as image:
+        assert image.mode == "RGBA"
+        assert image.size == (1024, 1536)
+    with Image.open(mouth_path) as image:
+        assert image.mode == "RGBA"
+        assert image.size == (1024, 1536)
+    with Image.open(eye_path) as image:
+        assert image.mode == "RGBA"
+        assert image.size == (1024, 1536)
+
+
+def test_actor_model_cli_scaffold_sample_assets_writes_report(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_dir = tmp_path / "actor_adult_woman_01"
+    report_path = tmp_path / "actor_adult_woman_01.sample_assets.json"
+    shutil.copytree(ACTOR_MODEL_PATH.parent, actor_dir)
+
+    exit_code = actor_model.main(
+        [
+            "scaffold-sample-assets",
+            str(actor_dir / "actor.json"),
+            "--output",
+            str(report_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert report["schema"] == "reverie.actor_model.sample_assets.v1"
+    assert report["created_count"] == 18
+    assert report["coverage_after"]["missing_count"] == 0
+    assert (actor_dir / "variants" / "talking_standing.png").exists()
+    assert "sample actor assets" in captured.out
 
 
 def test_actor_model_cli_writes_coverage_report_and_can_fail_on_missing(tmp_path, capsys):

@@ -387,6 +387,20 @@ The asset coverage report lists every expected variant, mouth, and eye target,
 then marks which files exist locally. The public template is expected to report
 missing assets because it does not bundle generated PNG files.
 
+For a renderer smoke test before real AI asset generation, create local
+placeholder PNGs for the gold actor:
+
+```bash
+reverie-actor-model-requests scaffold-sample-assets assets/actor_models/actor_adult_woman_01/actor.json --repo-root . --output data/actor_asset_requests/actor_adult_woman_01.sample_assets.json
+```
+
+`scaffold-sample-assets` writes transparent RGBA placeholder files for every
+variant, mouth shape, and eye shape in the actor contract, then reports coverage
+under schema `reverie.actor_model.sample_assets.v1`. These files are for local
+render tests only. Do not commit the generated PNGs to the public template:
+strict public validation still rejects media files, while renderer-facing layer
+spec and coverage commands allow them in a local checkout.
+
 For a full pack, use `pack-coverage` against the pack settings file:
 
 ```bash

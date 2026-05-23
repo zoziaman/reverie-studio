@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Optional
 
+from PIL import Image, ImageDraw
+
 
 REQUIRED_PROMPT_FILES = (
     "prompts/identity_prompt.txt",
@@ -37,6 +39,7 @@ FORBIDDEN_PUBLIC_SUFFIXES = {
     ".pickle",
     ".pkl",
 }
+LOCAL_ACTOR_MEDIA_SUFFIXES = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 READINESS_STATES = {"template", "draft", "ready_for_test", "approved", "retired"}
 PRIVATE_TEXT_PATTERNS = (
     re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
@@ -675,7 +678,12 @@ def _validate_public_boundary(data: Mapping[str, Any], result: ActorModelValidat
             result.add_error(f"public_release_boundary.{field_name} must be false")
 
 
-def _validate_package_files(actor_dir: Path, result: ActorModelValidationResult) -> None:
+def _validate_package_files(
+    actor_dir: Path,
+    result: ActorModelValidationResult,
+    *,
+    allow_local_media: bool = False,
+) -> None:
     for relative_path in REQUIRED_PROMPT_FILES:
         if not (actor_dir / relative_path).exists():
             result.add_error(f"{relative_path} is required")
@@ -683,7 +691,9 @@ def _validate_package_files(actor_dir: Path, result: ActorModelValidationResult)
     forbidden_files = [
         str(path.relative_to(actor_dir))
         for path in actor_dir.rglob("*")
-        if path.is_file() and path.suffix.lower() in FORBIDDEN_PUBLIC_SUFFIXES
+        if path.is_file()
+        and path.suffix.lower() in FORBIDDEN_PUBLIC_SUFFIXES
+        and not (allow_local_media and path.suffix.lower() in LOCAL_ACTOR_MEDIA_SUFFIXES)
     ]
     if forbidden_files:
         result.add_error(f"public actor_model package contains forbidden media/model files: {', '.join(forbidden_files)}")
@@ -706,6 +716,7 @@ def validate_actor_model_package(
     actor_model_path: Path | str,
     *,
     repo_root: Optional[Path | str] = None,
+    allow_local_media: bool = False,
 ) -> ActorModelValidationResult:
     """Validate a public-safe video-toon actor model package."""
     result = ActorModelValidationResult()
@@ -776,7 +787,7 @@ def validate_actor_model_package(
 
     _validate_layering_contract(data, result)
     _validate_public_boundary(data, result)
-    _validate_package_files(actor_dir, result)
+    _validate_package_files(actor_dir, result, allow_local_media=allow_local_media)
     return result
 
 
@@ -1446,7 +1457,7 @@ def build_actor_layer_spec_manifest(
     repo_root: Optional[Path | str] = None,
 ) -> dict[str, Any]:
     """Build a renderer-facing public-safe layer specification for one actor."""
-    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root)
+    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root, allow_local_media=True)
     if not validation.is_valid:
         raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
 
@@ -1544,7 +1555,7 @@ def build_actor_asset_request_manifest(
     repo_root: Optional[Path | str] = None,
 ) -> dict[str, Any]:
     """Build a public-safe request manifest for local actor asset generation."""
-    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root)
+    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root, allow_local_media=True)
     if not validation.is_valid:
         raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
 
@@ -1582,6 +1593,313 @@ def write_actor_asset_request_manifest(
     output.parent.mkdir(parents=True, exist_ok=True)
     manifest = build_actor_asset_request_manifest(actor_model_path, repo_root=repo_root)
     output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
+def _actor_canvas(actor_data: Mapping[str, Any]) -> tuple[int, int]:
+    contract = _normalize_layering_contract(actor_data.get("layering_contract"))
+    canvas = contract["canvas"]
+    return int(canvas["width"]), int(canvas["height"])
+
+
+def _anchor_pixel(actor_data: Mapping[str, Any], anchor_key: str, width: int, height: int) -> tuple[int, int]:
+    contract = _normalize_layering_contract(actor_data.get("layering_contract"))
+    anchor = contract["anchor_points"].get(anchor_key, {"x": 0.5, "y": 0.5})
+    return int(float(anchor.get("x", 0.5)) * width), int(float(anchor.get("y", 0.5)) * height)
+
+
+def _sample_asset_palette(actor_id: str) -> dict[str, tuple[int, int, int, int]]:
+    seed = sum(ord(char) for char in actor_id)
+    jacket = (72 + seed % 50, 92 + seed % 45, 122 + seed % 40, 255)
+    accent = (176 + seed % 40, 94 + seed % 35, 112 + seed % 25, 255)
+    return {
+        "line": (34, 34, 34, 255),
+        "skin": (245, 206, 176, 255),
+        "hair": (42, 36, 34, 255),
+        "jacket": jacket,
+        "shirt": (244, 240, 230, 255),
+        "accent": accent,
+        "shadow": (0, 0, 0, 32),
+    }
+
+
+def _draw_sample_variant_asset(path: Path, actor_id: str, key: str, actor_data: Mapping[str, Any]) -> tuple[int, int]:
+    width, height = _actor_canvas(actor_data)
+    palette = _sample_asset_palette(actor_id)
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+
+    center_x = width // 2
+    head_y = int(height * 0.22)
+    head_w = int(width * 0.26)
+    head_h = int(height * 0.17)
+    torso_top = int(height * 0.43)
+    torso_bottom = int(height * (0.94 if "seated" not in key else 0.82))
+    shoulder_w = int(width * 0.56)
+    waist_w = int(width * 0.39)
+    expression = _variant_parts(key)[0]
+
+    draw.ellipse(
+        (center_x - head_w // 2 + 18, head_y - 8, center_x + head_w // 2 + 18, head_y + head_h + 10),
+        fill=palette["shadow"],
+    )
+    draw.polygon(
+        [
+            (center_x - shoulder_w // 2, torso_top),
+            (center_x + shoulder_w // 2, torso_top),
+            (center_x + waist_w // 2, torso_bottom),
+            (center_x - waist_w // 2, torso_bottom),
+        ],
+        fill=palette["jacket"],
+        outline=palette["line"],
+    )
+    draw.polygon(
+        [
+            (center_x - int(width * 0.12), torso_top + 8),
+            (center_x + int(width * 0.12), torso_top + 8),
+            (center_x + int(width * 0.08), torso_bottom),
+            (center_x - int(width * 0.08), torso_bottom),
+        ],
+        fill=palette["shirt"],
+        outline=palette["line"],
+    )
+    neck_w = int(width * 0.08)
+    draw.rounded_rectangle(
+        (center_x - neck_w, int(height * 0.36), center_x + neck_w, int(height * 0.46)),
+        radius=16,
+        fill=palette["skin"],
+        outline=palette["line"],
+    )
+    draw.ellipse(
+        (center_x - head_w // 2, head_y, center_x + head_w // 2, head_y + head_h),
+        fill=palette["skin"],
+        outline=palette["line"],
+        width=max(3, width // 220),
+    )
+    draw.pieslice(
+        (center_x - head_w // 2 - 18, head_y - 42, center_x + head_w // 2 + 18, head_y + head_h // 2),
+        start=185,
+        end=355,
+        fill=palette["hair"],
+        outline=palette["line"],
+    )
+    draw.arc(
+        (center_x - int(width * 0.09), head_y + int(head_h * 0.52), center_x + int(width * 0.09), head_y + int(head_h * 0.74)),
+        start=20 if expression in {"happy", "talking"} else 180,
+        end=160 if expression in {"happy", "talking"} else 340,
+        fill=palette["line"],
+        width=max(4, width // 160),
+    )
+    if expression in {"angry", "scared", "worried", "sad"}:
+        draw.line(
+            (center_x - int(width * 0.13), head_y + int(head_h * 0.38), center_x - int(width * 0.04), head_y + int(head_h * 0.34)),
+            fill=palette["line"],
+            width=max(3, width // 220),
+        )
+        draw.line(
+            (center_x + int(width * 0.04), head_y + int(head_h * 0.34), center_x + int(width * 0.13), head_y + int(head_h * 0.38)),
+            fill=palette["line"],
+            width=max(3, width // 220),
+        )
+    image.save(path)
+    return width, height
+
+
+def _draw_sample_mouth_asset(path: Path, actor_id: str, key: str, actor_data: Mapping[str, Any]) -> tuple[int, int]:
+    width, height = _actor_canvas(actor_data)
+    palette = _sample_asset_palette(actor_id)
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    center_x, center_y = _anchor_pixel(actor_data, "mouth_center", width, height)
+    mouth_w = int(width * 0.12)
+    mouth_h = int(height * 0.025)
+    line_width = max(4, width // 150)
+
+    if key == "mouth_closed":
+        draw.line((center_x - mouth_w // 2, center_y, center_x + mouth_w // 2, center_y), fill=palette["line"], width=line_width)
+    elif key == "mouth_round":
+        draw.ellipse(
+            (center_x - mouth_w // 3, center_y - mouth_h, center_x + mouth_w // 3, center_y + mouth_h),
+            fill=(86, 42, 48, 255),
+            outline=palette["line"],
+            width=line_width,
+        )
+    else:
+        scale = 1.0 if key == "mouth_small_open" else 1.55
+        draw.rounded_rectangle(
+            (
+                center_x - int(mouth_w * scale / 2),
+                center_y - int(mouth_h * scale / 2),
+                center_x + int(mouth_w * scale / 2),
+                center_y + int(mouth_h * scale),
+            ),
+            radius=10,
+            fill=(96, 45, 52, 255),
+            outline=palette["line"],
+            width=line_width,
+        )
+    image.save(path)
+    return width, height
+
+
+def _draw_sample_eye_asset(path: Path, actor_id: str, key: str, actor_data: Mapping[str, Any]) -> tuple[int, int]:
+    width, height = _actor_canvas(actor_data)
+    palette = _sample_asset_palette(actor_id)
+    image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(image)
+    center_x, center_y = _anchor_pixel(actor_data, "eye_center", width, height)
+    eye_w = int(width * 0.075)
+    eye_h = int(height * 0.018)
+    gap = int(width * 0.09)
+    line_width = max(4, width // 150)
+
+    for side in (-1, 1):
+        eye_x = center_x + side * gap
+        if key == "eyes_closed":
+            draw.arc(
+                (eye_x - eye_w // 2, center_y - eye_h, eye_x + eye_w // 2, center_y + eye_h),
+                start=10,
+                end=170,
+                fill=palette["line"],
+                width=line_width,
+            )
+        else:
+            y_offset = -eye_h if key == "eyes_angry" and side < 0 else eye_h if key == "eyes_angry" else 0
+            draw.ellipse(
+                (eye_x - eye_w // 2, center_y - eye_h + y_offset, eye_x + eye_w // 2, center_y + eye_h + y_offset),
+                fill=(255, 255, 255, 255),
+                outline=palette["line"],
+                width=line_width,
+            )
+            draw.ellipse(
+                (eye_x - eye_w // 7, center_y - eye_h // 2 + y_offset, eye_x + eye_w // 7, center_y + eye_h // 2 + y_offset),
+                fill=palette["line"],
+            )
+    if key == "eyes_worried":
+        draw.arc(
+            (center_x - int(width * 0.17), center_y - int(height * 0.055), center_x - int(width * 0.03), center_y),
+            start=200,
+            end=340,
+            fill=palette["line"],
+            width=line_width,
+        )
+        draw.arc(
+            (center_x + int(width * 0.03), center_y - int(height * 0.055), center_x + int(width * 0.17), center_y),
+            start=200,
+            end=340,
+            fill=palette["line"],
+            width=line_width,
+        )
+    image.save(path)
+    return width, height
+
+
+def _draw_sample_actor_asset(
+    path: Path,
+    actor_id: str,
+    request: Mapping[str, Any],
+    actor_data: Mapping[str, Any],
+) -> tuple[int, int]:
+    request_type = str(request.get("request_type") or "")
+    key = str(request.get("key") or "")
+    if request_type == "variant":
+        return _draw_sample_variant_asset(path, actor_id, key, actor_data)
+    if request_type == "mouth_shape":
+        return _draw_sample_mouth_asset(path, actor_id, key, actor_data)
+    if request_type == "eye_shape":
+        return _draw_sample_eye_asset(path, actor_id, key, actor_data)
+    width, height = _actor_canvas(actor_data)
+    Image.new("RGBA", (width, height), (0, 0, 0, 0)).save(path)
+    return width, height
+
+
+def scaffold_actor_model_sample_assets(
+    actor_model_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Create local placeholder PNG assets for a reusable actor template."""
+    actor_path, actor_data = _load_actor_contract(actor_model_path, repo_root)
+    validation = validate_actor_model_package(actor_path, repo_root=repo_root, allow_local_media=True)
+    if not validation.is_valid:
+        raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
+
+    actor_dir = actor_path.parent
+    requests = _build_asset_requests_from_contract(actor_path, validation)
+    assets: list[dict[str, Any]] = []
+    created_count = 0
+    skipped_count = 0
+    for request in requests:
+        target_relative_path = str(request["target_relative_path"])
+        target_path = actor_dir / target_relative_path
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        existed_before = target_path.is_file()
+        if existed_before and not force:
+            skipped_count += 1
+            width, height = _actor_canvas(actor_data)
+            created = False
+        else:
+            width, height = _draw_sample_actor_asset(target_path, validation.actor_id, request, actor_data)
+            created_count += 1
+            created = True
+
+        assets.append(
+            {
+                "request_id": request["request_id"],
+                "request_type": request["request_type"],
+                "key": request["key"],
+                "target_relative_path": target_relative_path,
+                "created": created,
+                "skipped_existing": existed_before and not force,
+                "width": width,
+                "height": height,
+                "local_only": True,
+                "public_safe_placeholder": True,
+            }
+        )
+
+    coverage_after = build_actor_asset_coverage_report(actor_path, repo_root=repo_root)
+    return {
+        "schema": "reverie.actor_model.sample_assets.v1",
+        "actor_id": validation.actor_id,
+        "mode": "public_safe_placeholder_png",
+        "creates_media": True,
+        "source_actor_model_path": _relative_to_root(actor_path, repo_root),
+        "target_actor_dir": _relative_to_root(actor_dir, repo_root),
+        "asset_count": len(assets),
+        "created_count": created_count,
+        "skipped_count": skipped_count,
+        "coverage_after": {
+            "expected_count": coverage_after["expected_count"],
+            "existing_count": coverage_after["existing_count"],
+            "missing_count": coverage_after["missing_count"],
+            "coverage_ratio": coverage_after["coverage_ratio"],
+            "ready_for_local_test": coverage_after["ready_for_local_test"],
+        },
+        "public_release_boundary": {
+            "contains_real_actor_media": False,
+            "contains_placeholder_media": True,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "assets": assets,
+    }
+
+
+def write_actor_model_sample_assets_report(
+    actor_model_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+    force: bool = False,
+) -> Path:
+    """Create local placeholder PNG assets and write a JSON report."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    report = scaffold_actor_model_sample_assets(actor_model_path, repo_root=repo_root, force=force)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return output
 
 
@@ -2147,7 +2465,7 @@ def _build_episode_variant_request(
     shot_types: list[str],
     repo_root: Optional[Path | str],
 ) -> dict[str, Any]:
-    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root)
+    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root, allow_local_media=True)
     if not validation.is_valid:
         raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
     actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
@@ -2873,6 +3191,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     preset_parser.add_argument("--catalog", default=None, help="Preset catalog JSON path.")
     preset_parser.add_argument("--force", action="store_true", help="Overwrite an existing actor scaffold.")
 
+    sample_assets_parser = subparsers.add_parser(
+        "scaffold-sample-assets",
+        help="Create local placeholder PNG assets for one actor model.",
+    )
+    sample_assets_parser.add_argument("actor_model_path", help="Path to actor.json")
+    sample_assets_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    sample_assets_parser.add_argument("--output", default=None, help="Output JSON report path. Prints JSON when omitted.")
+    sample_assets_parser.add_argument("--force", action="store_true", help="Overwrite existing placeholder PNG assets.")
+
     roster_parser = subparsers.add_parser(
         "roster-plan",
         help="Build a pack motiontoon actor_pool/cast_slots plan from preset assignments.",
@@ -3059,6 +3386,31 @@ def main(argv: Optional[list[str]] = None) -> int:
             force=args.force,
         )
         print(f"Scaffolded actor model {args.actor_id} from preset {args.preset_id}: {actor_path}")
+        return 0
+    if args.command == "scaffold-sample-assets":
+        if args.output:
+            output = write_actor_model_sample_assets_report(
+                args.actor_model_path,
+                args.output,
+                repo_root=args.repo_root,
+                force=args.force,
+            )
+            report = json.loads(Path(output).read_text(encoding="utf-8"))
+            print(
+                f"Wrote sample actor assets for {report['actor_id']}: {output} "
+                f"(created {report['created_count']}/{report['asset_count']})"
+            )
+        else:
+            report = scaffold_actor_model_sample_assets(
+                args.actor_model_path,
+                repo_root=args.repo_root,
+                force=args.force,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(
+                f"sample actor assets for {report['actor_id']}: "
+                f"created {report['created_count']}/{report['asset_count']}"
+            )
         return 0
     if args.command == "roster-plan":
         assignments = [_parse_roster_assignment(raw_assignment) for raw_assignment in args.assignment]
