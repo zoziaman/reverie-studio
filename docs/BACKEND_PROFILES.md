@@ -19,8 +19,8 @@ The profile catalog lives in `src/reverie_backends.py`.
 ## Recommended Path
 
 1. Start with `local_dry_run`.
-2. Run `python -m reverie_doctor --json`.
-3. Run `python -m reverie_demo --backend-profile local_dry_run --out <temp folder>`.
+2. Run `python scripts/public_verify.py --out <temp folder>`.
+3. Read `<temp folder>/public_verify_report.json` and `<temp folder>/public_demo/pipeline_report.md`.
 4. Install missing local tools.
 5. Choose one real backend profile.
 6. Keep upload in private/test review mode until the user approves production use.

@@ -9,32 +9,39 @@ repository.
 
 ```powershell
 $env:PYTHONPATH="src"
-python -m reverie_doctor --json
-python -m reverie_demo --out "$env:TEMP\reverie-public-demo"
+python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
+Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
+Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
 ```
 
 Expected files:
 
 ```text
-%TEMP%\reverie-public-demo\
-  backend_profile.json
-  environment_report.json
-  pack.public_demo.json
-  storyboard.plan.json
-  placeholder_frames.manifest.json
-  placeholder_voice.manifest.json
-  captions.preview.json
-  render.command.preview.json
-  metadata.review.json
-  youtube.private_upload.not_started.json
-  quality_gate.json
-  video_toon_actor_template.render_plan.json
-  video_toon_actor_template.asset_work_order.json
-  video_toon_actor_template.remotion_props.json
-  run_manifest.json
-  stage_log.jsonl
-  pipeline_report.md
+%TEMP%\reverie-public-verify\
+  public_verify_report.json
+  public_demo\
+    backend_profile.json
+    environment_report.json
+    pack.public_demo.json
+    storyboard.plan.json
+    placeholder_frames.manifest.json
+    placeholder_voice.manifest.json
+    captions.preview.json
+    render.command.preview.json
+    metadata.review.json
+    youtube.private_upload.not_started.json
+    quality_gate.json
+    video_toon_actor_template.render_plan.json
+    video_toon_actor_template.asset_work_order.json
+    video_toon_actor_template.remotion_props.json
+    run_manifest.json
+    stage_log.jsonl
+    pipeline_report.md
 ```
+
+For release verification, add `--with-pytest --with-functions-audit`; the
+top-level report will include `publish_gate` and optional Firebase Functions
+audit evidence while keeping the dry-run report-only.
 
 ## What It Shows
 

@@ -85,6 +85,7 @@ def test_codex_setup_prompt_is_present_for_non_developer_onboarding():
     assert "python scripts/public_verify.py" in text
     assert "python -m reverie_doctor" in text
     assert "python -m reverie_demo" in text
+    assert "--with-functions-audit" in text
     assert "do not paste real api keys" in text.lower()
 
 
@@ -92,12 +93,17 @@ def test_security_and_release_docs_use_public_verify_gate():
     security = Path("SECURITY_PUBLIC_CHECK.md").read_text(encoding="utf-8")
     checklist = Path("PUBLIC_RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
     workflow = Path(".github/workflows/test.yml").read_text(encoding="utf-8")
+    public_demo = Path("docs/PUBLIC_DEMO.md").read_text(encoding="utf-8")
+    backend_profiles = Path("docs/BACKEND_PROFILES.md").read_text(encoding="utf-8")
 
     assert "python scripts\\public_verify.py --with-pytest --with-functions-audit" in security
     assert "publish_gate.manual_review_items" in checklist
     assert "9 moderate" in security
-    assert "scripts/public_verify.py" in workflow
+    assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "tests/test_public_verify.py" in workflow
+    assert "public_verify_report.json" in public_demo
+    assert "publish_gate" in public_demo
+    assert "python scripts/public_verify.py --out <temp folder>" in backend_profiles
 
 
 def test_public_demo_docs_include_videotoon_actor_template_output():

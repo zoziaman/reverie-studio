@@ -16,7 +16,7 @@ PUBLIC_RELEASE_CHECKLIST.md.
 Start with the safe public checks only:
 
 1. Run python scripts/public_verify.py --out <a temporary folder outside the repo>.
-2. Run python scripts/public_verify.py --with-pytest --out <a temporary folder outside the repo> if pytest is available.
+2. Run python scripts/public_verify.py --with-pytest --with-functions-audit --out <a temporary folder outside the repo> if pytest and npm are available.
 3. Read public_verify_report.json and the generated public_demo reports.
 
 The verifier wraps the same safe checks that used to be run separately:
