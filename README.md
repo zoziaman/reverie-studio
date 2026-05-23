@@ -267,7 +267,7 @@ Before publishing, run the public checks against the exact branch or exported
 folder you plan to release:
 
 ```powershell
-python scripts\public_verify.py --with-pytest --with-functions-audit --out "$env:TEMP\reverie-public-verify"
+python scripts\public_verify.py --with-pytest --with-functions-audit --with-public-export --out "$env:TEMP\reverie-public-verify"
 Get-Content SECURITY_PUBLIC_CHECK.md
 Get-Content PUBLIC_RELEASE_CHECKLIST.md
 ```
@@ -284,7 +284,8 @@ Get-Content "$env:TEMP\reverie-public-export\public_export_manifest.json"
 
 The export manifest records `git_history_included=false`, `archive_sha256`,
 archive integrity checks, clean workspace state, and the redacted public
-snapshot summary.
+snapshot summary. `public_verify.py --with-public-export` records the same
+history-free export and verification result in `public_verify_report.json`.
 
 Do not publish if the release contains real credentials, private local state,
 generated channel output, model weights, voice datasets, BGM/SFX libraries, or

@@ -26,6 +26,7 @@ from reverie_doctor import build_environment_report
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT_CHECK_PATH = REPO_ROOT / "scripts" / "public_snapshot_check.py"
+PUBLIC_EXPORT_PATH = REPO_ROOT / "scripts" / "public_export.py"
 SNAPSHOT_CHECK_SCHEMA = "reverie.public_snapshot_check.v1"
 HISTORY_FILENAME_CHECK_SCHEMA = "reverie.public_history_filename_check.v1"
 DEFAULT_VERIFY_OUT = Path(tempfile.gettempdir()) / "reverie-public-verify"
@@ -57,6 +58,15 @@ def _load_public_snapshot_check() -> ModuleType:
     spec = importlib.util.spec_from_file_location("public_snapshot_check", SNAPSHOT_CHECK_PATH)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Unable to load {SNAPSHOT_CHECK_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _load_public_export() -> ModuleType:
+    spec = importlib.util.spec_from_file_location("public_export", PUBLIC_EXPORT_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load {PUBLIC_EXPORT_PATH}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
@@ -368,6 +378,81 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
     }
 
 
+def _public_export_evidence(public_export_report: dict[str, Any] | None) -> str:
+    if not public_export_report:
+        return "run with --with-public-export to create and verify a history-free source archive."
+    if public_export_report.get("status") != "pass":
+        return "public export status={status}".format(
+            status=public_export_report.get("status", "unknown"),
+        )
+    manifest = public_export_report.get("manifest") or {}
+    verify_report = public_export_report.get("verify") or {}
+    return (
+        "public export archive_file_count={archive_file_count}, "
+        "git_history_included={git_history_included}, verify_status={verify_status}"
+    ).format(
+        archive_file_count=_safe_int(manifest.get("archive_file_count")),
+        git_history_included=str(bool(manifest.get("git_history_included"))).lower(),
+        verify_status=verify_report.get("status", "unknown"),
+    )
+
+
+def _public_export_error_detail(exc: Exception) -> str:
+    detail = str(exc)
+    public_safe_fragments = (
+        "outside the repository",
+        "public snapshot check failed",
+        "workspace is not clean",
+        "archive integrity check failed",
+    )
+    if any(fragment in detail for fragment in public_safe_fragments):
+        return detail
+    return "public export failed before verification"
+
+
+def _run_public_export(output_dir: Path, *, allow_repo_output: bool) -> dict[str, Any]:
+    try:
+        public_export = _load_public_export()
+        export_out = output_dir / "public_export"
+        manifest = public_export.create_public_export(
+            export_out,
+            allow_repo_output=allow_repo_output,
+        )
+        verify_report = public_export.verify_public_export(export_out)
+    except (RuntimeError, ValueError) as exc:
+        return {
+            "status": "fail",
+            "error_type": type(exc).__name__,
+            "detail": _public_export_error_detail(exc),
+        }
+    except subprocess.CalledProcessError as exc:
+        return {
+            "status": "fail",
+            "error_type": type(exc).__name__,
+            "detail": "git archive command failed",
+            "returncode": exc.returncode,
+        }
+
+    return {
+        "status": "pass" if verify_report.get("status") == "pass" else "fail",
+        "archive_path": _report_artifact_path(export_out / public_export.ARCHIVE_NAME, output_dir),
+        "manifest_path": _report_artifact_path(export_out / public_export.MANIFEST_NAME, output_dir),
+        "manifest": {
+            "schema": manifest.get("schema"),
+            "source_commit": manifest.get("source_commit"),
+            "source_tree": manifest.get("source_tree"),
+            "tracked_file_count": manifest.get("tracked_file_count"),
+            "archive_file_count": manifest.get("archive_file_count"),
+            "archive_sha256": manifest.get("archive_sha256"),
+            "archive_integrity": manifest.get("archive_integrity"),
+            "git_history_included": manifest.get("git_history_included"),
+            "workspace_state": manifest.get("workspace_state"),
+            "public_snapshot": manifest.get("public_snapshot"),
+        },
+        "verify": verify_report,
+    }
+
+
 def _history_filename_evidence(history_filename_report: dict[str, Any] | None) -> str:
     if not history_filename_report:
         return "run public_verify with --with-history-scan for historical filename evidence."
@@ -438,6 +523,7 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         lines.extend(f"- {warning}" for warning in warnings)
 
     functions_audit = checks.get("functions_audit", {})
+    public_export = checks.get("public_export", {})
     vulnerabilities = functions_audit.get("vulnerabilities") or {}
     lines.extend(
         [
@@ -468,6 +554,23 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         if force_fix_targets:
             lines.append(f"- Force-fix targets: `{', '.join(force_fix_targets)}`")
 
+    if public_export.get("status") not in {None, "not_run"}:
+        manifest = public_export.get("manifest") or {}
+        verify_report = public_export.get("verify") or {}
+        lines.extend(
+            [
+                "",
+                "## Optional Public Export",
+                "",
+                f"- Status: `{public_export.get('status')}`",
+                f"- Archive: `{public_export.get('archive_path', 'not_available')}`",
+                f"- Manifest: `{public_export.get('manifest_path', 'not_available')}`",
+                f"- Verify status: `{verify_report.get('status', 'unknown')}`",
+                f"- Archive SHA-256: `{manifest.get('archive_sha256', 'not_available')}`",
+                f"- Git history included: `{str(bool(manifest.get('git_history_included'))).lower()}`",
+            ]
+        )
+
     lines.extend(
         [
             "",
@@ -493,6 +596,7 @@ def _build_publish_gate(
     pytest_report: dict[str, Any] | None,
     history_filename_report: dict[str, Any] | None,
     functions_audit_report: dict[str, Any] | None,
+    public_export_report: dict[str, Any] | None,
 ) -> dict[str, Any]:
     machine_checks = [
         {
@@ -550,6 +654,11 @@ def _build_publish_gate(
                 else _functions_audit_evidence(functions_audit_report)
             ),
         },
+        {
+            "id": "history_free_public_export",
+            "status": public_export_report["status"] if public_export_report else "not_run",
+            "evidence": _public_export_evidence(public_export_report),
+        },
     ]
     publish_status = "blocked" if failures or any(
         check["status"] in {"blocked", "error", "fail", "timeout"} for check in machine_checks
@@ -582,6 +691,7 @@ def run_public_verification(
     with_history_scan: bool = False,
     with_functions_audit: bool = False,
     functions_audit_timeout_seconds: int = 120,
+    with_public_export: bool = False,
     allow_repo_output: bool = False,
 ) -> dict[str, Any]:
     """Run the public-safe verification bundle and return its report."""
@@ -619,6 +729,9 @@ def run_public_verification(
     functions_audit_report = None
     if with_functions_audit:
         functions_audit_report = _run_functions_audit(functions_audit_timeout_seconds)
+    public_export_report = None
+    if with_public_export:
+        public_export_report = _run_public_export(out, allow_repo_output=allow_repo_output)
 
     failures: list[str] = []
     warnings: list[str] = []
@@ -647,6 +760,8 @@ def run_public_verification(
         failures.append(f"pytest returned {pytest_report['status']}")
     if history_filename_report and history_filename_report["status"] != "pass":
         failures.append("git history filename scan reported release-blocking findings")
+    if public_export_report and public_export_report["status"] != "pass":
+        failures.append("history-free public export did not verify")
 
     if failures:
         overall_status = "fail"
@@ -674,6 +789,7 @@ def run_public_verification(
             pytest_report=pytest_report,
             history_filename_report=history_filename_report,
             functions_audit_report=functions_audit_report,
+            public_export_report=public_export_report,
         ),
         "checks": {
             "public_snapshot": snapshot_report,
@@ -692,6 +808,7 @@ def run_public_verification(
             "pytest": pytest_report or {"status": "not_run"},
             "git_history_filenames": history_filename_report or {"status": "not_run"},
             "functions_audit": functions_audit_report or {"status": "not_run"},
+            "public_export": public_export_report or {"status": "not_run"},
         },
     }
     (out / "public_verify_report.json").write_text(
@@ -724,6 +841,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Also run npm audit for the optional Firebase Functions package.",
     )
     parser.add_argument(
+        "--with-public-export",
+        action="store_true",
+        help="Also create and verify a history-free public source export under the output directory.",
+    )
+    parser.add_argument(
         "--pytest-arg",
         action="append",
         dest="pytest_args",
@@ -754,6 +876,7 @@ def main(argv: list[str] | None = None) -> int:
             with_history_scan=args.with_history_scan,
             with_functions_audit=args.with_functions_audit,
             functions_audit_timeout_seconds=args.functions_audit_timeout,
+            with_public_export=args.with_public_export,
             allow_repo_output=args.allow_repo_output,
         )
     except ValueError as exc:

@@ -68,9 +68,11 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
     assert report["checks"]["workspace_state"]["status"] == "pass"
     assert report["checks"]["python_compile"]["status"] == "pass"
     assert report["checks"]["pytest"]["status"] == "not_run"
+    assert report["checks"]["public_export"]["status"] == "not_run"
     assert report["publish_gate"]["status"] == "review_required"
     check_ids = {check["id"] for check in report["publish_gate"]["machine_checks"]}
     assert "workspace_state" in check_ids
+    assert "history_free_public_export" in check_ids
     review_ids = {item["id"] for item in report["publish_gate"]["manual_review_items"]}
     assert "existing_git_history" in review_ids
     assert "firebase_functions_dependency_audit" in review_ids
@@ -434,3 +436,83 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     ][0]
     assert "total=9" in functions_check["evidence"]
     assert "force_fix_required=true" in functions_check["evidence"]
+
+
+def test_public_verify_can_include_public_export(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_public_export",
+        lambda out, allow_repo_output=False: {
+            "status": "pass",
+            "archive_path": "public_export/reverie-public-snapshot.zip",
+            "manifest_path": "public_export/public_export_manifest.json",
+            "manifest": {
+                "schema": "reverie.public_export.v1",
+                "source_commit": "abc123",
+                "source_tree": "def456",
+                "tracked_file_count": 2,
+                "archive_file_count": 2,
+                "archive_sha256": "1" * 64,
+                "archive_integrity": {"status": "pass"},
+                "git_history_included": False,
+                "workspace_state": {"status": "pass", "dirty_count": 0},
+                "public_snapshot": {"status": "pass", "finding_count": 0},
+            },
+            "verify": {"status": "pass"},
+        },
+    )
+
+    report = public_verify.run_public_verification(tmp_path, with_public_export=True)
+
+    assert report["overall_status"] == "pass"
+    assert report["checks"]["public_export"]["status"] == "pass"
+    assert report["checks"]["public_export"]["archive_path"] == "public_export/reverie-public-snapshot.zip"
+    assert report["checks"]["public_export"]["manifest"]["git_history_included"] is False
+    assert str(tmp_path.resolve()) not in json.dumps(report["checks"]["public_export"])
+    export_check = [
+        check for check in report["publish_gate"]["machine_checks"]
+        if check["id"] == "history_free_public_export"
+    ][0]
+    assert export_check["status"] == "pass"
+    assert "verify_status=pass" in export_check["evidence"]
+    summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
+    assert "Optional Public Export" in summary
+    assert "public_export/reverie-public-snapshot.zip" in summary
+
+
+def test_public_verify_blocks_when_public_export_fails(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_public_export",
+        lambda out, allow_repo_output=False: {
+            "status": "fail",
+            "error_type": "RuntimeError",
+            "detail": "workspace is not clean; refusing to create export archive from HEAD",
+        },
+    )
+
+    report = public_verify.run_public_verification(tmp_path, with_public_export=True)
+
+    assert report["overall_status"] == "fail"
+    assert report["publish_gate"]["status"] == "blocked"
+    assert report["checks"]["public_export"]["status"] == "fail"
+    assert any("history-free public export" in failure for failure in report["failures"])
+    export_check = [
+        check for check in report["publish_gate"]["machine_checks"]
+        if check["id"] == "history_free_public_export"
+    ][0]
+    assert export_check["status"] == "fail"

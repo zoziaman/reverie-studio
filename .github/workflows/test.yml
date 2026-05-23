@@ -36,7 +36,7 @@ jobs:
           PYTHONPATH: src
 
       - name: Run public verification bundle
-        run: python scripts/public_verify.py --with-functions-audit --out "$RUNNER_TEMP/reverie-public-verify"
+        run: python scripts/public_verify.py --with-functions-audit --with-public-export --out "$RUNNER_TEMP/reverie-public-verify"
         env:
           PYTHONPATH: src
 
