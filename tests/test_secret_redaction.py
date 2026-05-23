@@ -36,6 +36,52 @@ def test_redact_sensitive_text_hides_environment_assignment_values():
     assert redacted == "GEMINI_API_KEY=<redacted>"
 
 
+def test_redact_sensitive_text_hides_public_snapshot_token_patterns():
+    secrets = {
+        "openai": "sk-" + ("o" * 32),
+        "github": "ghp_" + ("g" * 36),
+        "aws": "AKIA" + ("A" * 16),
+        "stripe": "sk_live_" + ("s" * 24),
+        "huggingface": "hf_" + ("h" * 28),
+        "npm": "npm_" + ("n" * 28),
+        "oauth": "ya29." + ("y" * 28),
+        "slack": "xoxb-" + ("1" * 12) + "-" + ("s" * 24),
+        "discord": "https://discord.com/api/webhooks/1234567890/" + ("D" * 48),
+        "telegram": "bot123456:" + ("T" * 36),
+    }
+    message = " ".join(f"{name}={secret}" for name, secret in secrets.items())
+
+    redacted = redact_sensitive_text(message)
+
+    for secret in secrets.values():
+        assert secret not in redacted
+    assert "<redacted-openai-key>" in redacted
+    assert "<redacted-github-token>" in redacted
+    assert "<redacted-aws-access-key>" in redacted
+    assert "<redacted-stripe-live-key>" in redacted
+    assert "<redacted-huggingface-token>" in redacted
+    assert "<redacted-npm-token>" in redacted
+    assert "<redacted-google-oauth-token>" in redacted
+    assert "<redacted-slack-token>" in redacted
+    assert "<redacted-discord-webhook>" in redacted
+    assert "<redacted-telegram-bot-token>" in redacted
+
+
+def test_redact_sensitive_text_hides_generic_secret_env_assignments():
+    redacted = redact_sensitive_text(
+        "REVERIE_SECRET_KEY=local-secret-value "
+        "ADMIN_PASSWORD:super-secret "
+        "CUSTOM_WEBHOOK_URL=https://example.invalid/hook"
+    )
+
+    assert "local-secret-value" not in redacted
+    assert "super-secret" not in redacted
+    assert "https://example.invalid/hook" not in redacted
+    assert "REVERIE_SECRET_KEY=<redacted>" in redacted
+    assert "ADMIN_PASSWORD:<redacted>" in redacted
+    assert "CUSTOM_WEBHOOK_URL=<redacted>" in redacted
+
+
 def test_gemini_configure_logs_redacted_api_key(monkeypatch, caplog):
     api_key = "AIza" + ("k" * 32)
 
