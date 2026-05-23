@@ -499,7 +499,8 @@ class FirebaseLicenseValidator:
             return True, f"라이센스 유효 (남은 기간: {days_left}일)", license_info
 
         except Exception as e:
-            return False, f"서버 검증 중 오류: {str(e)}", None
+            safe_error = redact_sensitive_text(e)
+            return False, f"서버 검증 중 오류: {safe_error}", None
 
     def register_license(
         self,
@@ -553,7 +554,8 @@ class FirebaseLicenseValidator:
             return True, f"라이센스가 등록되었습니다. (만료일: {expire_date.strftime('%Y-%m-%d')}, 팩: {len(owned_packs)}개)"
 
         except Exception as e:
-            return False, f"등록 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"등록 실패: {safe_error}"
 
     def update_license(
         self,
@@ -598,7 +600,8 @@ class FirebaseLicenseValidator:
             return True, "라이센스가 수정되었습니다."
 
         except Exception as e:
-            return False, f"수정 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"수정 실패: {safe_error}"
 
     def extend_license(self, license_key: str, additional_days: int) -> Tuple[bool, str]:
         """
@@ -646,7 +649,8 @@ class FirebaseLicenseValidator:
             return True, f"라이센스가 연장되었습니다. (새 만료일: {new_expire.strftime('%Y-%m-%d')})"
 
         except Exception as e:
-            return False, f"연장 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"연장 실패: {safe_error}"
 
     def deactivate_license(self, license_key: str) -> Tuple[bool, str]:
         """라이센스 비활성화"""
@@ -723,7 +727,8 @@ class FirebaseLicenseValidator:
             self.db.collection('licenses').document(license_key.upper()).delete()
             return True, "라이센스가 삭제되었습니다."
         except Exception as e:
-            return False, f"삭제 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"삭제 실패: {safe_error}"
 
     # ============================================================
     # 패키지 소유권 확인 (v37)
@@ -778,7 +783,8 @@ class FirebaseLicenseValidator:
                 return False, f"구매하지 않은 패키지입니다.\n'{pack_id}' 패키지를 웹사이트에서 구매해주세요."
 
         except Exception as e:
-            return False, f"소유권 확인 중 오류: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"소유권 확인 중 오류: {safe_error}"
 
     def get_owned_packs(self, license_key: str) -> list:
         """
@@ -841,7 +847,8 @@ class FirebaseLicenseValidator:
             return True, f"패키지 '{pack_id}'가 추가되었습니다."
 
         except Exception as e:
-            return False, f"패키지 추가 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"패키지 추가 실패: {safe_error}"
 
     def remove_pack_from_license(self, license_key: str, pack_id: str) -> Tuple[bool, str]:
         """
@@ -869,7 +876,8 @@ class FirebaseLicenseValidator:
             return True, f"패키지 '{pack_id}'가 제거되었습니다."
 
         except Exception as e:
-            return False, f"패키지 제거 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return False, f"패키지 제거 실패: {safe_error}"
 
     # Alias 메서드 (GUI 호환성)
     def add_package_to_license(self, license_key: str, pack_id: str) -> Tuple[bool, str]:

@@ -3,6 +3,7 @@ from types import SimpleNamespace
 
 from utils.firebase_license import (
     CloudFunctionsClient,
+    FirebaseLicenseValidator,
     HybridLicenseValidator,
     _redact_license_key_for_log,
 )
@@ -16,6 +17,17 @@ class _FakeResponse:
 
     def json(self):
         return self._payload
+
+
+def _validator_with_collection_error(exc):
+    class FailingDb:
+        def collection(self, name):
+            raise exc
+
+    validator = object.__new__(FirebaseLicenseValidator)
+    validator.initialized = True
+    validator.db = FailingDb()
+    return validator
 
 
 def test_redact_license_key_for_log_hides_middle_segments():
@@ -149,6 +161,33 @@ def test_get_pack_key_error_response_redacts_api_key(monkeypatch, caplog):
     assert result is None
     assert api_key not in caplog.text
     assert "key=<redacted>" in caplog.text
+
+
+def test_firebase_validate_exception_redacts_secret_in_return():
+    secret = "sk-" + ("v" * 32)
+    validator = _validator_with_collection_error(
+        RuntimeError(f"license lookup failed for OPENAI_API_KEY={secret}")
+    )
+
+    valid, message, info = validator.validate("TEST-1234-5678-ABCD", "hwid")
+
+    assert valid is False
+    assert info is None
+    assert secret not in message
+    assert "OPENAI_API_KEY=<redacted>" in message
+
+
+def test_firebase_add_pack_exception_redacts_secret_in_return():
+    secret = "hf_" + ("p" * 28)
+    validator = _validator_with_collection_error(
+        RuntimeError(f"pack update failed for HF_TOKEN={secret}")
+    )
+
+    success, message = validator.add_pack_to_license("TEST-1234-5678-ABCD", "horror")
+
+    assert success is False
+    assert secret not in message
+    assert "HF_TOKEN=<redacted>" in message
 
 
 def _make_hybrid_validator():
