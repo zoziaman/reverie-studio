@@ -46,6 +46,13 @@ def _background_coverage(*, ready=True, missing_count=0):
     }
 
 
+def _episode_background_coverage(*, ready=True, missing_count=0):
+    report = _background_coverage(ready=ready, missing_count=missing_count)
+    report["schema"] = "reverie.background_library.episode_asset_coverage.v1"
+    report["episode_id"] = "ep001"
+    return report
+
+
 def test_videotoon_episode_preflight_combines_actor_and_background_readiness():
     preflight = _preflight_module()
 
@@ -98,6 +105,18 @@ def test_videotoon_episode_preflight_cli_writes_report_and_can_fail(tmp_path, ca
     assert report["ready_for_render"] is False
     assert report["background_assets"]["missing_count"] == 1
     assert "video-toon episode preflight" in captured.out
+
+
+def test_videotoon_episode_preflight_accepts_episode_background_coverage():
+    preflight = _preflight_module()
+
+    report = preflight.build_videotoon_episode_preflight_report(
+        _actor_coverage(ready=True, missing_count=0),
+        _episode_background_coverage(ready=True, missing_count=0),
+    )
+
+    assert report["ready_for_render"] is True
+    assert report["background_assets"]["schema"] == "reverie.background_library.episode_asset_coverage.v1"
 
 
 def test_pyproject_exposes_videotoon_preflight_cli():

@@ -1,3 +1,4 @@
+import json
 import tomllib
 from pathlib import Path
 
@@ -150,6 +151,54 @@ def test_background_asset_coverage_report_tracks_requested_background_files(tmp_
     assert ready_report["ready_for_render"] is True
 
 
+def test_background_episode_asset_coverage_filters_manifest_to_scene_locations(tmp_path):
+    config = build_background_library_config(
+        genre="daily_life_toon",
+        config_data={
+            "location_templates": {
+                "home": {
+                    "id": "home",
+                    "name_ko": "home",
+                    "name_en": "home",
+                    "base_prompt": "small Korean apartment living room, no people",
+                    "keywords": ["living room"],
+                },
+                "street": {
+                    "id": "street",
+                    "name_ko": "street",
+                    "name_en": "street",
+                    "base_prompt": "quiet Korean neighborhood street, no people",
+                    "keywords": ["neighborhood street"],
+                },
+            }
+        },
+        library_path="assets/backgrounds/test_pack",
+    )
+    bg = BackgroundLibrary(pack_id="test_pack", genre="daily_life_toon", config=config, base_path=str(tmp_path))
+    manifest = bg.build_asset_request_manifest(images_per_location=1, times=["day", "night"])
+    episode = {
+        "episode_id": "ep001",
+        "scenes": [
+            {"scene_id": "s001", "background_id": "street", "time": "night"},
+            {"scene_id": "s002", "location": "living room", "time": "day"},
+        ],
+    }
+    (tmp_path / "street_night_00.png").write_bytes(b"local background placeholder")
+
+    report = bg.build_episode_asset_coverage_report(manifest, episode)
+
+    assert report["schema"] == "reverie.background_library.episode_asset_coverage.v1"
+    assert report["episode_id"] == "ep001"
+    assert report["scene_count"] == 2
+    assert report["expected_count"] == 2
+    assert report["existing_count"] == 1
+    assert report["missing_count"] == 1
+    assert report["ready_for_render"] is False
+    assert report["scene_backgrounds"][0]["target_relative_path"] == "street_night_00.png"
+    assert report["scene_backgrounds"][1]["target_relative_path"] == "home_day_00.png"
+    assert report["missing_assets"] == ["s002:home_day_00.png"]
+
+
 def test_background_library_cli_writes_asset_requests_and_coverage(tmp_path, capsys):
     settings_path = tmp_path / "settings.json"
     settings_path.write_text(
@@ -213,6 +262,67 @@ def test_background_library_cli_writes_asset_requests_and_coverage(tmp_path, cap
     assert coverage["missing_count"] == 1
     assert "background asset requests" in captured.out
     assert "background asset coverage" in captured.out
+
+
+def test_background_library_cli_writes_episode_asset_coverage(tmp_path, capsys):
+    request_path = tmp_path / "background_requests.json"
+    episode_path = tmp_path / "episode.json"
+    coverage_path = tmp_path / "episode_background_coverage.json"
+    background_root = tmp_path / "backgrounds"
+    (background_root / "test_pack").mkdir(parents=True)
+    request_path.write_text(
+        json.dumps(
+            {
+                "schema": "reverie.background_library.asset_requests.v1",
+                "pack_id": "test_pack",
+                "genre": "daily_life_toon",
+                "target_base_path": "assets/backgrounds/test_pack",
+                "locations": [
+                    {
+                        "location_id": "street",
+                        "template_id": "street",
+                        "name_ko": "street",
+                        "name_en": "street",
+                        "keywords": ["street"],
+                    }
+                ],
+                "requests": [
+                    {
+                        "request_id": "test_pack__background_plate__street__day__00",
+                        "request_type": "background_plate",
+                        "location_id": "street",
+                        "time": "day",
+                        "target_relative_path": "street_day_00.png",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    episode_path.write_text(
+        json.dumps({"episode_id": "ep001", "scenes": [{"scene_id": "s001", "background_id": "street", "time": "day"}]}),
+        encoding="utf-8",
+    )
+
+    exit_code = background_library.main(
+        [
+            "episode-coverage",
+            str(request_path),
+            str(episode_path),
+            "--background-root",
+            str(background_root),
+            "--output",
+            str(coverage_path),
+            "--fail-on-missing",
+        ]
+    )
+    captured = capsys.readouterr()
+    report = background_library._load_json_object(coverage_path, "episode coverage report")
+
+    assert exit_code == 1
+    assert report["schema"] == "reverie.background_library.episode_asset_coverage.v1"
+    assert report["missing_count"] == 1
+    assert "episode background asset coverage" in captured.out
 
 
 def test_pyproject_exposes_background_library_request_cli():

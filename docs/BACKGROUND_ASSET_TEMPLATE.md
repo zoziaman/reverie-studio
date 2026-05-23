@@ -70,13 +70,30 @@ reverie.background_library.asset_coverage.v1
 The report includes `expected_count`, `existing_count`, `missing_count`,
 `coverage_ratio`, `missing_assets`, and `ready_for_render`.
 
+For episode rendering, prefer the narrower scene-level gate:
+
+```bash
+reverie-background-library-requests episode-coverage data/background_asset_requests/daily_life_toon.background_requests.json data/episodes/daily_life_toon_ep001.json --repo-root . --output data/background_asset_requests/daily_life_toon_ep001.background_coverage.json --fail-on-missing
+```
+
+The episode coverage schema is:
+
+```text
+reverie.background_library.episode_asset_coverage.v1
+```
+
+This report reads `episode.scenes[*].background_id`, `background_location`,
+`location`, `place`, or `setting`, then matches those scene locations against
+the background request manifest. It checks only the background plates needed by
+that episode.
+
 ## Episode Preflight
 
 Once actor episode coverage and background coverage are both available, combine
 them into a single render gate:
 
 ```bash
-reverie-videotoon-preflight episode --actor-coverage data/actor_asset_requests/daily_life_toon_ep001.episode_asset_coverage.json --background-coverage data/background_asset_requests/daily_life_toon.background_coverage.json --output data/preflight/daily_life_toon_ep001.preflight.json --fail-on-not-ready
+reverie-videotoon-preflight episode --actor-coverage data/actor_asset_requests/daily_life_toon_ep001.episode_asset_coverage.json --background-coverage data/background_asset_requests/daily_life_toon_ep001.background_coverage.json --output data/preflight/daily_life_toon_ep001.preflight.json --fail-on-not-ready
 ```
 
 The preflight schema is:

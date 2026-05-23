@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 ACTOR_COVERAGE_SCHEMA = "reverie.pack.actor_episode.asset_coverage.v1"
 BACKGROUND_COVERAGE_SCHEMA = "reverie.background_library.asset_coverage.v1"
+BACKGROUND_EPISODE_COVERAGE_SCHEMA = "reverie.background_library.episode_asset_coverage.v1"
 PREFLIGHT_SCHEMA = "reverie.pack.videotoon_episode_preflight.v1"
 
 
@@ -24,6 +25,16 @@ def _validate_report_schema(report: Mapping[str, Any], expected_schema: str, lab
         raise ValueError(f"{label} must be an object")
     if report.get("schema") != expected_schema:
         raise ValueError(f"{label} schema must be {expected_schema}")
+
+
+def _validate_background_report_schema(report: Mapping[str, Any]) -> None:
+    if not isinstance(report, Mapping):
+        raise ValueError("background coverage report must be an object")
+    if report.get("schema") not in {BACKGROUND_COVERAGE_SCHEMA, BACKGROUND_EPISODE_COVERAGE_SCHEMA}:
+        raise ValueError(
+            "background coverage report schema must be "
+            f"{BACKGROUND_COVERAGE_SCHEMA} or {BACKGROUND_EPISODE_COVERAGE_SCHEMA}"
+        )
 
 
 def _summary(report: Mapping[str, Any], *, schema: str) -> dict[str, Any]:
@@ -53,7 +64,7 @@ def build_videotoon_episode_preflight_report(
 ) -> dict[str, Any]:
     """Combine actor and background asset coverage into one episode render gate."""
     _validate_report_schema(actor_coverage_report, ACTOR_COVERAGE_SCHEMA, "actor coverage report")
-    _validate_report_schema(background_coverage_report, BACKGROUND_COVERAGE_SCHEMA, "background coverage report")
+    _validate_background_report_schema(background_coverage_report)
 
     actor_pack_id = str(actor_coverage_report.get("pack_id") or "").strip()
     background_pack_id = str(background_coverage_report.get("pack_id") or "").strip()
@@ -62,7 +73,7 @@ def build_videotoon_episode_preflight_report(
         errors.append(f"pack_id mismatch: actor={actor_pack_id}, background={background_pack_id}")
 
     actor_summary = _summary(actor_coverage_report, schema=ACTOR_COVERAGE_SCHEMA)
-    background_summary = _summary(background_coverage_report, schema=BACKGROUND_COVERAGE_SCHEMA)
+    background_summary = _summary(background_coverage_report, schema=str(background_coverage_report.get("schema") or ""))
     expected_count = actor_summary["expected_count"] + background_summary["expected_count"]
     existing_count = actor_summary["existing_count"] + background_summary["existing_count"]
     missing_count = actor_summary["missing_count"] + background_summary["missing_count"]

@@ -883,6 +883,151 @@ class BackgroundLibrary:
             },
         }
 
+    def _match_manifest_location(self, request_manifest: Dict[str, Any], location_text: str) -> str:
+        raw = str(location_text or "").strip()
+        if not raw:
+            return ""
+        matched = self._match_location(raw)
+        if matched:
+            return matched
+
+        lowered = raw.lower()
+        for location in request_manifest.get("locations", []) or []:
+            if not isinstance(location, dict):
+                continue
+            location_id = str(location.get("location_id") or "").strip()
+            candidates = [
+                location_id,
+                str(location.get("template_id") or ""),
+                str(location.get("name_ko") or ""),
+                str(location.get("name_en") or ""),
+            ]
+            candidates.extend(str(keyword) for keyword in (location.get("keywords") or []))
+            for candidate in candidates:
+                clean = str(candidate or "").strip()
+                if clean and (clean.lower() == lowered or clean.lower() in lowered or lowered in clean.lower()):
+                    return location_id
+
+        for request in request_manifest.get("requests", []) or []:
+            location_id = str(request.get("location_id") or "").strip()
+            if location_id and (location_id.lower() == lowered or location_id.lower() in lowered):
+                return location_id
+        return ""
+
+    def _scene_background_location(self, scene: Dict[str, Any]) -> str:
+        for key in ("background_id", "background_location", "location", "place", "setting"):
+            value = str(scene.get(key) or "").strip()
+            if value:
+                return value
+        return ""
+
+    def _scene_background_time(self, scene: Dict[str, Any]) -> str:
+        for key in ("background_time", "time", "time_of_day"):
+            value = str(scene.get(key) or "").strip()
+            if value:
+                return value
+        return "any"
+
+    def _select_background_request(
+        self,
+        request_manifest: Dict[str, Any],
+        *,
+        location_id: str,
+        time: str,
+    ) -> Dict[str, Any]:
+        requests = [
+            request
+            for request in (request_manifest.get("requests", []) or [])
+            if isinstance(request, dict) and str(request.get("location_id") or "") == location_id
+        ]
+        if not requests:
+            return {}
+        for request in requests:
+            if str(request.get("time") or "") == time:
+                return request
+        for request in requests:
+            if str(request.get("time") or "") == "any":
+                return request
+        return requests[0]
+
+    def build_episode_asset_coverage_report(
+        self,
+        request_manifest: Dict[str, Any],
+        episode: Dict[str, Any],
+        base_path: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Report only the background plates required by one episode."""
+        if request_manifest.get("schema") != "reverie.background_library.asset_requests.v1":
+            raise ValueError("background asset request manifest schema must be reverie.background_library.asset_requests.v1")
+        if not isinstance(episode, dict):
+            raise ValueError("episode must contain a JSON object")
+
+        root = Path(base_path) if base_path else self.base_path
+        scenes = episode.get("scenes") or []
+        if not isinstance(scenes, list):
+            scenes = []
+
+        scene_backgrounds: List[Dict[str, Any]] = []
+        missing_assets: List[str] = []
+        errors: List[str] = []
+        existing_count = 0
+
+        for index, scene in enumerate(scenes):
+            if not isinstance(scene, dict):
+                continue
+            scene_id = str(scene.get("scene_id") or f"scene_{index + 1:04d}")
+            raw_location = self._scene_background_location(scene)
+            location_id = self._match_manifest_location(request_manifest, raw_location)
+            time = self._scene_background_time(scene)
+            request = self._select_background_request(request_manifest, location_id=location_id, time=time)
+            target_relative_path = str(request.get("target_relative_path") or "").strip()
+            exists = bool(target_relative_path and (root / target_relative_path).exists())
+            if exists:
+                existing_count += 1
+            else:
+                missing_ref = f"{scene_id}:{target_relative_path or raw_location or '<missing-background>'}"
+                missing_assets.append(missing_ref)
+            if not location_id:
+                errors.append(f"scene {scene_id} background location is not in request manifest")
+
+            scene_backgrounds.append(
+                {
+                    "scene_id": scene_id,
+                    "raw_location": raw_location,
+                    "location_id": location_id,
+                    "time": time,
+                    "request_id": str(request.get("request_id") or ""),
+                    "target_relative_path": target_relative_path,
+                    "exists": exists,
+                }
+            )
+
+        expected_count = len(scene_backgrounds)
+        missing_count = expected_count - existing_count
+        coverage_ratio = round(existing_count / expected_count, 4) if expected_count else 0.0
+        return {
+            "schema": "reverie.background_library.episode_asset_coverage.v1",
+            "pack_id": str(request_manifest.get("pack_id") or self.pack_id),
+            "genre": str(request_manifest.get("genre") or self.genre),
+            "episode_id": str(episode.get("episode_id") or ""),
+            "target_base_path": str(request_manifest.get("target_base_path") or self._public_target_base_path()),
+            "scene_count": len(scenes),
+            "expected_count": expected_count,
+            "existing_count": existing_count,
+            "missing_count": missing_count,
+            "coverage_ratio": coverage_ratio,
+            "ready_for_render": expected_count > 0 and missing_count == 0 and not errors,
+            "errors": errors,
+            "missing_assets": missing_assets,
+            "scene_backgrounds": scene_backgrounds,
+            "public_release_boundary": {
+                "contains_generated_media": False,
+                "contains_voice_samples": False,
+                "contains_model_weights": False,
+                "contains_private_paths": False,
+            },
+        }
+
     # ========================================================================
     # 배경 이미지 생성
     # ========================================================================
@@ -1376,6 +1521,62 @@ def write_background_asset_coverage_report(
     return output
 
 
+def build_background_episode_asset_coverage_report(
+    request_manifest: Dict[str, Any] | Path | str,
+    episode: Dict[str, Any] | Path | str,
+    *,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+) -> Dict[str, Any]:
+    manifest = (
+        _load_json_object(request_manifest, "background asset request manifest")
+        if isinstance(request_manifest, (str, Path))
+        else request_manifest
+    )
+    episode_data = _load_json_object(episode, "episode") if isinstance(episode, (str, Path)) else episode
+    pack_id = str(manifest.get("pack_id") or "").strip()
+    if not pack_id:
+        raise ValueError("background asset request manifest pack_id is required")
+    genre = str(manifest.get("genre") or pack_id)
+    if background_root:
+        base_path, target_base_path = _background_base_paths(
+            pack_id,
+            background_root=background_root,
+            repo_root=repo_root,
+        )
+    else:
+        target_base_path = str(manifest.get("target_base_path") or (Path("assets") / "backgrounds" / pack_id).as_posix())
+        raw_target = Path(target_base_path)
+        base_path = (
+            raw_target
+            if raw_target.is_absolute()
+            else ((Path(repo_root).resolve() if repo_root else Path.cwd()) / raw_target).resolve()
+        )
+    config = BackgroundLibraryConfig(library_path=target_base_path)
+    library = BackgroundLibrary(pack_id=pack_id, genre=genre, config=config, base_path=str(base_path))
+    return library.build_episode_asset_coverage_report(manifest, episode_data)
+
+
+def write_background_episode_asset_coverage_report(
+    request_manifest_path: Path | str,
+    episode_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+) -> Path:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    report = build_background_episode_asset_coverage_report(
+        request_manifest_path,
+        episode_path,
+        repo_root=repo_root,
+        background_root=background_root,
+    )
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         description="Write public-safe background asset requests and local coverage reports."
@@ -1405,6 +1606,17 @@ def main(argv: Optional[List[str]] = None) -> int:
     coverage_parser.add_argument("--background-root", default=None, help="Directory that contains per-pack background folders.")
     coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
     coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any background is missing.")
+
+    episode_coverage_parser = subparsers.add_parser(
+        "episode-coverage",
+        help="Report only the requested background plates used by an episode JSON file.",
+    )
+    episode_coverage_parser.add_argument("request_manifest_path", help="Input background asset request manifest JSON path.")
+    episode_coverage_parser.add_argument("episode_path", help="Input episode JSON path.")
+    episode_coverage_parser.add_argument("--repo-root", default=None, help="Repository root for resolving relative background roots.")
+    episode_coverage_parser.add_argument("--background-root", default=None, help="Directory that contains per-pack background folders.")
+    episode_coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    episode_coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any episode background is missing.")
 
     args = parser.parse_args(argv)
     if args.command == "asset-requests":
@@ -1454,6 +1666,31 @@ def main(argv: Optional[List[str]] = None) -> int:
         else:
             print(json.dumps(report, ensure_ascii=False, indent=2))
             print(f"backgrounds missing {report['missing_count']}/{report['expected_count']}")
+        if args.fail_on_missing and report["missing_count"]:
+            return 1
+        return 0
+    if args.command == "episode-coverage":
+        report = build_background_episode_asset_coverage_report(
+            args.request_manifest_path,
+            args.episode_path,
+            repo_root=args.repo_root,
+            background_root=args.background_root,
+        )
+        if args.output:
+            output = write_background_episode_asset_coverage_report(
+                args.request_manifest_path,
+                args.episode_path,
+                args.output,
+                repo_root=args.repo_root,
+                background_root=args.background_root,
+            )
+            print(
+                f"Wrote episode background asset coverage for {report['pack_id']}: {output} "
+                f"(missing {report['missing_count']}/{report['expected_count']})"
+            )
+        else:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(f"episode backgrounds missing {report['missing_count']}/{report['expected_count']}")
         if args.fail_on_missing and report["missing_count"]:
             return 1
         return 0
