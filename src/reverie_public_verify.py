@@ -668,9 +668,16 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         "This report is public-safe. It does not contain credentials, generated media,",
         "voice data, model weights, or upload tokens.",
         "",
+    ]
+
+    recommendation = publish_gate.get("recommendation")
+    if recommendation:
+        lines.extend(["## Publish Recommendation", "", recommendation, ""])
+
+    lines.extend([
         "## Machine Checks",
         "",
-    ]
+    ])
     for check in publish_gate.get("machine_checks", []):
         lines.append(
             f"- `{check.get('id', 'unknown')}`: `{check.get('status', 'unknown')}` - "
