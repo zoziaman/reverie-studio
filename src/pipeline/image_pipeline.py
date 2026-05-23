@@ -29,6 +29,7 @@ import requests
 logger = logging.getLogger(__name__)
 
 from utils.videotoon_contract import actor_id_from_slot
+from utils.secret_redaction import redact_sensitive_text
 from config.settings import config
 try:
     from config.pack_config import ACTIVE_PACK, PACK_CONFIG_AVAILABLE
@@ -522,7 +523,7 @@ class ImagePipeline:
             return cache
 
         except (ImportError, RuntimeError, ValueError, AttributeError) as e:
-            logger.warning(f"[v59.8] 사전 분석 실패 (폴백: per-image 분석): {e}")
+            logger.warning(f"[v59.8] 사전 분석 실패 (폴백: per-image 분석): {redact_sensitive_text(e)}")
             return None
 
     def _create_black_placeholder(self, output_path: str, width: int = 0, height: int = 0) -> str:
