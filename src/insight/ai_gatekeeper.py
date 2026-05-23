@@ -13,6 +13,7 @@ import os
 import json
 import logging
 import base64
+import re
 import requests
 from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass, asdict
@@ -20,6 +21,10 @@ from pathlib import Path
 from enum import Enum
 
 logger = logging.getLogger(__name__)
+
+
+def _redact_gemini_key(text: str) -> str:
+    return re.sub(r"([?&]key=)[^&\s]+", r"\1<redacted>", str(text or ""))
 
 
 # ============================================================
@@ -195,8 +200,9 @@ class AIGatekeeper:
             result = self._parse_response(video_id, response)
             return result
         except Exception as e:
-            logger.error(f"분석 실패 (video_id={video_id}): {e}")
-            return self._create_error_result(video_id, str(e))
+            safe_error = _redact_gemini_key(str(e))
+            logger.error(f"분석 실패 (video_id={video_id}): {safe_error}")
+            return self._create_error_result(video_id, safe_error)
 
     def analyze_batch(
         self,
@@ -365,7 +371,10 @@ JSON만 응답해주세요. 다른 설명은 필요 없습니다."""
         }
 
         response = requests.post(url, json=payload, timeout=30)
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except requests.HTTPError as exc:
+            raise RuntimeError(_redact_gemini_key(str(exc))) from None
 
         data = response.json()
 
