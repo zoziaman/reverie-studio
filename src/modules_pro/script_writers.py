@@ -11,6 +11,7 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 
 from config.settings import config
+from utils.secret_redaction import redact_sensitive_text
 
 class _GenerationConfigCompat:
     """
@@ -1362,7 +1363,7 @@ class ScriptWriter:
             from llm.factory import create_story_llm
             gemini_model = create_story_llm(provider="gemini")
         except Exception as e:
-            logger.warning(f"[{role_label}] Gemini 초기화 실패: {e}. 하이브리드 불가.")
+            logger.warning(f"[{role_label}] Gemini 초기화 실패: {redact_sensitive_text(e)}. 하이브리드 불가.")
             safe_print(f"      [{role_label}] Gemini 사용 불가 → 폴백")
             return None
 
@@ -1407,7 +1408,7 @@ class ScriptWriter:
                     time.sleep(2)
 
             except Exception as e:
-                logger.warning(f"[{role_label}] Gemini 초안 오류: {type(e).__name__}: {str(e)[:150]}")
+                logger.warning(f"[{role_label}] Gemini 초안 오류: {type(e).__name__}: {redact_sensitive_text(e)[:150]}")
                 safe_print(f"      Gemini 초안 오류. 재시도... ({type(e).__name__})")
                 time.sleep(3)
 
@@ -1502,7 +1503,7 @@ Output JSON ONLY:
                     time.sleep(3)
 
             except Exception as e:
-                logger.warning(f"[{role_label}] 리라이트 오류: {type(e).__name__}: {str(e)[:150]}")
+                logger.warning(f"[{role_label}] 리라이트 오류: {type(e).__name__}: {redact_sensitive_text(e)[:150]}")
                 safe_print(f"      리라이트 오류. 재시도... ({type(e).__name__})")
                 time.sleep(3)
 
@@ -1649,7 +1650,7 @@ Output JSON ONLY:
 
                 except Exception as e:
                     logger.warning(
-                        f"[{role_label}] chunk {ci+1} 오류: {type(e).__name__}: {str(e)[:150]}. "
+                        f"[{role_label}] chunk {ci+1} 오류: {type(e).__name__}: {redact_sensitive_text(e)[:150]}. "
                         f"재시도 {attempt+1}/2"
                     )
                     safe_print(f"      청크 {ci+1} 오류. 재시도... ({type(e).__name__})")
@@ -1886,7 +1887,7 @@ Output JSON ONLY:
                     f"({len(combined)}/{target_turns})"
                 )
             except Exception as exc:
-                logger.warning(f"[{self.role_name}] short-script recovery failed: {type(exc).__name__}: {exc}")
+                logger.warning(f"[{self.role_name}] short-script recovery failed: {type(exc).__name__}: {redact_sensitive_text(exc)}")
                 break
 
         return combined
@@ -2174,7 +2175,7 @@ Output JSON ONLY:
             except Exception as e:
                 # v32.1: 지수 백오프 대기 및 상세 에러 로깅
                 delay = min(1.0 * (2 ** attempt), 30.0) * (0.5 + random.random())
-                logger.warning(f"[{self.role_name}] API 오류. 재시도 {attempt+1}/{attempt_limit}, {delay:.1f}초 대기. 에러: {type(e).__name__}: {str(e)[:100]}")
+                logger.warning(f"[{self.role_name}] API 오류. 재시도 {attempt+1}/{attempt_limit}, {delay:.1f}초 대기. 에러: {type(e).__name__}: {redact_sensitive_text(e)[:100]}")
                 safe_print(f"      JSON 형식/응답 오류. 재시도... ({attempt+1}/{attempt_limit})")
                 time.sleep(delay)
 
@@ -2708,8 +2709,9 @@ Output JSON ONLY:
 
             except Exception as e:
                 delay = min(1.0 * (2 ** attempt), 30.0) * (0.5 + random.random())
-                logger.warning(f"[{self.role_name} Enhanced] API 오류. 재시도 {attempt+1}/{attempt_limit}, {delay:.1f}초 대기. 에러: {type(e).__name__}: {str(e)[:200]}")
-                safe_print(f"      오류 발생. 재시도... ({attempt+1}/{attempt_limit}) — {type(e).__name__}: {str(e)[:100]}")
+                safe_error = redact_sensitive_text(e)
+                logger.warning(f"[{self.role_name} Enhanced] API 오류. 재시도 {attempt+1}/{attempt_limit}, {delay:.1f}초 대기. 에러: {type(e).__name__}: {safe_error[:200]}")
+                safe_print(f"      오류 발생. 재시도... ({attempt+1}/{attempt_limit}) — {type(e).__name__}: {safe_error[:100]}")
                 time.sleep(delay)
 
         # v62.31: best_script 있으면 강제 교정 후 사용 (비상 템플릿 투입 방지)
