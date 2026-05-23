@@ -438,3 +438,37 @@ def test_public_export_verify_cli_prints_release_guidance_status(tmp_path, monke
     assert "distribution_path: history_free_export" in stdout
     assert "release_guidance check: pass" in stdout
     assert "git_history_included check: pass" in stdout
+
+
+def test_public_export_verify_cli_prints_release_guidance_mismatch_details(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        public_export,
+        "verify_public_export",
+        lambda output_dir: {
+            "schema": "reverie.public_export.verify.v1",
+            "status": "fail",
+            "archive_path": "reverie-public-snapshot.zip",
+            "manifest_path": "public_export_manifest.json",
+            "release_guidance": None,
+            "checks": {
+                "release_guidance": {
+                    "status": "fail",
+                    "expected_distribution_path": "history_free_export",
+                    "actual_distribution_path": "missing",
+                    "expected_existing_repo_history_requires_review": True,
+                    "actual_existing_repo_history_requires_review": "missing",
+                },
+                "git_history_included": {"status": "pass"},
+            },
+        },
+    )
+
+    exit_code = public_export.main(["--verify", "--out", str(tmp_path)])
+
+    stdout = capsys.readouterr().out
+    assert exit_code == 1
+    assert "release_guidance check: fail" in stdout
+    assert "expected_distribution_path: history_free_export" in stdout
+    assert "actual_distribution_path: missing" in stdout
+    assert "expected_existing_repo_history_requires_review: true" in stdout
+    assert "actual_existing_repo_history_requires_review: missing" in stdout

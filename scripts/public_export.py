@@ -187,6 +187,26 @@ def _print_release_guidance(guidance: dict[str, Any] | None) -> None:
     )
 
 
+def _format_cli_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return _format_bool(value)
+    return str(value)
+
+
+def _print_release_guidance_check_details(check: dict[str, Any]) -> None:
+    if check.get("status") == "pass":
+        return
+    detail_keys = [
+        "expected_distribution_path",
+        "actual_distribution_path",
+        "expected_existing_repo_history_requires_review",
+        "actual_existing_repo_history_requires_review",
+    ]
+    for key in detail_keys:
+        if key in check:
+            print(f"- {key}: {_format_cli_value(check.get(key))}")
+
+
 def _actual_guidance_scalar(actual: Any, expected: Any) -> Any:
     if actual is None:
         return "missing"
@@ -319,6 +339,7 @@ def main(argv: list[str] | None = None) -> int:
             release_guidance_check = checks.get("release_guidance") or {}
             git_history_check = checks.get("git_history_included") or {}
             print(f"- release_guidance check: {release_guidance_check.get('status', 'unknown')}")
+            _print_release_guidance_check_details(release_guidance_check)
             print(f"- git_history_included check: {git_history_check.get('status', 'unknown')}")
         return 0 if report["status"] == "pass" else 1
 
