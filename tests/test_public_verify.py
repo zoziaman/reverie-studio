@@ -6,6 +6,22 @@ import pytest
 import reverie_public_verify as public_verify
 
 
+@pytest.fixture(autouse=True)
+def _python_compile_passes(monkeypatch):
+    monkeypatch.setattr(
+        public_verify,
+        "_run_python_compile",
+        lambda timeout_seconds=60: {
+            "status": "pass",
+            "command": ["python", "-m", "compileall", "-q", "src", "scripts"],
+            "returncode": 0,
+            "stdout_tail": "",
+            "stderr_tail": "",
+        },
+        raising=False,
+    )
+
+
 def _safe_demo_manifest() -> dict:
     return {
         "final_status": "needs_human_review",
@@ -32,6 +48,7 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
 
     assert report["overall_status"] == "pass"
     assert report["checks"]["public_snapshot"]["status"] == "pass"
+    assert report["checks"]["python_compile"]["status"] == "pass"
     assert report["checks"]["pytest"]["status"] == "not_run"
     assert report["publish_gate"]["status"] == "review_required"
     review_ids = {item["id"] for item in report["publish_gate"]["manual_review_items"]}
@@ -65,6 +82,34 @@ def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
     assert report["publish_gate"]["status"] == "blocked"
     assert report["checks"]["public_snapshot"]["finding_count"] == 1
     assert "public_snapshot_check" in report["failures"][0]
+
+
+def test_public_verify_fails_on_python_compile_error(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_python_compile",
+        lambda timeout_seconds=60: {
+            "status": "fail",
+            "command": ["python", "-m", "compileall", "-q", "src", "scripts"],
+            "returncode": 1,
+            "stdout_tail": "",
+            "stderr_tail": "SyntaxError: invalid syntax",
+        },
+    )
+
+    report = public_verify.run_public_verification(tmp_path)
+
+    assert report["overall_status"] == "fail"
+    assert report["publish_gate"]["status"] == "blocked"
+    assert report["checks"]["python_compile"]["status"] == "fail"
+    assert any("python_compile failed" in failure for failure in report["failures"])
 
 
 def test_public_verify_refuses_repo_output_by_default():

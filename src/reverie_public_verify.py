@@ -103,6 +103,35 @@ def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
         }
 
 
+def _run_python_compile(timeout_seconds: int = 60) -> dict[str, Any]:
+    command = [sys.executable, "-m", "compileall", "-q", "src", "scripts", "tests"]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=timeout_seconds,
+        )
+        return {
+            "status": "pass" if completed.returncode == 0 else "fail",
+            "command": command,
+            "returncode": completed.returncode,
+            "stdout_tail": _tail(completed.stdout or ""),
+            "stderr_tail": _tail(completed.stderr or ""),
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "status": "timeout",
+            "command": command,
+            "returncode": None,
+            "stdout_tail": _tail(exc.stdout or ""),
+            "stderr_tail": _tail(exc.stderr or ""),
+            "timeout_seconds": timeout_seconds,
+        }
+
+
 def _safe_int(value: Any) -> int:
     try:
         return int(value or 0)
@@ -339,6 +368,7 @@ def _build_publish_gate(
     snapshot_findings: list[str],
     demo_safety: dict[str, Any],
     environment_status: str | None,
+    python_compile_report: dict[str, Any],
     pytest_report: dict[str, Any] | None,
     functions_audit_report: dict[str, Any] | None,
 ) -> dict[str, Any]:
@@ -366,6 +396,11 @@ def _build_publish_gate(
             "id": "local_setup_doctor",
             "status": environment_status or "unknown",
             "evidence": "needs_setup is acceptable for a public clone; pass means this machine has required tools.",
+        },
+        {
+            "id": "python_compile",
+            "status": python_compile_report["status"],
+            "evidence": "compileall -q src scripts tests",
         },
         {
             "id": "pytest",
@@ -430,6 +465,7 @@ def run_public_verification(
     snapshot_check = _load_public_snapshot_check()
     snapshot_findings = snapshot_check.run_check(repo_root)
     environment_report = build_environment_report(repo_root)
+    python_compile_report = _run_python_compile()
     demo_manifest = run_demo(
         DEFAULT_PACK_PATH,
         demo_out,
@@ -462,6 +498,9 @@ def run_public_verification(
     elif environment_report.get("overall_status") != "pass":
         failures.append("environment doctor returned an unexpected blocking status")
 
+    if python_compile_report["status"] != "pass":
+        failures.append(f"python_compile failed: {python_compile_report['status']}")
+
     if pytest_report and pytest_report["status"] != "pass":
         failures.append(f"pytest returned {pytest_report['status']}")
 
@@ -485,6 +524,7 @@ def run_public_verification(
             snapshot_findings=snapshot_findings,
             demo_safety=demo_safety,
             environment_status=environment_report.get("overall_status"),
+            python_compile_report=python_compile_report,
             pytest_report=pytest_report,
             functions_audit_report=functions_audit_report,
         ),
@@ -498,6 +538,7 @@ def run_public_verification(
                 "status": environment_report.get("overall_status"),
                 "report_path": str(demo_out / "environment_report.json"),
             },
+            "python_compile": python_compile_report,
             "public_demo": {
                 "status": demo_manifest.get("final_status"),
                 "quality_status": demo_manifest.get("quality_gate", {}).get("status"),
