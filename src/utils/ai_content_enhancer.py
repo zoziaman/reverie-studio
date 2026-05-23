@@ -10,6 +10,7 @@ import json
 from typing import List, Dict, Any, Optional
 
 from utils.gemini_compat import configure_gemini, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 
 class AIContentEnhancer:
@@ -93,12 +94,19 @@ JSON 형식으로만 응답하세요:
             return result
 
         except Exception as e:
-            print(f"AI 제목 생성 오류: {e}")
+            print(f"AI 제목 생성 오류: {redact_sensitive_text(e)}")
             return self._basic_title_optimization(original_title, channel_key)
+
+    def _get_keyword_pool(self, channel_key: str) -> Dict[str, List[str]]:
+        """Return a configured keyword pool, falling back to a stable public default."""
+        default_pool = self.keyword_pools.get("daily_life_toon")
+        if default_pool is None:
+            default_pool = next(iter(self.keyword_pools.values()))
+        return self.keyword_pools.get(channel_key) or default_pool
 
     def _basic_title_optimization(self, title: str, channel_key: str) -> Dict[str, Any]:
         """기본 제목 최적화"""
-        keywords = self.keyword_pools.get(channel_key, self.keyword_pools["horror"])
+        keywords = self._get_keyword_pool(channel_key)
 
         # 제목에 키워드가 없으면 추가
         optimized_titles = []
@@ -141,7 +149,7 @@ JSON 형식으로만 응답하세요:
             List of tags
         """
         channel_key = f"{channel}_{mode}" if channel == "senior" else channel
-        keywords = self.keyword_pools.get(channel_key, self.keyword_pools["horror"])
+        keywords = self._get_keyword_pool(channel_key)
 
         # 기본 태그 수집
         tags = set()
@@ -196,7 +204,7 @@ JSON 형식으로만 응답하세요:
             return [t for t in tags if 2 <= len(t) <= 10][:10]
 
         except Exception as e:
-            print(f"AI 태그 생성 오류: {e}")
+            print(f"AI 태그 생성 오류: {redact_sensitive_text(e)}")
             return []
 
     def enhance_description(self,
