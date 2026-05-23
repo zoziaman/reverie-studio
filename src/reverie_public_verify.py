@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,6 +26,7 @@ from reverie_doctor import build_environment_report
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT_CHECK_PATH = REPO_ROOT / "scripts" / "public_snapshot_check.py"
 DEFAULT_VERIFY_OUT = Path(tempfile.gettempdir()) / "reverie-public-verify"
+FUNCTIONS_DIR = REPO_ROOT / "functions"
 
 PUBLISH_REVIEW_ITEMS = (
     {
@@ -101,6 +103,120 @@ def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
         }
 
 
+def _safe_int(value: Any) -> int:
+    try:
+        return int(value or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _functions_audit_status(vulnerabilities: dict[str, Any]) -> str:
+    if _safe_int(vulnerabilities.get("critical")) or _safe_int(vulnerabilities.get("high")):
+        return "blocked"
+    if _safe_int(vulnerabilities.get("total")):
+        return "review_required"
+    return "pass"
+
+
+def _functions_audit_evidence(functions_audit_report: dict[str, Any]) -> str:
+    counts = functions_audit_report.get("vulnerabilities") or {}
+    return (
+        "functions npm audit status={status}, total={total}, moderate={moderate}, "
+        "high={high}, critical={critical}"
+    ).format(
+        status=functions_audit_report.get("status", "unknown"),
+        total=_safe_int(counts.get("total")),
+        moderate=_safe_int(counts.get("moderate")),
+        high=_safe_int(counts.get("high")),
+        critical=_safe_int(counts.get("critical")),
+    )
+
+
+def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
+    if not (FUNCTIONS_DIR / "package-lock.json").exists():
+        return {
+            "status": "not_available",
+            "detail": "functions/package-lock.json is missing",
+        }
+    npm_executable = shutil.which("npm")
+    if not npm_executable:
+        return {
+            "status": "not_available",
+            "detail": "npm is not available on PATH",
+        }
+
+    command = [
+        npm_executable,
+        "--prefix",
+        str(FUNCTIONS_DIR),
+        "audit",
+        "--omit=dev",
+        "--json",
+    ]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired as exc:
+        return {
+            "status": "timeout",
+            "command": command,
+            "returncode": None,
+            "stdout_tail": _tail(exc.stdout or ""),
+            "stderr_tail": _tail(exc.stderr or ""),
+            "timeout_seconds": timeout_seconds,
+        }
+
+    try:
+        payload = json.loads(completed.stdout or "{}")
+    except json.JSONDecodeError:
+        return {
+            "status": "error",
+            "command": command,
+            "returncode": completed.returncode,
+            "stdout_tail": _tail(completed.stdout or ""),
+            "stderr_tail": _tail(completed.stderr or ""),
+            "detail": "npm audit did not return JSON",
+        }
+
+    counts = payload.get("metadata", {}).get("vulnerabilities", {})
+    vulnerabilities = {
+        "info": _safe_int(counts.get("info")),
+        "low": _safe_int(counts.get("low")),
+        "moderate": _safe_int(counts.get("moderate")),
+        "high": _safe_int(counts.get("high")),
+        "critical": _safe_int(counts.get("critical")),
+        "total": _safe_int(counts.get("total")),
+    }
+    names = sorted((payload.get("vulnerabilities") or {}).keys())
+    return {
+        "status": _functions_audit_status(vulnerabilities),
+        "command": command,
+        "returncode": completed.returncode,
+        "vulnerabilities": vulnerabilities,
+        "vulnerability_names": names[:25],
+        "truncated_vulnerability_names": max(0, len(names) - 25),
+        "stdout_tail": _tail(completed.stdout or "", limit=1200),
+        "stderr_tail": _tail(completed.stderr or "", limit=1200),
+    }
+
+
+def _review_items(functions_audit_report: dict[str, Any] | None) -> list[dict[str, Any]]:
+    items = [dict(item) for item in PUBLISH_REVIEW_ITEMS]
+    if not functions_audit_report:
+        return items
+    for item in items:
+        if item["id"] == "firebase_functions_dependency_audit":
+            item["status"] = functions_audit_report.get("status", "review_required")
+            item["evidence"] = _functions_audit_evidence(functions_audit_report)
+    return items
+
+
 def _build_publish_gate(
     *,
     failures: list[str],
@@ -108,6 +224,7 @@ def _build_publish_gate(
     demo_safety: dict[str, Any],
     environment_status: str | None,
     pytest_report: dict[str, Any] | None,
+    functions_audit_report: dict[str, Any] | None,
 ) -> dict[str, Any]:
     machine_checks = [
         {
@@ -139,8 +256,19 @@ def _build_publish_gate(
             "status": pytest_report["status"] if pytest_report else "not_run",
             "evidence": "run with --with-pytest for full test evidence.",
         },
+        {
+            "id": "firebase_functions_dependency_audit",
+            "status": functions_audit_report["status"] if functions_audit_report else "not_run",
+            "evidence": (
+                "run with --with-functions-audit for npm audit evidence."
+                if not functions_audit_report
+                else _functions_audit_evidence(functions_audit_report)
+            ),
+        },
     ]
-    publish_status = "blocked" if failures else "review_required"
+    publish_status = "blocked" if failures or any(
+        check["status"] in {"blocked", "error", "timeout"} for check in machine_checks
+    ) else "review_required"
     recommendation = (
         "Do not publish until blocking failures are fixed."
         if failures
@@ -154,7 +282,7 @@ def _build_publish_gate(
         "status": publish_status,
         "recommendation": recommendation,
         "machine_checks": machine_checks,
-        "manual_review_items": list(PUBLISH_REVIEW_ITEMS),
+        "manual_review_items": _review_items(functions_audit_report),
     }
 
 
@@ -166,6 +294,8 @@ def run_public_verification(
     with_pytest: bool = False,
     pytest_args: list[str] | None = None,
     pytest_timeout_seconds: int = 300,
+    with_functions_audit: bool = False,
+    functions_audit_timeout_seconds: int = 120,
     allow_repo_output: bool = False,
 ) -> dict[str, Any]:
     """Run the public-safe verification bundle and return its report."""
@@ -194,6 +324,9 @@ def run_public_verification(
     pytest_report = None
     if with_pytest:
         pytest_report = _run_pytest(pytest_args or ["-q"], pytest_timeout_seconds)
+    functions_audit_report = None
+    if with_functions_audit:
+        functions_audit_report = _run_functions_audit(functions_audit_timeout_seconds)
 
     failures: list[str] = []
     warnings: list[str] = []
@@ -237,6 +370,7 @@ def run_public_verification(
             demo_safety=demo_safety,
             environment_status=environment_report.get("overall_status"),
             pytest_report=pytest_report,
+            functions_audit_report=functions_audit_report,
         ),
         "checks": {
             "public_snapshot": {
@@ -255,6 +389,7 @@ def run_public_verification(
                 "safety": demo_safety,
             },
             "pytest": pytest_report or {"status": "not_run"},
+            "functions_audit": functions_audit_report or {"status": "not_run"},
         },
     }
     (out / "public_verify_report.json").write_text(
@@ -276,12 +411,23 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--quality-threshold", type=float, default=0.75, help="Dry-run quality threshold.")
     parser.add_argument("--with-pytest", action="store_true", help="Also run pytest after public safety checks.")
     parser.add_argument(
+        "--with-functions-audit",
+        action="store_true",
+        help="Also run npm audit for the optional Firebase Functions package.",
+    )
+    parser.add_argument(
         "--pytest-arg",
         action="append",
         dest="pytest_args",
         help="Extra pytest argument. Repeat for multiple args. Defaults to -q when --with-pytest is used.",
     )
     parser.add_argument("--pytest-timeout", type=int, default=300, help="Pytest timeout in seconds.")
+    parser.add_argument(
+        "--functions-audit-timeout",
+        type=int,
+        default=120,
+        help="Functions npm audit timeout in seconds.",
+    )
     parser.add_argument("--allow-repo-output", action="store_true", help="Allow report output inside the repo.")
     parser.add_argument("--json", action="store_true", help="Print the full verification report JSON.")
     return parser
@@ -297,6 +443,8 @@ def main(argv: list[str] | None = None) -> int:
             with_pytest=args.with_pytest,
             pytest_args=args.pytest_args,
             pytest_timeout_seconds=args.pytest_timeout,
+            with_functions_audit=args.with_functions_audit,
+            functions_audit_timeout_seconds=args.functions_audit_timeout,
             allow_repo_output=args.allow_repo_output,
         )
     except ValueError as exc:

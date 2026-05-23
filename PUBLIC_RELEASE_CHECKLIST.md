@@ -12,11 +12,12 @@ content, and third-party model/audio assets.
 NEEDS REVIEW
 
 The tracked publish set now has a single public verification bundle. On the
-current branch, `python scripts\public_verify.py --with-pytest --out <temp>`
+current branch, `python scripts\public_verify.py --with-pytest --with-functions-audit --out <temp>`
 passes the tracked-file scanner, public doctor, no-credential dry-run, and
-pytest. The remaining release gates are intentionally manual: scan or replace
-old private git history before turning an existing repository public, and review
-the optional Firebase Functions dependency chain before calling that surface
+pytest, while reporting the optional Firebase Functions audit as review-required.
+The remaining release gates are intentionally manual: scan or replace old
+private git history before turning an existing repository public, and review the
+optional Firebase Functions dependency chain before calling that surface
 production-ready.
 
 ## Release Checklist
@@ -73,7 +74,7 @@ production-ready.
 ## Final Step Before Publishing
 
 Run `SECURITY_PUBLIC_CHECK.md` against the exact release branch/export. Publish
-only when `python scripts\public_verify.py --with-pytest --out <temp>` passes,
+only when `python scripts\public_verify.py --with-pytest --with-functions-audit --out <temp>` passes,
 the publish set has no real secrets, no personal data, no local runtime state,
 and no generated or third-party assets that should remain user-provided. Treat
 `publish_gate.manual_review_items` in `public_verify_report.json` as mandatory

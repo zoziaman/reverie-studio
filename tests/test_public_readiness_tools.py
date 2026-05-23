@@ -93,7 +93,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     checklist = Path("PUBLIC_RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
     workflow = Path(".github/workflows/test.yml").read_text(encoding="utf-8")
 
-    assert "python scripts\\public_verify.py --with-pytest" in security
+    assert "python scripts\\public_verify.py --with-pytest --with-functions-audit" in security
     assert "publish_gate.manual_review_items" in checklist
     assert "9 moderate" in security
     assert "scripts/public_verify.py" in workflow

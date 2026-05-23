@@ -93,3 +93,47 @@ def test_public_verify_can_run_pytest_when_requested(tmp_path, monkeypatch):
     assert report["overall_status"] == "pass"
     assert report["checks"]["pytest"]["status"] == "pass"
     assert report["checks"]["pytest"]["stdout_tail"] == "1 passed"
+
+
+def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
+    class Completed:
+        returncode = 1
+        stdout = json.dumps({
+            "metadata": {
+                "vulnerabilities": {
+                    "info": 0,
+                    "low": 0,
+                    "moderate": 9,
+                    "high": 0,
+                    "critical": 0,
+                    "total": 9,
+                }
+            },
+            "vulnerabilities": {
+                "firebase-admin": {"severity": "moderate"},
+                "uuid": {"severity": "moderate"},
+            },
+        })
+        stderr = ""
+
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(public_verify.shutil, "which", lambda command: "npm")
+    monkeypatch.setattr(public_verify.subprocess, "run", lambda *args, **kwargs: Completed())
+
+    report = public_verify.run_public_verification(tmp_path, with_functions_audit=True)
+
+    assert report["overall_status"] == "pass"
+    assert report["publish_gate"]["status"] == "review_required"
+    assert report["checks"]["functions_audit"]["status"] == "review_required"
+    assert report["checks"]["functions_audit"]["vulnerabilities"]["moderate"] == 9
+    functions_check = [
+        check for check in report["publish_gate"]["machine_checks"]
+        if check["id"] == "firebase_functions_dependency_audit"
+    ][0]
+    assert "total=9" in functions_check["evidence"]

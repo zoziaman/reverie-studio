@@ -174,7 +174,8 @@ python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
 The verifier runs the public snapshot scan, the local setup doctor, and the
 no-credential dry-run demo, then writes `public_verify_report.json` outside the
 repository. Add `--with-pytest` when you want the full public test suite in the
-same command.
+same command, and add `--with-functions-audit` when you explicitly want npm's
+audit registry check for the optional Firebase Functions package.
 
 4. Install and run any local generation services you want to use, such as
    Stable Diffusion WebUI, ComfyUI, GPT-SoVITS, Supertonic 3, or a compatible
@@ -264,7 +265,7 @@ Before publishing, run the public checks against the exact branch or exported
 folder you plan to release:
 
 ```powershell
-python scripts\public_verify.py --with-pytest --out "$env:TEMP\reverie-public-verify"
+python scripts\public_verify.py --with-pytest --with-functions-audit --out "$env:TEMP\reverie-public-verify"
 Get-Content SECURITY_PUBLIC_CHECK.md
 Get-Content PUBLIC_RELEASE_CHECKLIST.md
 ```
