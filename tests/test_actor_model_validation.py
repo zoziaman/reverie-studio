@@ -1,5 +1,6 @@
 import importlib
 import json
+import shutil
 import tomllib
 from pathlib import Path
 
@@ -222,3 +223,68 @@ def test_pyproject_exposes_actor_model_request_cli():
     scripts = pyproject["project"]["scripts"]
 
     assert scripts["reverie-actor-model-requests"] == "utils.actor_model:main"
+
+
+def test_actor_asset_coverage_report_flags_missing_public_template_assets():
+    actor_model = _actor_model_module()
+
+    report = actor_model.build_actor_asset_coverage_report(ACTOR_MODEL_PATH, repo_root=ROOT)
+
+    assert report["schema"] == "reverie.actor_model.asset_coverage.v1"
+    assert report["actor_id"] == "actor_adult_woman_01"
+    assert report["expected_count"] == 18
+    assert report["existing_count"] == 0
+    assert report["missing_count"] == 18
+    assert report["ready_for_local_test"] is False
+    assert "variants/neutral_standing.png" in report["missing_assets"]
+
+
+def test_actor_asset_coverage_report_accepts_local_generated_assets(tmp_path):
+    actor_model = _actor_model_module()
+    actor_dir = tmp_path / "actor_adult_woman_01"
+    shutil.copytree(ACTOR_MODEL_PATH.parent, actor_dir)
+
+    request_manifest = actor_model.build_actor_asset_request_manifest(actor_dir / "actor.json")
+    for request in request_manifest["requests"]:
+        target = actor_dir / request["target_relative_path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(b"local placeholder asset")
+
+    report = actor_model.build_actor_asset_coverage_report(actor_dir / "actor.json")
+
+    assert report["existing_count"] == report["expected_count"]
+    assert report["missing_count"] == 0
+    assert report["coverage_ratio"] == 1.0
+    assert report["ready_for_local_test"] is True
+
+
+def test_actor_model_cli_writes_coverage_report_and_can_fail_on_missing(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    output_path = tmp_path / "coverage.json"
+
+    exit_code = actor_model.main(
+        [
+            "coverage",
+            str(ACTOR_MODEL_PATH),
+            "--repo-root",
+            str(ROOT),
+            "--output",
+            str(output_path),
+        ]
+    )
+    fail_code = actor_model.main(
+        [
+            "coverage",
+            str(ACTOR_MODEL_PATH),
+            "--repo-root",
+            str(ROOT),
+            "--fail-on-missing",
+        ]
+    )
+    captured = capsys.readouterr()
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert fail_code == 1
+    assert report["missing_count"] == 18
+    assert "missing 18/18" in captured.out

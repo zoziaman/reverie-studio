@@ -140,6 +140,118 @@ def _asset_request(
     return request
 
 
+def _load_actor_contract(actor_model_path: Path | str, repo_root: Optional[Path | str]) -> tuple[Path, dict[str, Any]]:
+    actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    if not actor_path.exists():
+        raise ValueError(f"actor_model_path does not exist: {actor_model_path}")
+    data = json.loads(actor_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("actor.json must contain a JSON object")
+    return actor_path, data
+
+
+def _build_asset_requests_from_contract(
+    actor_path: Path,
+    validation: ActorModelValidationResult,
+) -> list[dict[str, Any]]:
+    actor_dir = actor_path.parent
+    actor_id = validation.actor_id
+    identity_prompt = _read_template(actor_dir, "prompts/identity_prompt.txt")
+    variant_prompt = _read_template(actor_dir, "prompts/variant_prompt.txt")
+    mouth_prompt = _read_template(actor_dir, "prompts/mouth_prompt.txt")
+    negative_prompt = _read_template(actor_dir, "prompts/negative_prompt.txt")
+
+    requests: list[dict[str, Any]] = []
+    for variant_key in validation.required_variants:
+        expression, pose = _variant_parts(variant_key)
+        prompt = "\n\n".join(
+            [
+                identity_prompt,
+                variant_prompt,
+                f"Requested variant: {variant_key}",
+                f"Expression: {expression}",
+                f"Pose: {pose}",
+                "Output: one transparent-capable half-body video-toon actor image, no background, no text.",
+            ]
+        )
+        requests.append(
+            _asset_request(
+                actor_id=actor_id,
+                request_type="variant",
+                key=variant_key,
+                target_relative_path=f"variants/{variant_key}.png",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                expression=expression,
+                pose=pose,
+            )
+        )
+
+    for mouth_shape in validation.mouth_shapes:
+        prompt = "\n\n".join(
+            [
+                identity_prompt,
+                mouth_prompt,
+                f"Requested mouth shape: {mouth_shape}",
+                "Output: transparent PNG mouth layer aligned to the actor face.",
+            ]
+        )
+        requests.append(
+            _asset_request(
+                actor_id=actor_id,
+                request_type="mouth_shape",
+                key=mouth_shape,
+                target_relative_path=f"face_parts/{mouth_shape}.png",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+            )
+        )
+
+    for eye_shape in validation.eye_shapes:
+        prompt = "\n\n".join(
+            [
+                identity_prompt,
+                f"Create eye shape '{eye_shape}' for {actor_id}.",
+                "Keep the same head angle, eye placement, line weight, and webtoon style.",
+                "Output: transparent PNG eye layer aligned to the actor face.",
+            ]
+        )
+        requests.append(
+            _asset_request(
+                actor_id=actor_id,
+                request_type="eye_shape",
+                key=eye_shape,
+                target_relative_path=f"face_parts/{eye_shape}.png",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+            )
+        )
+
+    return requests
+
+
+def _validation_from_contract(actor_path: Path, actor_data: Mapping[str, Any]) -> ActorModelValidationResult:
+    result = ActorModelValidationResult()
+    actor_id = str(actor_data.get("actor_id") or "").strip()
+    result.actor_id = actor_id
+    if not actor_id:
+        result.add_error("actor_id is required")
+    elif actor_path.parent.name != actor_id:
+        result.add_error(f"actor_id '{actor_id}' must match actor model folder '{actor_path.parent.name}'")
+    result.required_variants = _string_list(actor_data.get("required_variants"))
+    result.mouth_shapes = _string_list(actor_data.get("mouth_shapes"))
+    result.eye_shapes = _string_list(actor_data.get("eye_shapes"))
+    if not result.required_variants:
+        result.add_error("required_variants must be a non-empty string list")
+    if not result.mouth_shapes:
+        result.add_error("mouth_shapes must be a non-empty string list")
+    if not result.eye_shapes:
+        result.add_error("eye_shapes must be a non-empty string list")
+    return result
+
+
 def _validate_public_boundary(data: Mapping[str, Any], result: ActorModelValidationResult) -> None:
     boundary = data.get("public_release_boundary")
     if not isinstance(boundary, Mapping):
@@ -251,84 +363,12 @@ def build_actor_asset_request_manifest(
     actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
     if path_error:
         raise ValueError(path_error)
-    actor_dir = actor_path.parent
     actor_data = json.loads(actor_path.read_text(encoding="utf-8"))
-    actor_id = validation.actor_id
-
-    identity_prompt = _read_template(actor_dir, "prompts/identity_prompt.txt")
-    variant_prompt = _read_template(actor_dir, "prompts/variant_prompt.txt")
-    mouth_prompt = _read_template(actor_dir, "prompts/mouth_prompt.txt")
-    negative_prompt = _read_template(actor_dir, "prompts/negative_prompt.txt")
-
-    requests: list[dict[str, Any]] = []
-    for variant_key in validation.required_variants:
-        expression, pose = _variant_parts(variant_key)
-        prompt = "\n\n".join(
-            [
-                identity_prompt,
-                variant_prompt,
-                f"Requested variant: {variant_key}",
-                f"Expression: {expression}",
-                f"Pose: {pose}",
-                "Output: one transparent-capable half-body video-toon actor image, no background, no text.",
-            ]
-        )
-        requests.append(
-            _asset_request(
-                actor_id=actor_id,
-                request_type="variant",
-                key=variant_key,
-                target_relative_path=f"variants/{variant_key}.png",
-                prompt=prompt,
-                negative_prompt=negative_prompt,
-                expression=expression,
-                pose=pose,
-            )
-        )
-
-    for mouth_shape in validation.mouth_shapes:
-        prompt = "\n\n".join(
-            [
-                identity_prompt,
-                mouth_prompt,
-                f"Requested mouth shape: {mouth_shape}",
-                "Output: transparent PNG mouth layer aligned to the actor face.",
-            ]
-        )
-        requests.append(
-            _asset_request(
-                actor_id=actor_id,
-                request_type="mouth_shape",
-                key=mouth_shape,
-                target_relative_path=f"face_parts/{mouth_shape}.png",
-                prompt=prompt,
-                negative_prompt=negative_prompt,
-            )
-        )
-
-    for eye_shape in validation.eye_shapes:
-        prompt = "\n\n".join(
-            [
-                identity_prompt,
-                f"Create eye shape '{eye_shape}' for {actor_id}.",
-                "Keep the same head angle, eye placement, line weight, and webtoon style.",
-                "Output: transparent PNG eye layer aligned to the actor face.",
-            ]
-        )
-        requests.append(
-            _asset_request(
-                actor_id=actor_id,
-                request_type="eye_shape",
-                key=eye_shape,
-                target_relative_path=f"face_parts/{eye_shape}.png",
-                prompt=prompt,
-                negative_prompt=negative_prompt,
-            )
-        )
+    requests = _build_asset_requests_from_contract(actor_path, validation)
 
     return {
         "schema": "reverie.actor_model.asset_requests.v1",
-        "actor_id": actor_id,
+        "actor_id": validation.actor_id,
         "template_version": actor_data.get("template_version", ""),
         "readiness_state": actor_data.get("readiness_state", ""),
         "source_actor_model_path": _relative_to_root(actor_path, repo_root),
@@ -357,6 +397,71 @@ def write_actor_asset_request_manifest(
     return output
 
 
+def build_actor_asset_coverage_report(
+    actor_model_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Report whether locally generated actor assets exist for each request."""
+    actor_path, actor_data = _load_actor_contract(actor_model_path, repo_root)
+    validation = _validation_from_contract(actor_path, actor_data)
+    if not validation.is_valid:
+        raise ValueError("actor model contract validation failed: " + "; ".join(validation.errors))
+    actor_dir = actor_path.parent
+    requests = _build_asset_requests_from_contract(actor_path, validation)
+
+    expected_assets: list[dict[str, Any]] = []
+    missing_assets: list[str] = []
+    existing_count = 0
+    for request in requests:
+        relative_path = str(request["target_relative_path"])
+        target_path = actor_dir / relative_path
+        exists = target_path.is_file()
+        if exists:
+            existing_count += 1
+        else:
+            missing_assets.append(relative_path)
+        expected_assets.append(
+            {
+                "request_id": request["request_id"],
+                "request_type": request["request_type"],
+                "key": request["key"],
+                "target_relative_path": relative_path,
+                "exists": exists,
+            }
+        )
+
+    expected_count = len(expected_assets)
+    missing_count = len(missing_assets)
+    coverage_ratio = round(existing_count / expected_count, 4) if expected_count else 1.0
+    return {
+        "schema": "reverie.actor_model.asset_coverage.v1",
+        "actor_id": validation.actor_id,
+        "source_actor_model_path": _relative_to_root(actor_path, repo_root),
+        "expected_count": expected_count,
+        "existing_count": existing_count,
+        "missing_count": missing_count,
+        "coverage_ratio": coverage_ratio,
+        "ready_for_local_test": missing_count == 0,
+        "missing_assets": missing_assets,
+        "expected_assets": expected_assets,
+    }
+
+
+def write_actor_asset_coverage_report(
+    actor_model_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write a local actor asset coverage report and return the output path."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    report = build_actor_asset_coverage_report(actor_model_path, repo_root=repo_root)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Validate actor models and write local asset request manifests.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -366,6 +471,12 @@ def main(argv: Optional[list[str]] = None) -> int:
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    coverage_parser = subparsers.add_parser("coverage", help="Report missing local actor assets.")
+    coverage_parser.add_argument("actor_model_path", help="Path to actor.json")
+    coverage_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any asset is missing.")
+
     args = parser.parse_args(argv)
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)
@@ -374,6 +485,20 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(f"Wrote actor asset requests for {manifest['actor_id']}: {output}")
         else:
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "coverage":
+        report = build_actor_asset_coverage_report(args.actor_model_path, repo_root=args.repo_root)
+        if args.output:
+            output = write_actor_asset_coverage_report(args.actor_model_path, args.output, repo_root=args.repo_root)
+            print(
+                f"Wrote actor asset coverage for {report['actor_id']}: {output} "
+                f"(missing {report['missing_count']}/{report['expected_count']})"
+            )
+        else:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(f"actor {report['actor_id']} missing {report['missing_count']}/{report['expected_count']}")
+        if args.fail_on_missing and report["missing_count"]:
+            return 1
         return 0
 
     parser.error(f"unknown command: {args.command}")

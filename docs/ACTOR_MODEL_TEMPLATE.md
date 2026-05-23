@@ -162,3 +162,13 @@ as `variants/neutral_standing.png` or `face_parts/mouth_closed.png`.
 
 Keep generated manifests and output images local unless they have passed the
 public release boundary in this document.
+
+To check local asset coverage after generation, run:
+
+```bash
+reverie-actor-model-requests coverage assets/actor_models/actor_adult_woman_01/actor.json --repo-root . --output data/actor_asset_requests/actor_adult_woman_01.coverage.json --fail-on-missing
+```
+
+The asset coverage report lists every expected variant, mouth, and eye target,
+then marks which files exist locally. The public template is expected to report
+missing assets because it does not bundle generated PNG files.
