@@ -313,7 +313,22 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             archive_path,
             detail="manifest numeric field is invalid: tracked_file_count",
         )
-    actual_archive_count = _archive_file_count(archive_path) if archive_exists else 0
+    archive_read_error = False
+    actual_archive_count: int | str = 0
+    actual_integrity = {
+        "status": "fail",
+        "contains_git_metadata": False,
+        "contains_unsafe_paths": False,
+        "count_matches_tracked_files": False,
+    }
+    if archive_exists:
+        try:
+            actual_archive_count = _archive_file_count(archive_path)
+            actual_integrity = _archive_integrity_report(archive_path, tracked_file_count)
+        except zipfile.BadZipFile:
+            archive_read_error = True
+            actual_archive_count = "unreadable"
+            actual_integrity["detail"] = "archive ZIP could not be read"
     expected_archive_count = _manifest_int(manifest, "archive_file_count")
     if expected_archive_count is None:
         return _invalid_manifest_report(
@@ -326,16 +341,6 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             archive_path,
             detail="manifest object field is invalid: public_snapshot",
         )
-    actual_integrity = (
-        _archive_integrity_report(archive_path, tracked_file_count)
-        if archive_exists
-        else {
-            "status": "fail",
-            "contains_git_metadata": False,
-            "contains_unsafe_paths": False,
-            "count_matches_tracked_files": False,
-        }
-    )
     checks = {
         "manifest_exists": {"status": "pass"},
         "archive_exists": {"status": "pass" if archive_exists else "fail"},
@@ -351,7 +356,9 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             "actual": actual_sha,
         },
         "archive_file_count": {
-            "status": _check_status(expected_archive_count == actual_archive_count),
+            "status": _check_status(
+                not archive_read_error and expected_archive_count == actual_archive_count,
+            ),
             "expected": expected_archive_count,
             "actual": actual_archive_count,
         },

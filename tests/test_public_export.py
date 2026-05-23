@@ -599,6 +599,41 @@ def test_public_export_verify_fails_for_checksum_mismatch(tmp_path):
     assert report["checks"]["archive_sha256"]["actual"] != "0" * 64
 
 
+def test_public_export_verify_reports_unreadable_archive_without_traceback(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    archive_path.write_bytes(b"not a zip archive")
+    manifest = {
+        "schema": "reverie.public_export.v1",
+        "archive_path": "reverie-public-snapshot.zip",
+        "manifest_path": "public_export_manifest.json",
+        "tracked_file_count": 1,
+        "archive_file_count": 1,
+        "archive_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+        "archive_integrity": {
+            "status": "pass",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": True,
+        },
+        "release_guidance": public_export.RELEASE_GUIDANCE,
+        "git_history_included": False,
+        "workspace_state": {"status": "pass", "dirty_count": 0},
+        "public_snapshot": {"status": "pass", "finding_count": 0},
+    }
+    (tmp_path / "public_export_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["checks"]["manifest_exists"]["status"] == "pass"
+    assert report["checks"]["archive_exists"]["status"] == "pass"
+    assert report["checks"]["archive_file_count"]["status"] == "fail"
+    assert report["checks"]["archive_file_count"]["actual"] == "unreadable"
+    assert report["checks"]["archive_integrity"]["status"] == "fail"
+    assert report["checks"]["archive_integrity"]["detail"] == "archive ZIP could not be read"
+    assert str(tmp_path.resolve()) not in json.dumps(report)
+
+
 def test_public_export_cli_prints_release_guidance_for_created_export(tmp_path, monkeypatch, capsys):
     def fake_create_public_export(output_dir, allow_repo_output=False):
         return {
