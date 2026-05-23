@@ -28,8 +28,8 @@ production-ready.
 | README explains open-source scope | PASS | README states what is included, what is excluded, and what users must provide locally. |
 | External asset boundary documented | PASS | `EXTERNAL_ASSETS.md` explains that voice data, BGM/SFX, LoRA/checkpoints, and service credentials are user-provided. |
 | `.env.example` is safe | PASS | Placeholder-only environment template; no real API keys, tokens, service accounts, or personal paths. |
-| Real `.env` excluded | PASS | No `.env` or `.env.*.local` file is tracked; `.env.example` uses placeholders only. |
-| OAuth/token/Firebase secrets excluded | PASS | No YouTube OAuth client secret, token pickle, Firebase service account, or credential store is tracked. |
+| Real `.env` excluded | PASS | No `.env` or `.env.*.local` file is tracked; `.env.example` uses placeholders only, and the snapshot scanner blocks env-like filenames by pattern. |
+| OAuth/token/Firebase secrets excluded | PASS | No YouTube OAuth client secret, token pickle, Firebase service account, or credential store is tracked; credential/token/service-account filenames are blocked by pattern. |
 | Memory/session/local-agent data excluded | PASS | `.opennexus/`, `.claude/`, `.cursor/`, `daily/`, `data/collab/`, and tracked memory/session files were removed. |
 | Generated output excluded | PASS | Generated video/audio/image/thumbnail/subtitle/script/output folders and Remotion render artifacts were removed from the tracked publish set. |
 | External model/audio assets excluded | PASS | BGM/SFX libraries, SoVITS voice data, LoRA/checkpoints/model weights, vendor caches, and Remotion `node_modules` are excluded. |

@@ -23,7 +23,7 @@ chain is reviewed.
 
 | Check | Status | Evidence / action |
 | --- | --- | --- |
-| Real `.env` / API key / token absent from publish set | PASS | Focused tracked-file scan found no `.env`, token pickle, credential store, or live API key file in the publish set. `.env.example` remains placeholder-only. |
+| Real `.env` / API key / token absent from publish set | PASS | Focused tracked-file scan found no `.env`, token pickle, credential store, or live API key file in the publish set. `.env.example` remains placeholder-only, and the snapshot scanner blocks env-like credential/token filenames. |
 | YouTube OAuth credentials and token pickle absent | PASS | No OAuth client-secret JSON or token pickle is tracked. Runtime upload credentials remain user-provided local files. |
 | Firebase service account absent | PASS | No Firebase service-account JSON is tracked. Firebase references are code/documentation placeholders only. |
 | Memory DB / session log / local agent state absent | PASS | `.opennexus/`, `.claude/`, `daily/`, `data/collab/`, and tracked memory/session artifacts were removed from the publish set. |

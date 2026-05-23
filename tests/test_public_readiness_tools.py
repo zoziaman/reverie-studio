@@ -102,6 +102,8 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "workspace_state" in checklist
     assert "path fingerprints" in security
     assert "raw local path names" in checklist
+    assert "env-like credential/token filenames" in security
+    assert "credential/token/service-account filenames" in checklist
     assert "9 moderate" in security
     assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "tests/test_public_verify.py" in workflow

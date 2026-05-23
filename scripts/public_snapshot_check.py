@@ -66,6 +66,18 @@ BLOCKED_FILENAMES = {
     "token.pickle",
 }
 
+ALLOWED_FILENAMES = {
+    ".env.example",
+}
+
+BLOCKED_FILENAME_PATTERNS = {
+    "env_file": re.compile(r"^\.env(\..+)?$"),
+    "credential_file": re.compile(
+        r"(credential|credentials|client[_-]?secret|oauth|token|service[_-]?account)",
+        re.IGNORECASE,
+    ),
+}
+
 CONTENT_PATTERNS = {
     "google_api_key": re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
     "openai_key": re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
@@ -95,8 +107,13 @@ def _is_blocked_path(path: Path) -> str | None:
     parts = path.parts
     if parts and parts[0] in BLOCKED_ROOTS:
         return f"blocked root: {parts[0]}"
+    if path.name in ALLOWED_FILENAMES:
+        return None
     if path.name in BLOCKED_FILENAMES:
         return f"blocked filename: {path.name}"
+    for pattern in BLOCKED_FILENAME_PATTERNS.values():
+        if pattern.search(path.name):
+            return f"blocked filename pattern: {path.name}"
     if path.suffix.lower() in BLOCKED_EXTENSIONS:
         return f"blocked extension: {path.suffix}"
     return None
