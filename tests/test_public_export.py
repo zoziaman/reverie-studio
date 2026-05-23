@@ -358,6 +358,55 @@ def test_public_export_verify_summarizes_unexpected_release_guidance_without_ech
     assert "publish everything" not in serialized
 
 
+def test_public_export_verify_handles_bom_manifest_without_traceback(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("README.md", "# demo\n")
+    manifest = {
+        "schema": "reverie.public_export.v1",
+        "archive_path": "reverie-public-snapshot.zip",
+        "manifest_path": "public_export_manifest.json",
+        "tracked_file_count": 1,
+        "archive_file_count": 1,
+        "archive_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+        "archive_integrity": {
+            "status": "pass",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": True,
+        },
+        "release_guidance": public_export.RELEASE_GUIDANCE,
+        "git_history_included": False,
+        "workspace_state": {"status": "pass", "dirty_count": 0},
+        "public_snapshot": {"status": "pass", "finding_count": 0},
+    }
+    (tmp_path / "public_export_manifest.json").write_text(
+        json.dumps(manifest),
+        encoding="utf-8-sig",
+    )
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["status"] == "pass"
+    assert report["checks"]["release_guidance"]["status"] == "pass"
+
+
+def test_public_export_verify_reports_invalid_manifest_json_without_traceback(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("README.md", "# demo\n")
+    (tmp_path / "public_export_manifest.json").write_text("{not json", encoding="utf-8")
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["checks"]["manifest_exists"]["status"] == "pass"
+    assert report["checks"]["archive_exists"]["status"] == "pass"
+    assert report["checks"]["manifest_schema"]["status"] == "fail"
+    assert report["checks"]["manifest_schema"]["detail"] == "manifest JSON could not be parsed"
+    assert str(tmp_path.resolve()) not in json.dumps(report)
+
+
 def test_public_export_verify_fails_for_checksum_mismatch(tmp_path):
     archive_path = tmp_path / "reverie-public-snapshot.zip"
     with zipfile.ZipFile(archive_path, "w") as archive:

@@ -241,6 +241,24 @@ def _verified_release_guidance(manifest: dict[str, Any]) -> dict[str, Any] | Non
     return None
 
 
+def _invalid_manifest_report(archive_path: Path) -> dict[str, Any]:
+    return {
+        "schema": "reverie.public_export.verify.v1",
+        "status": "fail",
+        "archive_path": ARCHIVE_NAME,
+        "manifest_path": MANIFEST_NAME,
+        "release_guidance": None,
+        "checks": {
+            "manifest_exists": {"status": "pass"},
+            "archive_exists": {"status": "pass" if archive_path.exists() else "fail"},
+            "manifest_schema": {
+                "status": "fail",
+                "detail": "manifest JSON could not be parsed",
+            },
+        },
+    }
+
+
 def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[str, Any]:
     out = Path(output_dir).resolve()
     manifest_path = out / MANIFEST_NAME
@@ -256,7 +274,10 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
                 "archive_exists": {"status": "pass" if archive_path.exists() else "fail"},
             },
         }
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
+    except json.JSONDecodeError:
+        return _invalid_manifest_report(archive_path)
     archive_exists = archive_path.exists()
     actual_sha = _sha256_file(archive_path) if archive_exists else ""
     expected_sha = str(manifest.get("archive_sha256") or "")
