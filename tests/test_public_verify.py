@@ -200,6 +200,27 @@ def test_workspace_state_does_not_report_raw_local_paths(monkeypatch):
     assert "docs/PUBLIC_DEMO.md" not in serialized
 
 
+def test_public_verify_report_does_not_include_raw_local_paths(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+
+    report = public_verify.run_public_verification(tmp_path)
+    written = json.loads((tmp_path / "public_verify_report.json").read_text(encoding="utf-8"))
+    serialized = json.dumps(written)
+
+    assert report["repo_root"] == "<repo_root>"
+    assert report["output_dir"] == "<verification_output>"
+    assert report["checks"]["environment_doctor"]["report_path"] == "public_demo/environment_report.json"
+    assert report["checks"]["public_demo"]["report_path"] == "public_demo/run_manifest.json"
+    assert str(public_verify.REPO_ROOT.resolve()) not in serialized
+    assert str(tmp_path.resolve()) not in serialized
+
+
 def test_public_verify_refuses_repo_output_by_default():
     repo_output = public_verify.REPO_ROOT / "tmp-public-verify"
 
@@ -309,6 +330,16 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
         "force_fix_required": True,
         "force_fix_targets": ["firebase-admin@10.3.0", "firebase-functions@4.9.0"],
     }
+    assert report["checks"]["functions_audit"]["command"] == [
+        "npm",
+        "--prefix",
+        "functions",
+        "audit",
+        "--package-lock-only",
+        "--omit=dev",
+        "--json",
+    ]
+    assert str(public_verify.FUNCTIONS_DIR) not in json.dumps(report["checks"]["functions_audit"])
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
     assert "Optional Functions Audit" in summary
     assert "Moderate: `9`" in summary

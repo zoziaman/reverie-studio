@@ -70,6 +70,13 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
         return False
 
 
+def _report_artifact_path(path: Path, output_root: Path) -> str:
+    try:
+        return path.resolve().relative_to(output_root.resolve()).as_posix()
+    except ValueError:
+        return "<artifact_outside_output>"
+
+
 def _tail(text: str, limit: int = 4000) -> str:
     if len(text) <= limit:
         return text
@@ -78,6 +85,7 @@ def _tail(text: str, limit: int = 4000) -> str:
 
 def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
     command = [sys.executable, "-m", "pytest", *pytest_args]
+    report_command = ["python", "-m", "pytest", *pytest_args]
     try:
         completed = subprocess.run(
             command,
@@ -89,7 +97,7 @@ def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
         )
         return {
             "status": "pass" if completed.returncode == 0 else "fail",
-            "command": command,
+            "command": report_command,
             "returncode": completed.returncode,
             "stdout_tail": _tail(completed.stdout or ""),
             "stderr_tail": _tail(completed.stderr or ""),
@@ -97,7 +105,7 @@ def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
     except subprocess.TimeoutExpired as exc:
         return {
             "status": "timeout",
-            "command": command,
+            "command": report_command,
             "returncode": None,
             "stdout_tail": _tail(exc.stdout or ""),
             "stderr_tail": _tail(exc.stderr or ""),
@@ -107,6 +115,7 @@ def _run_pytest(pytest_args: list[str], timeout_seconds: int) -> dict[str, Any]:
 
 def _run_python_compile(timeout_seconds: int = 60) -> dict[str, Any]:
     command = [sys.executable, "-m", "compileall", "-q", "src", "scripts", "tests"]
+    report_command = ["python", "-m", "compileall", "-q", "src", "scripts", "tests"]
     try:
         completed = subprocess.run(
             command,
@@ -118,7 +127,7 @@ def _run_python_compile(timeout_seconds: int = 60) -> dict[str, Any]:
         )
         return {
             "status": "pass" if completed.returncode == 0 else "fail",
-            "command": command,
+            "command": report_command,
             "returncode": completed.returncode,
             "stdout_tail": _tail(completed.stdout or ""),
             "stderr_tail": _tail(completed.stderr or ""),
@@ -126,7 +135,7 @@ def _run_python_compile(timeout_seconds: int = 60) -> dict[str, Any]:
     except subprocess.TimeoutExpired as exc:
         return {
             "status": "timeout",
-            "command": command,
+            "command": report_command,
             "returncode": None,
             "stdout_tail": _tail(exc.stdout or ""),
             "stderr_tail": _tail(exc.stderr or ""),
@@ -292,6 +301,15 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
         "--omit=dev",
         "--json",
     ]
+    report_command = [
+        "npm",
+        "--prefix",
+        "functions",
+        "audit",
+        "--package-lock-only",
+        "--omit=dev",
+        "--json",
+    ]
     try:
         completed = subprocess.run(
             command,
@@ -304,7 +322,7 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
     except subprocess.TimeoutExpired as exc:
         return {
             "status": "timeout",
-            "command": command,
+            "command": report_command,
             "returncode": None,
             "stdout_tail": _tail(exc.stdout or ""),
             "stderr_tail": _tail(exc.stderr or ""),
@@ -316,7 +334,7 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
     except json.JSONDecodeError:
         return {
             "status": "error",
-            "command": command,
+            "command": report_command,
             "returncode": completed.returncode,
             "stdout_tail": _tail(completed.stdout or ""),
             "stderr_tail": _tail(completed.stderr or ""),
@@ -335,7 +353,7 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
     names = sorted((payload.get("vulnerabilities") or {}).keys())
     return {
         "status": _functions_audit_status(vulnerabilities),
-        "command": command,
+        "command": report_command,
         "returncode": completed.returncode,
         "vulnerabilities": vulnerabilities,
         "vulnerability_names": names[:25],
@@ -607,8 +625,8 @@ def run_public_verification(
     report = {
         "schema": "reverie.public_verify.v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "repo_root": str(repo_root),
-        "output_dir": str(out),
+        "repo_root": "<repo_root>",
+        "output_dir": "<verification_output>",
         "overall_status": overall_status,
         "failures": failures,
         "warnings": warnings,
@@ -627,13 +645,13 @@ def run_public_verification(
             "workspace_state": workspace_report,
             "environment_doctor": {
                 "status": environment_report.get("overall_status"),
-                "report_path": str(demo_out / "environment_report.json"),
+                "report_path": _report_artifact_path(demo_out / "environment_report.json", out),
             },
             "python_compile": python_compile_report,
             "public_demo": {
                 "status": demo_manifest.get("final_status"),
                 "quality_status": demo_manifest.get("quality_gate", {}).get("status"),
-                "report_path": str(demo_out / "run_manifest.json"),
+                "report_path": _report_artifact_path(demo_out / "run_manifest.json", out),
                 "safety": demo_safety,
             },
             "pytest": pytest_report or {"status": "not_run"},
@@ -703,10 +721,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(report, indent=2, ensure_ascii=False))
     else:
+        output_dir = Path(args.out).resolve()
         print(f"Public verification: {report['overall_status'].upper()}")
         print(f"Publish gate: {report['publish_gate']['status'].upper()}")
-        print(f"Report: {Path(report['output_dir']) / 'public_verify_report.json'}")
-        print(f"Summary: {Path(report['output_dir']) / 'public_verify_summary.md'}")
+        print(f"Report: {output_dir / 'public_verify_report.json'}")
+        print(f"Summary: {output_dir / 'public_verify_summary.md'}")
         for failure in report["failures"]:
             print(f"- FAIL: {failure}")
         for warning in report["warnings"]:
