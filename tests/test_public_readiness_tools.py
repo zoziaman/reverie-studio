@@ -98,12 +98,16 @@ def test_security_and_release_docs_use_public_verify_gate():
 
     assert "python scripts\\public_verify.py --with-pytest --with-functions-audit" in security
     assert "--with-history-scan" in security
+    assert "python scripts\\public_export.py" in security
     assert "publish_gate.manual_review_items" in checklist
     assert "python scripts\\public_snapshot_check.py --json" in security
     assert "python scripts\\public_snapshot_check.py --json" in checklist
     assert "workspace_state" in security
     assert "workspace_state" in checklist
     assert "git history filenames" in checklist
+    assert "public_export_manifest.json" in checklist
+    assert "git_history_included" in checklist
+    assert "clean workspace" in checklist
     assert "path fingerprints" in security
     assert "raw local path names" in checklist
     assert "structured counts, vulnerability names, and fix advice" in security
@@ -120,7 +124,9 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "NPM token" in security
     assert "9 moderate" in security
     assert "scripts/public_verify.py --with-functions-audit" in workflow
+    assert "scripts/public_export.py" in workflow
     assert "tests/test_public_verify.py" in workflow
+    assert "tests/test_public_export.py" in workflow
     assert "public_verify_report.json" in public_demo
     assert "public_verify_summary.md" in public_demo
     assert "publish_gate" in public_demo

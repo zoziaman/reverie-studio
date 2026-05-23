@@ -31,7 +31,7 @@ jobs:
         run: python -m pip install pytest
 
       - name: Run public demo tests
-        run: python -m pytest tests/test_public_demo.py tests/test_public_readiness_tools.py tests/test_public_verify.py -q
+        run: python -m pytest tests/test_public_demo.py tests/test_public_export.py tests/test_public_readiness_tools.py tests/test_public_verify.py -q
         env:
           PYTHONPATH: src
 
@@ -39,6 +39,9 @@ jobs:
         run: python scripts/public_verify.py --with-functions-audit --out "$RUNNER_TEMP/reverie-public-verify"
         env:
           PYTHONPATH: src
+
+      - name: Create public source export
+        run: python scripts/public_export.py --out "$RUNNER_TEMP/reverie-public-export"
 
   functions-syntax:
     name: Firebase Functions syntax check
