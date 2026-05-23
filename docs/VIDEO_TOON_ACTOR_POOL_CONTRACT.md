@@ -132,6 +132,9 @@ deduplicated local generation requests without mutating the public actor
 package contract.
 Use `episode-variant-coverage` after local generation to verify those
 supplemental `variants/*.png` files exist before rendering the episode.
+Use `episode-variant-promotions` only when a generated supplemental variant
+should become a durable actor-model requirement; it writes a reviewable plan
+instead of mutating `actor.json` automatically.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 

@@ -1388,3 +1388,179 @@ def test_actor_model_cli_writes_episode_variant_coverage_report(tmp_path, capsys
     assert exit_code == 1
     assert report["missing_count"] == 1
     assert "episode variant coverage" in captured.out
+
+
+def test_actor_episode_variant_promotion_plan_lists_ready_durable_candidates(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "surprised",
+                "pose": "jumping",
+                "shot_type": "wide",
+            }
+        ],
+    }
+    request_manifest = actor_model.build_actor_episode_variant_request_manifest(
+        plan,
+        episode,
+        actor_root=actor_root,
+    )
+    target = actor_root / "actor_daily_adult_man_01" / "variants" / "surprised_jumping.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(b"local generated placeholder")
+    coverage_report = actor_model.build_actor_episode_variant_coverage_report(
+        request_manifest,
+        actor_root=actor_root,
+    )
+    actor_path = actor_root / "actor_daily_adult_man_01" / "actor.json"
+    before_actor = json.loads(actor_path.read_text(encoding="utf-8"))
+
+    promotion_plan = actor_model.build_actor_episode_variant_promotion_plan(
+        coverage_report,
+        actor_root=actor_root,
+    )
+    after_actor = json.loads(actor_path.read_text(encoding="utf-8"))
+
+    assert promotion_plan["schema"] == "reverie.pack.actor_episode.variant_promotions.v1"
+    assert promotion_plan["ready_for_promotion"] is True
+    assert promotion_plan["promotion_count"] == 1
+    assert promotion_plan["actors"]["actor_daily_adult_man_01"]["promoted_variants"] == ["surprised_jumping"]
+    assert "surprised_jumping" not in before_actor["required_variants"]
+    assert "surprised_jumping" in promotion_plan["actors"]["actor_daily_adult_man_01"]["required_variants_after"]
+    assert after_actor["required_variants"] == before_actor["required_variants"]
+    assert promotion_plan["public_release_boundary"]["contains_generated_media"] is False
+
+
+def test_actor_episode_variant_promotion_plan_rejects_missing_coverage(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    coverage_report = {
+        "schema": "reverie.pack.actor_episode.variant_coverage.v1",
+        "pack_id": "daily_life_toon",
+        "episode_id": "daily_life_toon_ep001",
+        "expected_count": 1,
+        "existing_count": 0,
+        "missing_count": 1,
+        "ready_for_episode": False,
+        "missing_variants": ["actor_daily_adult_man_01:surprised_jumping"],
+        "expected_assets": [
+            {
+                "request_id": "actor_daily_adult_man_01__variant__surprised_jumping",
+                "actor_id": "actor_daily_adult_man_01",
+                "key": "surprised_jumping",
+                "target_relative_path": "variants/surprised_jumping.png",
+                "exists": False,
+            }
+        ],
+    }
+
+    promotion_plan = actor_model.build_actor_episode_variant_promotion_plan(
+        coverage_report,
+        actor_root=actor_root,
+    )
+
+    assert promotion_plan["ready_for_promotion"] is False
+    assert promotion_plan["promotion_count"] == 0
+    assert "not ready" in promotion_plan["errors"][0]
+
+
+def test_actor_model_cli_writes_episode_variant_promotion_plan(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    episode_path = tmp_path / "daily_life_toon.episode.json"
+    requests_path = tmp_path / "daily_life_toon.episode_variant_requests.json"
+    coverage_path = tmp_path / "daily_life_toon.episode_variant_coverage.json"
+    promotion_path = tmp_path / "daily_life_toon.episode_variant_promotions.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode_path.write_text(
+        json.dumps(
+            {
+                "episode_id": "daily_life_toon_ep001",
+                "role_casting": plan["episode_cast_seed"]["role_casting"],
+                "scenes": [
+                    {
+                        "scene_id": "s001",
+                        "role_id": "protagonist",
+                        "actor_id": "actor_daily_adult_man_01",
+                        "emotion": "surprised",
+                        "pose": "jumping",
+                        "shot_type": "wide",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    actor_model.write_actor_episode_variant_request_manifest(
+        plan_path,
+        episode_path,
+        requests_path,
+        actor_root=actor_root,
+    )
+    target = actor_root / "actor_daily_adult_man_01" / "variants" / "surprised_jumping.png"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(b"local generated placeholder")
+    actor_model.write_actor_episode_variant_coverage_report(
+        requests_path,
+        coverage_path,
+        actor_root=actor_root,
+    )
+
+    exit_code = actor_model.main(
+        [
+            "episode-variant-promotions",
+            str(coverage_path),
+            "--actor-root",
+            str(actor_root),
+            "--output",
+            str(promotion_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    promotion_plan = json.loads(promotion_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert promotion_plan["promotion_count"] == 1
+    assert promotion_plan["actors"]["actor_daily_adult_man_01"]["promoted_variants"] == ["surprised_jumping"]
+    assert "episode variant promotions" in captured.out

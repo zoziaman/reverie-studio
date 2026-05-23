@@ -1742,6 +1742,141 @@ def write_actor_episode_variant_coverage_report(
     return output
 
 
+def _validate_episode_variant_coverage_report(report: Mapping[str, Any]) -> None:
+    if not isinstance(report, Mapping):
+        raise ValueError("episode variant coverage report must be an object")
+    if report.get("schema") != "reverie.pack.actor_episode.variant_coverage.v1":
+        raise ValueError("episode variant coverage report schema must be reverie.pack.actor_episode.variant_coverage.v1")
+    if not isinstance(report.get("expected_assets", []), list):
+        raise ValueError("episode variant coverage report expected_assets must be a list")
+
+
+def _actor_path_for_promotion(
+    actor_id: str,
+    asset: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str],
+    repo_root: Optional[Path | str],
+) -> Path:
+    if actor_root is not None:
+        return _resolve_actor_root(actor_root, repo_root) / actor_id / "actor.json"
+    source_path = str(asset.get("source_actor_model_path") or "").strip()
+    if not source_path:
+        raise ValueError(f"episode variant promotion for {actor_id} requires actor_root or source_actor_model_path")
+    actor_path, path_error = _resolve_actor_path(source_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    return actor_path
+
+
+def build_actor_episode_variant_promotion_plan(
+    coverage_report: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Plan durable actor.json required_variants additions from ready episode coverage."""
+    _validate_episode_variant_coverage_report(coverage_report)
+    errors: list[str] = []
+    if coverage_report.get("ready_for_episode") is not True or int(coverage_report.get("missing_count") or 0) > 0:
+        errors.append("episode variant coverage is not ready for promotion; missing variants remain")
+        return {
+            "schema": "reverie.pack.actor_episode.variant_promotions.v1",
+            "pack_id": str(coverage_report.get("pack_id") or ""),
+            "episode_id": str(coverage_report.get("episode_id") or ""),
+            "ready_for_promotion": False,
+            "promotion_count": 0,
+            "skipped_existing_count": 0,
+            "errors": errors,
+            "public_release_boundary": {
+                "contains_generated_media": False,
+                "contains_voice_samples": False,
+                "contains_model_weights": False,
+                "contains_private_paths": False,
+            },
+            "actors": {},
+        }
+
+    actor_groups: dict[str, list[Mapping[str, Any]]] = {}
+    for asset in coverage_report.get("expected_assets", []):
+        if not isinstance(asset, Mapping) or asset.get("exists") is not True:
+            continue
+        actor_id = str(asset.get("actor_id") or "").strip()
+        variant_key = str(asset.get("key") or "").strip()
+        if not actor_id or not variant_key:
+            raise ValueError("episode variant coverage expected_assets require actor_id and key")
+        actor_groups.setdefault(actor_id, []).append(asset)
+
+    actors: dict[str, Any] = {}
+    promotion_count = 0
+    skipped_existing_count = 0
+    for actor_id, assets in actor_groups.items():
+        actor_path = _actor_path_for_promotion(actor_id, assets[0], actor_root=actor_root, repo_root=repo_root)
+        actor_data = _load_actor_json(actor_path, ActorModelValidationResult())
+        if not actor_data:
+            raise ValueError(f"actor.json could not be loaded for {actor_id}: {actor_path}")
+        required_before = _string_list(actor_data.get("required_variants"))
+        required_after = list(required_before)
+        promoted_variants: list[str] = []
+        skipped_existing: list[str] = []
+
+        for asset in assets:
+            variant_key = str(asset.get("key") or "").strip()
+            if variant_key in required_after:
+                skipped_existing.append(variant_key)
+                skipped_existing_count += 1
+                continue
+            required_after.append(variant_key)
+            promoted_variants.append(variant_key)
+            promotion_count += 1
+
+        actors[actor_id] = {
+            "actor_id": actor_id,
+            "actor_model_path": _relative_to_root(actor_path, repo_root),
+            "promoted_variants": promoted_variants,
+            "skipped_existing_variants": skipped_existing,
+            "required_variants_before": required_before,
+            "required_variants_after": required_after,
+        }
+
+    return {
+        "schema": "reverie.pack.actor_episode.variant_promotions.v1",
+        "pack_id": str(coverage_report.get("pack_id") or ""),
+        "episode_id": str(coverage_report.get("episode_id") or ""),
+        "ready_for_promotion": not errors,
+        "promotion_count": promotion_count,
+        "skipped_existing_count": skipped_existing_count,
+        "errors": errors,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "actors": actors,
+    }
+
+
+def write_actor_episode_variant_promotion_plan(
+    coverage_report_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write a durable variant promotion plan without mutating actor.json."""
+    coverage_report = _load_json_object(coverage_report_path, "episode variant coverage report")
+    plan = build_actor_episode_variant_promotion_plan(
+        coverage_report,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_coverage_report(
     actor_model_path: Path | str,
     *,
@@ -2028,6 +2163,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     episode_variant_coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
     episode_variant_coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any requested variant is missing.")
 
+    episode_variant_promotions_parser = subparsers.add_parser(
+        "episode-variant-promotions",
+        help="Plan durable actor.json required_variants additions from ready episode coverage.",
+    )
+    episode_variant_promotions_parser.add_argument("coverage_report_path", help="Input episode variant coverage report JSON path.")
+    episode_variant_promotions_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    episode_variant_promotions_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    episode_variant_promotions_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    episode_variant_promotions_parser.add_argument("--fail-on-not-ready", action="store_true", help="Exit 1 when promotions are not ready.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -2220,6 +2365,31 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(json.dumps(report, ensure_ascii=False, indent=2))
             print(f"episode variants missing {report['missing_count']}/{report['expected_count']}")
         if args.fail_on_missing and report["missing_count"]:
+            return 1
+        return 0
+    if args.command == "episode-variant-promotions":
+        if args.output:
+            output = write_actor_episode_variant_promotion_plan(
+                args.coverage_report_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            promotion_plan = json.loads(Path(output).read_text(encoding="utf-8"))
+            print(
+                f"Wrote episode variant promotions: {output} "
+                f"(promote {promotion_plan['promotion_count']})"
+            )
+        else:
+            coverage_report = _load_json_object(args.coverage_report_path, "episode variant coverage report")
+            promotion_plan = build_actor_episode_variant_promotion_plan(
+                coverage_report,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(promotion_plan, ensure_ascii=False, indent=2))
+            print(f"episode variant promotions: {promotion_plan['promotion_count']}")
+        if args.fail_on_not_ready and not promotion_plan["ready_for_promotion"]:
             return 1
         return 0
     if args.command == "asset-requests":

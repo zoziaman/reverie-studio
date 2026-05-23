@@ -251,6 +251,18 @@ This report verifies the requested `variants/*.png` files exist under each
 actor package. It is useful for one-off episode variants that should not yet be
 added to durable `required_variants`.
 
+When a generated episode variant should become part of the reusable actor
+template, create a promotion plan:
+
+```bash
+reverie-actor-model-requests episode-variant-promotions data/actor_asset_requests/daily_life_toon_ep001.episode_variant_coverage.json --repo-root . --output data/actor_asset_requests/daily_life_toon_ep001.episode_variant_promotions.json --fail-on-not-ready
+```
+
+The promotion plan lists which `required_variants` entries would be added to
+each actor package. It does not mutate `actor.json`; apply the plan only after
+reviewing whether the variant belongs in the durable actor model instead of
+remaining episode-specific.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash
