@@ -228,3 +228,67 @@ def test_public_export_manifest_records_archive_sha256(tmp_path, monkeypatch):
     archive_bytes = (tmp_path / "reverie-public-snapshot.zip").read_bytes()
 
     assert manifest["archive_sha256"] == hashlib.sha256(archive_bytes).hexdigest()
+
+
+def test_public_export_verify_passes_for_matching_archive(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("README.md", "# demo\n")
+    manifest = {
+        "schema": "reverie.public_export.v1",
+        "archive_path": "reverie-public-snapshot.zip",
+        "manifest_path": "public_export_manifest.json",
+        "tracked_file_count": 1,
+        "archive_file_count": 1,
+        "archive_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+        "archive_integrity": {
+            "status": "pass",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": True,
+        },
+        "git_history_included": False,
+        "workspace_state": {"status": "pass", "dirty_count": 0},
+        "public_snapshot": {"status": "pass", "finding_count": 0},
+    }
+    (tmp_path / "public_export_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["schema"] == "reverie.public_export.verify.v1"
+    assert report["status"] == "pass"
+    assert report["archive_path"] == "reverie-public-snapshot.zip"
+    assert report["checks"]["archive_sha256"]["status"] == "pass"
+    assert report["checks"]["archive_integrity"]["status"] == "pass"
+    assert str(tmp_path.resolve()) not in json.dumps(report)
+
+
+def test_public_export_verify_fails_for_checksum_mismatch(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("README.md", "# demo\n")
+    manifest = {
+        "schema": "reverie.public_export.v1",
+        "archive_path": "reverie-public-snapshot.zip",
+        "manifest_path": "public_export_manifest.json",
+        "tracked_file_count": 1,
+        "archive_file_count": 1,
+        "archive_sha256": "0" * 64,
+        "archive_integrity": {
+            "status": "pass",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": True,
+        },
+        "git_history_included": False,
+        "workspace_state": {"status": "pass", "dirty_count": 0},
+        "public_snapshot": {"status": "pass", "finding_count": 0},
+    }
+    (tmp_path / "public_export_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["checks"]["archive_sha256"]["status"] == "fail"
+    assert report["checks"]["archive_sha256"]["expected"] == "0" * 64
+    assert report["checks"]["archive_sha256"]["actual"] != "0" * 64

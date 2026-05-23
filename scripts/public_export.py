@@ -156,6 +156,79 @@ def create_public_export(
     return manifest
 
 
+def _check_status(condition: bool) -> str:
+    return "pass" if condition else "fail"
+
+
+def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[str, Any]:
+    out = Path(output_dir).resolve()
+    manifest_path = out / MANIFEST_NAME
+    archive_path = out / ARCHIVE_NAME
+    if not manifest_path.exists():
+        return {
+            "schema": "reverie.public_export.verify.v1",
+            "status": "fail",
+            "archive_path": ARCHIVE_NAME,
+            "manifest_path": MANIFEST_NAME,
+            "checks": {
+                "manifest_exists": {"status": "fail"},
+                "archive_exists": {"status": "pass" if archive_path.exists() else "fail"},
+            },
+        }
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    archive_exists = archive_path.exists()
+    actual_sha = _sha256_file(archive_path) if archive_exists else ""
+    expected_sha = str(manifest.get("archive_sha256") or "")
+    tracked_file_count = int(manifest.get("tracked_file_count") or 0)
+    actual_archive_count = _archive_file_count(archive_path) if archive_exists else 0
+    expected_archive_count = int(manifest.get("archive_file_count") or 0)
+    actual_integrity = (
+        _archive_integrity_report(archive_path, tracked_file_count)
+        if archive_exists
+        else {
+            "status": "fail",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": False,
+        }
+    )
+    checks = {
+        "manifest_exists": {"status": "pass"},
+        "archive_exists": {"status": "pass" if archive_exists else "fail"},
+        "manifest_schema": {
+            "status": _check_status(manifest.get("schema") == "reverie.public_export.v1"),
+        },
+        "archive_path": {
+            "status": _check_status(manifest.get("archive_path") == ARCHIVE_NAME),
+        },
+        "archive_sha256": {
+            "status": _check_status(bool(expected_sha) and expected_sha == actual_sha),
+            "expected": expected_sha,
+            "actual": actual_sha,
+        },
+        "archive_file_count": {
+            "status": _check_status(expected_archive_count == actual_archive_count),
+            "expected": expected_archive_count,
+            "actual": actual_archive_count,
+        },
+        "archive_integrity": actual_integrity,
+        "git_history_included": {
+            "status": _check_status(manifest.get("git_history_included") is False),
+        },
+        "public_snapshot": {
+            "status": _check_status((manifest.get("public_snapshot") or {}).get("status") == "pass"),
+        },
+    }
+    status = "pass" if all(check.get("status") == "pass" for check in checks.values()) else "fail"
+    return {
+        "schema": "reverie.public_export.verify.v1",
+        "status": status,
+        "archive_path": ARCHIVE_NAME,
+        "manifest_path": MANIFEST_NAME,
+        "checks": checks,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Create a history-free Reverie Studio public source export.")
     parser.add_argument(
@@ -165,12 +238,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output directory for the source archive and manifest. Defaults outside the repository.",
     )
     parser.add_argument("--allow-repo-output", action="store_true", help="Allow export output inside the repo.")
+    parser.add_argument("--verify", action="store_true", help="Verify an existing export archive and manifest.")
     parser.add_argument("--json", action="store_true", help="Print the export manifest JSON.")
     return parser
 
 
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.verify:
+        report = verify_public_export(args.out)
+        if args.json:
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+        else:
+            print(f"Public export verify: {report['status'].upper()}")
+        return 0 if report["status"] == "pass" else 1
+
     try:
         manifest = create_public_export(args.out, allow_repo_output=args.allow_repo_output)
     except (RuntimeError, ValueError, subprocess.CalledProcessError) as exc:

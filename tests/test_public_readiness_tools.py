@@ -127,6 +127,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "9 moderate" in security
     assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "scripts/public_export.py" in workflow
+    assert "scripts/public_export.py --verify" in workflow
     assert "tests/test_public_verify.py" in workflow
     assert "tests/test_public_export.py" in workflow
     assert "public_verify_report.json" in public_demo

@@ -43,6 +43,9 @@ jobs:
       - name: Create public source export
         run: python scripts/public_export.py --out "$RUNNER_TEMP/reverie-public-export"
 
+      - name: Verify public source export
+        run: python scripts/public_export.py --verify --out "$RUNNER_TEMP/reverie-public-export"
+
   functions-syntax:
     name: Firebase Functions syntax check
     runs-on: ubuntu-latest
