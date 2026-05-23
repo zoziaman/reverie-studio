@@ -103,6 +103,12 @@ def get_font(size: str = "normal", bold: bool = False):
     )
 
 
+def _format_api_key_status(api_key: str | None) -> tuple[str, str]:
+    if (api_key or "").strip():
+        return "연결됨 (값 숨김)", "#00AA00"
+    return "API 키 없음 - settings.json에 youtube_api_key 추가 필요", "#AA0000"
+
+
 # ============================================================
 # Insight 탭 클래스
 # ============================================================
@@ -267,12 +273,7 @@ class InsightTab:
         )
         api_label.pack(side="left", padx=10, pady=8)
 
-        if self.api_key:
-            status_text = f"연결됨 ({self.api_key[:10]}...)"
-            status_color = "#00AA00"
-        else:
-            status_text = "API 키 없음 - settings.json에 youtube_api_key 추가 필요"
-            status_color = "#AA0000"
+        status_text, status_color = _format_api_key_status(self.api_key)
 
         self.api_status_label = ctk.CTkLabel(
             api_status_frame,
