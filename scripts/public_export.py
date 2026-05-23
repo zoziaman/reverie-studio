@@ -262,6 +262,13 @@ def _invalid_manifest_report(
     }
 
 
+def _manifest_int(manifest: dict[str, Any], field_name: str) -> int | None:
+    try:
+        return int(manifest.get(field_name) or 0)
+    except (TypeError, ValueError):
+        return None
+
+
 def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[str, Any]:
     out = Path(output_dir).resolve()
     manifest_path = out / MANIFEST_NAME
@@ -289,9 +296,19 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
     archive_exists = archive_path.exists()
     actual_sha = _sha256_file(archive_path) if archive_exists else ""
     expected_sha = str(manifest.get("archive_sha256") or "")
-    tracked_file_count = int(manifest.get("tracked_file_count") or 0)
+    tracked_file_count = _manifest_int(manifest, "tracked_file_count")
+    if tracked_file_count is None:
+        return _invalid_manifest_report(
+            archive_path,
+            detail="manifest numeric field is invalid: tracked_file_count",
+        )
     actual_archive_count = _archive_file_count(archive_path) if archive_exists else 0
-    expected_archive_count = int(manifest.get("archive_file_count") or 0)
+    expected_archive_count = _manifest_int(manifest, "archive_file_count")
+    if expected_archive_count is None:
+        return _invalid_manifest_report(
+            archive_path,
+            detail="manifest numeric field is invalid: archive_file_count",
+        )
     actual_integrity = (
         _archive_integrity_report(archive_path, tracked_file_count)
         if archive_exists
