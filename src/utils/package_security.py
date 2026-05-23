@@ -25,6 +25,8 @@ from typing import Tuple, Optional, Dict, Any
 from datetime import datetime
 from dataclasses import dataclass, asdict
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 # ==================== 앱 고유 키 (난독화) ====================
@@ -422,10 +424,11 @@ class PackageSecurityManager:
             return True, "검증 성공", decrypted
 
         except ValueError as e:
-            return False, str(e), None
+            return False, redact_sensitive_text(e), None
         except Exception as e:
-            logger.error(f"[PackageSecurityManager] 검증 실패: {e}")
-            return False, f"패키지 검증 오류: {e}", None
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PackageSecurityManager] 검증 실패: {safe_error}")
+            return False, f"패키지 검증 오류: {safe_error}", None
 
     def generate_license_for_package(self, package_id: str,
                                      expires_at: Optional[str] = None) -> str:
