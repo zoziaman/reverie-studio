@@ -25,7 +25,8 @@ assets/backgrounds/daily_life_toon/
 
 ## Request Manifest
 
-Use the CLI to create a background plate work order from a pack settings file:
+Use the CLI to create a full background plate work order from a pack settings
+file:
 
 ```bash
 reverie-background-library-requests asset-requests assets/packs/daily_life_toon/settings.json --repo-root . --pack-id daily_life_toon --time day --time night --images-per-location 2 --output data/background_asset_requests/daily_life_toon.background_requests.json
@@ -52,6 +53,23 @@ Each request contains:
 The command does not call SD WebUI, ComfyUI, or any image backend. It writes
 only a public-safe JSON work order.
 
+For real episode production, prefer an episode-specific request manifest:
+
+```bash
+reverie-background-library-requests episode-asset-requests assets/packs/daily_life_toon/settings.json data/episodes/daily_life_toon_ep001.json --repo-root . --pack-id daily_life_toon --output data/background_asset_requests/daily_life_toon_ep001.background_requests.json
+```
+
+The episode request schema is:
+
+```text
+reverie.background_library.episode_asset_requests.v1
+```
+
+This command reads scene background fields and creates requests only for the
+location/time pairs used by that episode. It avoids generating unused
+cross-product combinations such as `home_night` when the episode only needs
+`home_day`.
+
 ## Coverage
 
 After local generation or curation, verify that every requested background file
@@ -73,7 +91,7 @@ The report includes `expected_count`, `existing_count`, `missing_count`,
 For episode rendering, prefer the narrower scene-level gate:
 
 ```bash
-reverie-background-library-requests episode-coverage data/background_asset_requests/daily_life_toon.background_requests.json data/episodes/daily_life_toon_ep001.json --repo-root . --output data/background_asset_requests/daily_life_toon_ep001.background_coverage.json --fail-on-missing
+reverie-background-library-requests episode-coverage data/background_asset_requests/daily_life_toon_ep001.background_requests.json data/episodes/daily_life_toon_ep001.json --repo-root . --output data/background_asset_requests/daily_life_toon_ep001.background_coverage.json --fail-on-missing
 ```
 
 The episode coverage schema is:

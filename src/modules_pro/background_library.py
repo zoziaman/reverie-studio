@@ -950,6 +950,100 @@ class BackgroundLibrary:
                 return request
         return requests[0]
 
+    def build_episode_asset_request_manifest(
+        self,
+        episode: Dict[str, Any],
+        images_per_location: Optional[int] = None,
+    ) -> Dict[str, Any]:
+        """Build background requests for only the location/time pairs used by one episode."""
+        if not isinstance(episode, dict):
+            raise ValueError("episode must contain a JSON object")
+
+        scenes = episode.get("scenes") or []
+        if not isinstance(scenes, list):
+            scenes = []
+        count_per_location = int(images_per_location or 1)
+        if count_per_location < 1:
+            count_per_location = 1
+
+        requests: List[Dict[str, Any]] = []
+        source_scenes: List[Dict[str, Any]] = []
+        errors: List[str] = []
+        requested_pairs = set()
+
+        for index, scene in enumerate(scenes):
+            if not isinstance(scene, dict):
+                continue
+            scene_id = str(scene.get("scene_id") or f"scene_{index + 1:04d}")
+            raw_location = self._scene_background_location(scene)
+            time = self._scene_background_time(scene)
+            location_id = self._match_location(raw_location)
+            source_scenes.append(
+                {
+                    "scene_id": scene_id,
+                    "raw_location": raw_location,
+                    "location_id": location_id or "",
+                    "time": time,
+                }
+            )
+            if not location_id or location_id not in self.config.location_templates:
+                errors.append(f"scene {scene_id} background location is not in background templates")
+                continue
+
+            pair = (location_id, time)
+            if pair in requested_pairs:
+                continue
+            requested_pairs.add(pair)
+            template = self.config.location_templates[location_id]
+            prompt = self._compose_background_prompt(template, time)
+            negative_prompt = self._compose_negative_prompt(template)
+            for request_index in range(count_per_location):
+                filename = f"{location_id}_{time}_{request_index:02d}.png"
+                requests.append(
+                    {
+                        "request_id": (
+                            f"{self.pack_id}__episode_background_plate__"
+                            f"{location_id}__{time}__{request_index:02d}"
+                        ),
+                        "request_type": "background_plate",
+                        "pack_id": self.pack_id,
+                        "genre": self.genre,
+                        "location_id": location_id,
+                        "location_template_id": template.id,
+                        "location_name_ko": template.name_ko,
+                        "location_name_en": template.name_en,
+                        "time": time,
+                        "index": request_index,
+                        "target_relative_path": filename,
+                        "prompt": prompt,
+                        "negative_prompt": negative_prompt,
+                        "seed": self._stable_request_seed(location_id, time, request_index),
+                        "width": 1024,
+                        "height": 576,
+                        "public_safe": True,
+                    }
+                )
+
+        return {
+            "schema": "reverie.background_library.episode_asset_requests.v1",
+            "pack_id": self.pack_id,
+            "genre": self.genre,
+            "episode_id": str(episode.get("episode_id") or ""),
+            "target_base_path": self._public_target_base_path(),
+            "scene_count": len(scenes),
+            "source_scenes": source_scenes,
+            "images_per_location": count_per_location,
+            "request_count": len(requests),
+            "requests": requests,
+            "errors": errors,
+            "public_release_boundary": {
+                "contains_generated_media": False,
+                "contains_voice_samples": False,
+                "contains_model_weights": False,
+                "contains_private_paths": False,
+            },
+        }
+
     def build_episode_asset_coverage_report(
         self,
         request_manifest: Dict[str, Any],
@@ -957,8 +1051,15 @@ class BackgroundLibrary:
         base_path: Optional[str] = None,
     ) -> Dict[str, Any]:
         """Report only the background plates required by one episode."""
-        if request_manifest.get("schema") != "reverie.background_library.asset_requests.v1":
-            raise ValueError("background asset request manifest schema must be reverie.background_library.asset_requests.v1")
+        if request_manifest.get("schema") not in {
+            "reverie.background_library.asset_requests.v1",
+            "reverie.background_library.episode_asset_requests.v1",
+        }:
+            raise ValueError(
+                "background asset request manifest schema must be "
+                "reverie.background_library.asset_requests.v1 or "
+                "reverie.background_library.episode_asset_requests.v1"
+            )
         if not isinstance(episode, dict):
             raise ValueError("episode must contain a JSON object")
 
@@ -1469,6 +1570,71 @@ def write_background_asset_request_manifest(
     return output
 
 
+def build_background_episode_asset_request_manifest(
+    settings_path: Path | str,
+    episode: Dict[str, Any] | Path | str,
+    *,
+    pack_id: Optional[str] = None,
+    genre: Optional[str] = None,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+    images_per_location: Optional[int] = None,
+) -> Dict[str, Any]:
+    settings = _load_json_object(settings_path, "settings")
+    episode_data = _load_json_object(episode, "episode") if isinstance(episode, (str, Path)) else episode
+    resolved_pack_id = _infer_pack_id(settings_path, pack_id)
+    resolved_genre = str(genre or resolved_pack_id or "daily_life_toon")
+    base_path, target_base_path = _background_base_paths(
+        resolved_pack_id,
+        background_root=background_root,
+        repo_root=repo_root,
+    )
+    raw_config = settings.get("background_library", {}) or {}
+    if not isinstance(raw_config, dict):
+        raise ValueError("settings.background_library must be an object")
+    config = build_background_library_config(
+        genre=resolved_genre,
+        config_data=raw_config,
+        library_path=target_base_path,
+    )
+    library = BackgroundLibrary(
+        pack_id=resolved_pack_id,
+        genre=resolved_genre,
+        config=config,
+        base_path=str(base_path),
+    )
+    return library.build_episode_asset_request_manifest(
+        episode_data,
+        images_per_location=images_per_location,
+    )
+
+
+def write_background_episode_asset_request_manifest(
+    settings_path: Path | str,
+    episode_path: Path | str,
+    output_path: Path | str,
+    *,
+    pack_id: Optional[str] = None,
+    genre: Optional[str] = None,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+    images_per_location: Optional[int] = None,
+) -> Path:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    manifest = build_background_episode_asset_request_manifest(
+        settings_path,
+        episode_path,
+        pack_id=pack_id,
+        genre=genre,
+        repo_root=repo_root,
+        background_root=background_root,
+        images_per_location=images_per_location,
+    )
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_background_asset_coverage_report(
     request_manifest: Dict[str, Any] | Path | str,
     *,
@@ -1597,6 +1763,19 @@ def main(argv: Optional[List[str]] = None) -> int:
     request_parser.add_argument("--images-per-location", type=int, default=None, help="Image count per location and time.")
     request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    episode_request_parser = subparsers.add_parser(
+        "episode-asset-requests",
+        help="Build background plate requests only for locations used by an episode JSON file.",
+    )
+    episode_request_parser.add_argument("settings_path", help="Path to pack settings.json")
+    episode_request_parser.add_argument("episode_path", help="Input episode JSON path.")
+    episode_request_parser.add_argument("--pack-id", default=None, help="Pack id. Defaults to the settings directory name.")
+    episode_request_parser.add_argument("--genre", default=None, help="Background profile/genre. Defaults to pack id.")
+    episode_request_parser.add_argument("--repo-root", default=None, help="Repository root for resolving relative background roots.")
+    episode_request_parser.add_argument("--background-root", default=None, help="Directory that contains per-pack background folders.")
+    episode_request_parser.add_argument("--images-per-location", type=int, default=None, help="Image count per episode location/time.")
+    episode_request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     coverage_parser = subparsers.add_parser(
         "coverage",
         help="Report which requested background plates exist locally.",
@@ -1643,6 +1822,31 @@ def main(argv: Optional[List[str]] = None) -> int:
                 times=args.time,
             )
             print(f"Wrote background asset requests for {manifest['pack_id']}: {output}")
+        else:
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "episode-asset-requests":
+        manifest = build_background_episode_asset_request_manifest(
+            args.settings_path,
+            args.episode_path,
+            pack_id=args.pack_id,
+            genre=args.genre,
+            repo_root=args.repo_root,
+            background_root=args.background_root,
+            images_per_location=args.images_per_location,
+        )
+        if args.output:
+            output = write_background_episode_asset_request_manifest(
+                args.settings_path,
+                args.episode_path,
+                args.output,
+                pack_id=args.pack_id,
+                genre=args.genre,
+                repo_root=args.repo_root,
+                background_root=args.background_root,
+                images_per_location=args.images_per_location,
+            )
+            print(f"Wrote episode background asset requests for {manifest['pack_id']}: {output}")
         else:
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return 0

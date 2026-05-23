@@ -151,9 +151,10 @@ contract.
 
 Use `reverie-videotoon-preflight episode ...` after actor episode asset
 coverage and background asset coverage are both written. For real episode
-rendering, use `reverie-background-library-requests episode-coverage ...` so
-the background gate checks only the locations referenced by that episode's
-scenes. Preflight combines both reports into
+rendering, use `reverie-background-library-requests episode-asset-requests ...`
+followed by `reverie-background-library-requests episode-coverage ...` so the
+background gate requests and checks only the locations referenced by that
+episode's scenes. Preflight combines both reports into
 `reverie.pack.videotoon_episode_preflight.v1` and should be the final local
 render gate before assembling a video-toon episode.
 
