@@ -122,6 +122,10 @@
         "base": "Nari, Korean young woman, shoulder-length black hair, beige cardigan or casual modern outfit, clear eyes, decisive but warm expression, premium Korean webtoon character",
         "style": "consistent face, clean black line art, medium-shot readable acting, natural proportions, no text"
       },
+      "actor_adult_woman_01": {
+        "base": "Reusable adult Korean woman actor, short or medium neat dark hair, simple modern cardigan or blouse silhouette, clean Korean video-toon cutout",
+        "style": "fixed actor model identity, clean black line art, half-body readable acting, natural proportions, no text"
+      },
       "_default": {
         "base": "Korean webtoon character, everyday outfit, clean foreground cutout",
         "style": "consistent face, clean line art"
@@ -318,6 +322,13 @@
     "video_toon_workflow_template": "layered_character_reference_v1",
     "prop_keywords": [],
     "actor_pool": {
+      "actor_adult_woman_01": {
+        "character_id": "actor_adult_woman_01",
+        "actor_model_path": "assets/actor_models/actor_adult_woman_01/actor.json",
+        "visual_identity": "Reusable adult Korean woman actor with stable face, hair silhouette, and modern everyday outfit for omnibus roles",
+        "voice_profile": "female_01",
+        "required_variants": ["neutral_standing", "talking_standing", "worried_standing", "sad_standing", "happy_standing", "angry_standing"]
+      },
       "nari_young_woman": {
         "character_id": "nari_young_woman",
         "visual_identity": "Nari, recurring young woman actor with shoulder-length black hair, clear decisive eyes, and a warm modern casual look",
@@ -358,12 +369,13 @@
     },
     "cast_slots": {
       "protagonist": {
-        "actor_id": "nari_young_woman",
-        "character_id": "nari_young_woman",
+        "actor_id": "actor_adult_woman_01",
+        "character_id": "actor_adult_woman_01",
         "aliases": [
           "민서",
           "나리",
           "nari",
+          "actor_adult_woman_01",
           "nari_young_woman",
           "young_woman",
           "woman",

@@ -314,3 +314,29 @@ def test_public_videotoon_packs_use_actor_pool_contract():
         for slot_name, slot_data in motiontoon["cast_slots"].items():
             assert slot_data.get("actor_id"), f"{pack_name}.{slot_name} missing actor_id"
             assert slot_data["actor_id"] in motiontoon["actor_pool"]
+
+
+def test_public_videotoon_packs_cast_reusable_actor_model_template():
+    validator = PackValidator()
+    repo_root = Path(__file__).resolve().parents[1]
+    actor_model_path = "assets/actor_models/actor_adult_woman_01/actor.json"
+
+    for pack_name in ("daily_life_toon", "mystery_toon"):
+        settings_path = repo_root / "assets" / "packs" / pack_name / "settings.json"
+        settings = json.loads(settings_path.read_text(encoding="utf-8"))
+        motiontoon = settings["motiontoon"]
+        actor_pool = motiontoon["actor_pool"]
+
+        result = validator.validate_settings(settings)
+
+        assert result.is_valid is True, f"{pack_name}: {result.errors}"
+        assert actor_pool["actor_adult_woman_01"]["actor_model_path"] == actor_model_path
+        assert any(
+            slot_data.get("actor_id") == "actor_adult_woman_01"
+            for slot_data in motiontoon["cast_slots"].values()
+        ), f"{pack_name} does not cast actor_adult_woman_01"
+
+        image_prompt = (repo_root / "assets" / "packs" / pack_name / "prompts" / "image_llm_prompt.txt").read_text(
+            encoding="utf-8"
+        )
+        assert "actor_adult_woman_01" in image_prompt

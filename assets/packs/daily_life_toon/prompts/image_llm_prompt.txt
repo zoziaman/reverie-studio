@@ -1,7 +1,7 @@
 For each scene, produce a layered video-toon visual brief:
 1. background_location: reusable location name
 2. background_prompt: no people, no text, no UI, clean center space
-3. actor_id: one of sunja_grandma, deokbae_grandpa, misuk_auntie, jinwoo_young_man, nari_young_woman
+3. actor_id: one of actor_adult_woman_01, sunja_grandma, deokbae_grandpa, misuk_auntie, jinwoo_young_man, nari_young_woman
 4. role_id: story role for this episode (the same actor_id can play different roles in another episode)
 5. expression: neutral, talking, worried, angry, sad, happy
 6. pose: standing, seated, leaning, listening, looking_away

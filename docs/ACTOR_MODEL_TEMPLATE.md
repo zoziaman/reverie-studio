@@ -136,3 +136,8 @@ Runtime-facing validation lives in `utils.actor_model.validate_actor_model_packa
 Pack-level validation uses `PackValidator(repo_root=...)` to verify
 `settings.motiontoon.actor_pool.*.actor_model_path` references. A pack can only
 request variants that exist in the actor model contract.
+
+The public `daily_life_toon` and `mystery_toon` packs both expose
+`actor_adult_woman_01` in `settings.motiontoon.actor_pool` and cast that actor
+into one lead/observer slot while keeping older named actor aliases available
+for compatibility.

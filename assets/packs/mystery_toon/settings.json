@@ -76,6 +76,7 @@
       "misuk_auntie": {"base": "Misuk, middle-aged Korean auntie, skeptical gaze, practical bob haircut, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
       "jinwoo_young_man": {"base": "Jinwoo, Korean young man, tired but observant, neat casual clothes, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
       "nari_young_woman": {"base": "Nari, Korean young woman, alert decisive eyes, modern casual outfit, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
+      "actor_adult_woman_01": {"base": "Reusable adult Korean woman actor, short or medium neat dark hair, simple modern cardigan or blouse silhouette, clean Korean mystery video-toon cutout", "style": "fixed actor model identity, clean foreground cutout, readable mystery acting"},
       "fake_manager": {"base": "middle-aged Korean building manager, ambiguous smile, neat jacket, premium Korean webtoon character", "style": "consistent face, clean foreground cutout"},
       "_default": {"base": "Korean mystery webtoon character, clean foreground cutout", "style": "consistent face, clean line art"}
     },
@@ -153,6 +154,13 @@
     "video_toon_workflow_template": "layered_character_reference_v1",
     "prop_keywords": [],
     "actor_pool": {
+      "actor_adult_woman_01": {
+        "character_id": "actor_adult_woman_01",
+        "actor_model_path": "assets/actor_models/actor_adult_woman_01/actor.json",
+        "visual_identity": "Reusable adult Korean woman actor with stable face, hair silhouette, and restrained mystery-toon acting range",
+        "voice_profile": "female_01",
+        "required_variants": ["neutral_standing", "talking_standing", "worried_standing", "sad_standing", "scared_standing", "angry_standing"]
+      },
       "nari_young_woman": {
         "character_id": "nari_young_woman",
         "visual_identity": "Nari, recurring observer actor with shoulder-length black hair, alert decisive eyes, and modern casual styling",
@@ -192,7 +200,7 @@
       "required_scene_fields": ["scene_id", "role_id", "actor_id", "emotion", "shot_type"]
     },
     "cast_slots": {
-      "observer": {"actor_id": "nari_young_woman", "character_id": "nari_young_woman", "aliases": ["나리", "관찰자", "young_woman"]},
+      "observer": {"actor_id": "actor_adult_woman_01", "character_id": "actor_adult_woman_01", "aliases": ["나리", "관찰자", "young_woman", "actor_adult_woman_01", "nari_young_woman"]},
       "skeptic": {"actor_id": "jinwoo_young_man", "character_id": "jinwoo_young_man", "aliases": ["진우", "청년", "young_man"]},
       "witness": {"actor_id": "misuk_auntie", "character_id": "misuk_auntie", "aliases": ["미숙", "아줌마", "middle_woman"]},
       "elder": {"actor_id": "sunja_grandma", "character_id": "sunja_grandma", "aliases": ["순자", "할머니", "grandma"]},
