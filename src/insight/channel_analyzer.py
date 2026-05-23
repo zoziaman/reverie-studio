@@ -36,6 +36,7 @@ except ImportError:
 
 # Gemini AI
 from utils.gemini_compat import GEMINI_AVAILABLE, configure_gemini, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 # 로거
 try:
@@ -184,7 +185,7 @@ class ChannelAnalyzer:
             try:
                 self.gemini = GeminiClient(gemini_api_key)
             except Exception as e:
-                logger.warning(f"Gemini 초기화 실패: {e}")
+                logger.warning(f"Gemini 초기화 실패: {redact_sensitive_text(e)}")
 
         logger.info(f"[ChannelAnalyzer] v{self.VERSION} 초기화 완료")
 
@@ -650,7 +651,7 @@ JSON만 출력하세요."""
                 )
 
         except Exception as e:
-            logger.error(f"댓글 AI 분석 실패: {e}")
+            logger.error(f"댓글 AI 분석 실패: {redact_sensitive_text(e)}")
 
         return CommentAnalysis(total_comments_analyzed=len(sample))
 
@@ -719,8 +720,9 @@ JSON만 출력하세요."""
             return response
 
         except Exception as e:
-            logger.error(f"전략 리포트 생성 실패: {e}")
-            return f"전략 리포트 생성 실패: {e}"
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"전략 리포트 생성 실패: {safe_error}")
+            return f"전략 리포트 생성 실패: {safe_error}"
 
     # ============================================================
     # 메인 분석 함수
