@@ -83,6 +83,10 @@ def test_codex_setup_prompt_is_present_for_non_developer_onboarding():
     text = guide.read_text(encoding="utf-8")
     assert "Codex" in text
     assert "python scripts/public_verify.py" in text
+    assert "python scripts/public_export.py" in text
+    assert "python scripts/public_export.py --verify" in text
+    assert "history-free source archive" in text
+    assert "report files only" not in text
     assert "python -m reverie_doctor" in text
     assert "python -m reverie_demo" in text
     assert "--with-functions-audit" in text
@@ -151,3 +155,13 @@ def test_public_demo_docs_include_videotoon_actor_template_output():
     assert "storyboard.plan.json" in readme
     assert "metadata.review.json" in public_demo
     assert "mouthCues" in public_demo
+
+
+def test_readme_documents_public_export_workflow():
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    assert "python scripts\\public_export.py --out" in readme
+    assert "python scripts\\public_export.py --verify" in readme
+    assert "public_export_manifest.json" in readme
+    assert "archive_sha256" in readme
+    assert "git_history_included=false" in readme

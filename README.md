@@ -272,6 +272,20 @@ Get-Content SECURITY_PUBLIC_CHECK.md
 Get-Content PUBLIC_RELEASE_CHECKLIST.md
 ```
 
+If you are publishing from this recovered/private-history workspace, do not
+turn the whole checkout public. Build and verify a history-free source archive
+instead:
+
+```powershell
+python scripts\public_export.py --out "$env:TEMP\reverie-public-export"
+python scripts\public_export.py --verify --out "$env:TEMP\reverie-public-export"
+Get-Content "$env:TEMP\reverie-public-export\public_export_manifest.json"
+```
+
+The export manifest records `git_history_included=false`, `archive_sha256`,
+archive integrity checks, clean workspace state, and the redacted public
+snapshot summary.
+
 Do not publish if the release contains real credentials, private local state,
 generated channel output, model weights, voice datasets, BGM/SFX libraries, or
 personal identifiers.

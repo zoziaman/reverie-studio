@@ -17,7 +17,8 @@ Start with the safe public checks only:
 
 1. Run python scripts/public_verify.py --out <a temporary folder outside the repo>.
 2. Run python scripts/public_verify.py --with-pytest --with-functions-audit --out <a temporary folder outside the repo> if pytest and npm are available.
-3. Read public_verify_report.json and the generated public_demo reports.
+3. If preparing a public release artifact, create a history-free source archive by running python scripts/public_export.py --out <a temporary folder outside the repo>, then python scripts/public_export.py --verify --out <the same temporary folder>.
+4. Read public_verify_report.json, public_export_manifest.json, and the generated public_demo reports.
 
 The verifier wraps the same safe checks that used to be run separately:
 python scripts/public_snapshot_check.py, python -m reverie_doctor --json, and
@@ -52,11 +53,15 @@ python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_summary.md"
 Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
+python scripts\public_export.py --out "$env:TEMP\reverie-public-export"
+python scripts\public_export.py --verify --out "$env:TEMP\reverie-public-export"
+Get-Content "$env:TEMP\reverie-public-export\public_export_manifest.json"
 ```
 
 ## Expected First Outcome
 
-The first successful run should create report files only:
+The first successful run should create safe report files and, when export is
+requested, a history-free source archive outside the repository:
 
 ```text
 reverie-public-verify/
@@ -69,6 +74,9 @@ reverie-public-verify/
     run_manifest.json
     stage_log.jsonl
     pipeline_report.md
+reverie-public-export/
+  reverie-public-snapshot.zip
+  public_export_manifest.json
 ```
 
 It should not create video, audio, image, subtitle, credential, token, database,
