@@ -288,3 +288,98 @@ def test_actor_model_cli_writes_coverage_report_and_can_fail_on_missing(tmp_path
     assert fail_code == 1
     assert report["missing_count"] == 18
     assert "missing 18/18" in captured.out
+
+
+def test_pack_actor_asset_coverage_report_summarizes_actor_model_paths():
+    actor_model = _actor_model_module()
+    settings_path = ROOT / "assets" / "packs" / "daily_life_toon" / "settings.json"
+
+    report = actor_model.build_pack_actor_asset_coverage_report(settings_path, repo_root=ROOT)
+
+    assert report["schema"] == "reverie.pack.actor_asset_coverage.v1"
+    assert report["pack_settings_path"] == "assets/packs/daily_life_toon/settings.json"
+    assert report["actor_model_count"] >= 1
+    assert report["expected_count"] >= 18
+    assert report["missing_count"] >= 18
+    assert report["ready_for_local_test"] is False
+    assert report["actors"]["actor_adult_woman_01"]["missing_count"] == 18
+
+
+def test_pack_actor_asset_coverage_report_rejects_unknown_actor_model_path(tmp_path):
+    actor_model = _actor_model_module()
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps(
+            {
+                "motiontoon": {
+                    "actor_pool": {
+                        "actor_missing_01": {
+                            "visual_identity": "missing actor",
+                            "actor_model_path": "assets/actor_models/actor_missing_01/actor.json",
+                        }
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    report = actor_model.build_pack_actor_asset_coverage_report(settings_path, repo_root=ROOT)
+
+    assert report["ready_for_local_test"] is False
+    assert report["actors"]["actor_missing_01"]["is_valid"] is False
+    assert "does not exist" in report["actors"]["actor_missing_01"]["errors"][0]
+
+
+def test_actor_model_cli_writes_pack_coverage_report(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    settings_path = ROOT / "assets" / "packs" / "daily_life_toon" / "settings.json"
+    output_path = tmp_path / "daily_life_toon.actor_coverage.json"
+
+    exit_code = actor_model.main(
+        [
+            "pack-coverage",
+            str(settings_path),
+            "--repo-root",
+            str(ROOT),
+            "--output",
+            str(output_path),
+        ]
+    )
+    fail_code = actor_model.main(
+        [
+            "pack-coverage",
+            str(settings_path),
+            "--repo-root",
+            str(ROOT),
+            "--fail-on-missing",
+        ]
+    )
+    captured = capsys.readouterr()
+    report = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert fail_code == 1
+    assert report["actors"]["actor_adult_woman_01"]["missing_count"] == 18
+    assert "daily_life_toon" in captured.out
+
+
+def test_pack_coverage_fail_on_missing_rejects_pack_without_actor_models(tmp_path):
+    actor_model = _actor_model_module()
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"motiontoon": {"actor_pool": {"legacy_actor": {"visual_identity": "legacy only"}}}}),
+        encoding="utf-8",
+    )
+
+    fail_code = actor_model.main(
+        [
+            "pack-coverage",
+            str(settings_path),
+            "--repo-root",
+            str(ROOT),
+            "--fail-on-missing",
+        ]
+    )
+
+    assert fail_code == 1

@@ -104,7 +104,7 @@ def _relative_to_root(path: Path, repo_root: Optional[Path | str]) -> str:
     try:
         return path.resolve().relative_to(root).as_posix()
     except ValueError:
-        return path.as_posix()
+        return (Path(path.parent.name) / path.name).as_posix()
 
 
 def _variant_parts(variant_key: str) -> tuple[str, str]:
@@ -462,6 +462,102 @@ def write_actor_asset_coverage_report(
     return output
 
 
+def _load_pack_settings(settings_path: Path | str, repo_root: Optional[Path | str]) -> tuple[Path, dict[str, Any]]:
+    raw_path = Path(settings_path)
+    root = Path(repo_root).resolve() if repo_root is not None else None
+    path = raw_path.resolve() if raw_path.is_absolute() else ((root or Path.cwd()) / raw_path).resolve()
+    if not path.exists():
+        raise ValueError(f"pack settings path does not exist: {settings_path}")
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError("pack settings must contain a JSON object")
+    return path, data
+
+
+def _actor_model_entries_from_settings(settings: Mapping[str, Any]) -> dict[str, str]:
+    motiontoon = settings.get("motiontoon")
+    if not isinstance(motiontoon, Mapping):
+        return {}
+    actor_pool = motiontoon.get("actor_pool")
+    if not isinstance(actor_pool, Mapping):
+        return {}
+
+    entries: dict[str, str] = {}
+    for actor_id, actor_data in actor_pool.items():
+        if not isinstance(actor_data, Mapping):
+            continue
+        actor_model_path = str(actor_data.get("actor_model_path") or "").strip()
+        actor_key = str(actor_id or "").strip()
+        if actor_key and actor_model_path:
+            entries[actor_key] = actor_model_path
+    return entries
+
+
+def build_pack_actor_asset_coverage_report(
+    settings_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Aggregate actor asset coverage for every actor_model_path in a pack settings file."""
+    settings_file, settings = _load_pack_settings(settings_path, repo_root)
+    actor_model_entries = _actor_model_entries_from_settings(settings)
+    actors: dict[str, Any] = {}
+    expected_count = 0
+    existing_count = 0
+    missing_count = 0
+
+    for actor_id, actor_model_path in actor_model_entries.items():
+        try:
+            actor_report = build_actor_asset_coverage_report(actor_model_path, repo_root=repo_root)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            actors[actor_id] = {
+                "actor_id": actor_id,
+                "actor_model_path": actor_model_path,
+                "is_valid": False,
+                "errors": [str(exc)],
+                "expected_count": 0,
+                "existing_count": 0,
+                "missing_count": 0,
+                "ready_for_local_test": False,
+            }
+            missing_count += 1
+            continue
+
+        actor_report["is_valid"] = True
+        actor_report["actor_model_path"] = actor_model_path
+        actors[actor_id] = actor_report
+        expected_count += int(actor_report["expected_count"])
+        existing_count += int(actor_report["existing_count"])
+        missing_count += int(actor_report["missing_count"])
+
+    coverage_ratio = round(existing_count / expected_count, 4) if expected_count else 1.0
+    return {
+        "schema": "reverie.pack.actor_asset_coverage.v1",
+        "pack_settings_path": _relative_to_root(settings_file, repo_root),
+        "actor_model_count": len(actor_model_entries),
+        "expected_count": expected_count,
+        "existing_count": existing_count,
+        "missing_count": missing_count,
+        "coverage_ratio": coverage_ratio,
+        "ready_for_local_test": bool(actor_model_entries) and missing_count == 0,
+        "actors": actors,
+    }
+
+
+def write_pack_actor_asset_coverage_report(
+    settings_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write a pack-level actor asset coverage report and return the output path."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    report = build_pack_actor_asset_coverage_report(settings_path, repo_root=repo_root)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Validate actor models and write local asset request manifests.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -476,6 +572,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     coverage_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
     coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any asset is missing.")
+
+    pack_coverage_parser = subparsers.add_parser(
+        "pack-coverage",
+        help="Aggregate actor asset coverage for a pack settings.json file.",
+    )
+    pack_coverage_parser.add_argument("settings_path", help="Path to pack settings.json")
+    pack_coverage_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    pack_coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    pack_coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any asset is missing.")
 
     args = parser.parse_args(argv)
     if args.command == "asset-requests":
@@ -498,6 +603,23 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(json.dumps(report, ensure_ascii=False, indent=2))
             print(f"actor {report['actor_id']} missing {report['missing_count']}/{report['expected_count']}")
         if args.fail_on_missing and report["missing_count"]:
+            return 1
+        return 0
+    if args.command == "pack-coverage":
+        report = build_pack_actor_asset_coverage_report(args.settings_path, repo_root=args.repo_root)
+        if args.output:
+            output = write_pack_actor_asset_coverage_report(args.settings_path, args.output, repo_root=args.repo_root)
+            print(
+                f"Wrote pack actor coverage for {report['pack_settings_path']}: {output} "
+                f"(missing {report['missing_count']}/{report['expected_count']})"
+            )
+        else:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(
+                f"pack {report['pack_settings_path']} missing "
+                f"{report['missing_count']}/{report['expected_count']}"
+            )
+        if args.fail_on_missing and not report["ready_for_local_test"]:
             return 1
         return 0
 

@@ -172,3 +172,13 @@ reverie-actor-model-requests coverage assets/actor_models/actor_adult_woman_01/a
 The asset coverage report lists every expected variant, mouth, and eye target,
 then marks which files exist locally. The public template is expected to report
 missing assets because it does not bundle generated PNG files.
+
+For a full pack, use `pack-coverage` against the pack settings file:
+
+```bash
+reverie-actor-model-requests pack-coverage assets/packs/daily_life_toon/settings.json --repo-root . --output data/actor_asset_requests/daily_life_toon.actor_coverage.json --fail-on-missing
+```
+
+`pack-coverage` scans `settings.motiontoon.actor_pool` for every
+`actor_model_path`, runs actor asset coverage for each one, and returns one
+pack-level readiness result.
