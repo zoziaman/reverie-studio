@@ -23,7 +23,7 @@ chain is reviewed.
 
 | Check | Status | Evidence / action |
 | --- | --- | --- |
-| Real `.env` / API key / token absent from publish set | PASS | Focused tracked-file scan found no `.env`, token pickle, credential store, Slack token, or live API key file in the publish set. `.env.example` remains placeholder-only, and the snapshot scanner blocks env-like credential/token filenames. |
+| Real `.env` / API key / token absent from publish set | PASS | Focused tracked-file scan found no `.env`, token pickle, credential store, Slack token, AWS key, Stripe live key, or live API key file in the publish set. `.env.example` remains placeholder-only, and the snapshot scanner blocks env-like credential/token filenames. |
 | YouTube OAuth credentials and token pickle absent | PASS | No OAuth client-secret JSON or token pickle is tracked. Runtime upload credentials remain user-provided local files. |
 | Firebase service account absent | PASS | No Firebase service-account JSON is tracked. Firebase references are code/documentation placeholders only. |
 | Memory DB / session log / local agent state absent | PASS | `.opennexus/`, `.claude/`, `daily/`, `data/collab/`, and tracked memory/session artifacts were removed from the publish set. |
@@ -43,7 +43,7 @@ Run these against the exact release directory or branch:
 ```powershell
 python scripts\public_verify.py --with-pytest --with-functions-audit --out "$env:TEMP\reverie-public-verify"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
-rg -n "AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|ya29\.[A-Za-z0-9_-]+|xox[baprs]-[A-Za-z0-9-]{20,}|BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY|private_key|client_secret|firebase-adminsdk"
+rg -n "AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(AKIA|ASIA)[0-9A-Z]{16}|(sk|rk)_live_[A-Za-z0-9]{16,}|ya29\.[A-Za-z0-9_-]+|xox[baprs]-[A-Za-z0-9-]{20,}|BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY|private_key|client_secret|firebase-adminsdk"
 rg -n "C:\\Users\\|C:/Users/|@gmail\.com|@naver\.com|@daum\.net|010[- ]?[0-9]{4}[- ]?[0-9]{4}"
 git ls-files | rg -i "(^|/)(\.env|.*token.*|.*credential.*|.*secret.*|.*oauth.*|.*session.*|.*memory.*|.*\.db|.*\.sqlite|.*\.pickle|.*\.pkl|.*\.log)$|(^|/)(daily|\.opennexus|\.claude|logs|data/logs|data/backups|src/data/logs)(/|$)"
 git ls-files | rg -i "(\.(mp4|mov|avi|wav|mp3|flac|ogg|ckpt|safetensors|pt|pth|bin|onnx|gguf|zip|7z|rar|exe)$)|(^|/)(node_modules|\.cache|__pycache__|release|dist|build|outputs?|temp|tmp|checkpoints?|loras?|voice_datasets?|thumbnails?|screenshots?)(/|$)"
