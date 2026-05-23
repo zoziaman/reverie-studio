@@ -3,9 +3,13 @@
 import logging
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from utils.actor_model import validate_actor_model_package
+
 logger = logging.getLogger(__name__)
+DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass
@@ -48,6 +52,14 @@ class PackValidator:
     ]
     VALID_COLOR_FILTERS = ["horror", "horror_green", "warm", "cool", "cold", "sepia", "noir", "vintage", "drama", "none"]
     VALID_TRANSITIONS = ["crossfade", "fade_black", "fade_white", "cut", "slide", "zoom"]
+
+    def __init__(self, repo_root: Optional[str | Path] = None) -> None:
+        if repo_root is not None:
+            self.repo_root = Path(repo_root).resolve()
+        elif (DEFAULT_REPO_ROOT / "assets").exists():
+            self.repo_root = DEFAULT_REPO_ROOT
+        else:
+            self.repo_root = None
 
     def _is_valid_channel_type(self, channel_type: str) -> bool:
         if not channel_type:
@@ -127,6 +139,30 @@ class PackValidator:
             if not isinstance(visual_identity, str) or not visual_identity.strip():
                 result.add_error(f"{actor_path}.visual_identity is required")
 
+            actor_model_path = actor_data.get("actor_model_path")
+            actor_model_variants: set[str] = set()
+            if actor_model_path is not None:
+                if not isinstance(actor_model_path, str) or not actor_model_path.strip():
+                    result.add_error(f"{actor_path}.actor_model_path must be a non-empty string")
+                elif Path(actor_model_path).is_absolute():
+                    result.add_error(f"{actor_path}.actor_model_path must be relative to the repository root")
+                elif self.repo_root is None:
+                    result.add_warning(f"{actor_path}.actor_model_path was not validated because repo_root is unavailable")
+                else:
+                    actor_model_result = validate_actor_model_package(actor_model_path, repo_root=self.repo_root)
+                    for error in actor_model_result.errors:
+                        result.add_error(f"{actor_path}.actor_model_path: {error}")
+                    result.warnings.extend(
+                        f"{actor_path}.actor_model_path: {warning}" for warning in actor_model_result.warnings
+                    )
+                    if actor_model_result.is_valid:
+                        if actor_model_result.actor_id != actor_id:
+                            result.add_error(
+                                f"{actor_path}.actor_model_path actor_id '{actor_model_result.actor_id}' "
+                                f"does not match actor_pool key '{actor_id}'"
+                            )
+                        actor_model_variants = set(actor_model_result.required_variants)
+
             character_id = actor_data.get("character_id")
             if character_id is not None:
                 if not isinstance(character_id, str) or not character_id.strip():
@@ -151,6 +187,15 @@ class PackValidator:
                     result.add_error(f"{actor_path}.required_variants must be a list")
                 elif any(not isinstance(variant, str) or not variant.strip() for variant in required_variants):
                     result.add_error(f"{actor_path}.required_variants must contain non-empty strings")
+                elif actor_model_variants:
+                    missing_model_variants = [
+                        variant for variant in required_variants if variant not in actor_model_variants
+                    ]
+                    if missing_model_variants:
+                        result.add_error(
+                            f"{actor_path}.required_variants missing from actor_model: "
+                            f"{', '.join(missing_model_variants)}"
+                        )
 
             sprite_sheet = actor_data.get("sprite_sheet")
             if sprite_sheet is not None:

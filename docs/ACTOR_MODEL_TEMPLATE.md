@@ -131,3 +131,8 @@ The template must not contain:
 
 The sample actor template is checked by `tests/test_actor_model_template.py`.
 The schema is defined in `schemas/video_toon_actor_model.schema.json`.
+
+Runtime-facing validation lives in `utils.actor_model.validate_actor_model_package`.
+Pack-level validation uses `PackValidator(repo_root=...)` to verify
+`settings.motiontoon.actor_pool.*.actor_model_path` references. A pack can only
+request variants that exist in the actor model contract.

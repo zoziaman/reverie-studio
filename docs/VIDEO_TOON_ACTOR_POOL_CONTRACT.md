@@ -40,6 +40,7 @@ This contract moves identity upstream:
     "actor_pool": {
       "actor_woman_01": {
         "character_id": "actor_woman_01",
+        "actor_model_path": "assets/actor_models/actor_adult_woman_01/actor.json",
         "visual_identity": "sharp-eyed recurring woman actor with short black hair",
         "voice_profile": "female_01",
         "required_variants": ["neutral_front", "fear_front", "talking_front"],
@@ -57,6 +58,7 @@ This contract moves identity upstream:
 Minimum fields:
 
 - `visual_identity`: Required. Short human-readable lock on the actor's stable look.
+- `actor_model_path`: Optional but recommended. Relative path to the reusable actor model package contract.
 - `character_id`: Optional bridge to existing `visual_storytelling.characters`.
 - `voice_profile`: Optional but recommended. Keeps the same face tied to the same voice.
 - `required_variants`: Optional list of sprite or expression keys needed before production.
@@ -121,6 +123,11 @@ Episode and scene validation lives in `utils.videotoon_contract`:
 Generation requests now expose `identity_source`, `identity_contract`, and `variant_generation_support`. When `actor_id` is present, the identity source is `actor_pool`; IP-Adapter and ControlNet are marked as optional support for missing pose, depth, or face-reference variants.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
+
+`PackValidator(repo_root=...)` validates `actor_model_path` when it is present.
+It checks that the referenced actor model package exists, remains inside the
+repository root, keeps public-safe boundaries, matches the actor pool key, and
+contains every pack-level `required_variants` entry requested by that actor.
 
 ## Target Video-Toon Grammar
 
