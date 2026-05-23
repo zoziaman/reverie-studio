@@ -24,6 +24,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Callable
 from enum import Enum
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -156,6 +158,7 @@ class UploadScheduler:
 
     def _log(self, message: str, level: str = "info"):
         """로그 기록"""
+        message = redact_sensitive_text(message)
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_entry = f"[{timestamp}] {message}"
 
@@ -476,7 +479,7 @@ class UploadScheduler:
                 raise Exception("업로드 응답에 video_id가 없음")
 
         except Exception as e:
-            error_msg = str(e)
+            error_msg = redact_sensitive_text(e)
             item["error"] = error_msg
             item["retry_count"] += 1
 
@@ -541,10 +544,11 @@ class UploadScheduler:
             return True
 
         except Exception as e:
-            self._log(f"피드백 루프 등록 실패: {e}", "warning")
+            safe_error = redact_sensitive_text(e)
+            self._log(f"피드백 루프 등록 실패: {safe_error}", "warning")
             # v54.7.3: 등록 실패를 item에 기록하여 나중에 재시도 가능
             item["feedback_registered"] = False
-            item["feedback_error"] = str(e)
+            item["feedback_error"] = safe_error
             self._save_queue()  # 상태 저장
             return False
 
