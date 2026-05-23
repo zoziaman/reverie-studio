@@ -43,7 +43,8 @@ Expected files:
 
 For release verification, add `--with-pytest --with-functions-audit`; the
 top-level report will include `publish_gate` and optional Firebase Functions
-audit evidence while keeping the dry-run report-only. It also records
+audit evidence while keeping the dry-run report-only. A passing functions audit
+reports 0 production vulnerabilities as structured counts. It also records
 `workspace_state` from `git status` as counts and path fingerprints so release
 review can distinguish a clean publish branch/export from local work in
 progress without copying raw local path names into the report.

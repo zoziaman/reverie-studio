@@ -27,6 +27,8 @@ from datetime import datetime, timedelta
 from typing import Dict, Any, List, Optional, Tuple
 from collections import Counter
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -141,7 +143,7 @@ class PromptOptimizer:
                     self._deep_merge(default_data, loaded)
                     return default_data
             except Exception as e:
-                logger.warning(f"채널 데이터 로드 실패: {e}")
+                logger.warning(f"채널 데이터 로드 실패: {redact_sensitive_text(e)}")
 
         return default_data
 
@@ -153,7 +155,7 @@ class PromptOptimizer:
                 with open(self.channel_data_path, 'w', encoding='utf-8') as f:
                     json.dump(self.channel_data, f, ensure_ascii=False, indent=2)
             except Exception as e:
-                logger.error(f"채널 데이터 저장 실패: {e}")
+                logger.error(f"채널 데이터 저장 실패: {redact_sensitive_text(e)}")
 
     def _deep_merge(self, base: dict, update: dict):
         """딕셔너리 깊은 병합"""
@@ -211,7 +213,7 @@ class PromptOptimizer:
                         self.channel_data["channel_name"] = channel_info.get('title', '')
                         logger.info(f"[PromptOptimizer] 채널 감지됨: {self.channel_id} ({channel_info.get('title', '')})")
                 except Exception as e:
-                    logger.warning(f"채널 ID 감지 실패: {e}")
+                    logger.warning(f"채널 ID 감지 실패: {redact_sensitive_text(e)}")
 
             result["channel_id"] = self.channel_id
 
@@ -252,8 +254,9 @@ class PromptOptimizer:
             logger.info(f"채널 분석 완료: {len(videos)}개 영상, 패턴 {sum(result['patterns_found'].values())}개 발견")
 
         except Exception as e:
-            logger.error(f"채널 분석 오류: {e}")
-            result["errors"].append(str(e))
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"채널 분석 오류: {safe_error}")
+            result["errors"].append(safe_error)
 
         return result
 

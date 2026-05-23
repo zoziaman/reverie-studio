@@ -64,7 +64,7 @@ run a local setup doctor, write a fixed-actor video-toon Remotion props dry-run,
 score a public quality gate, and stop before upload. It does not render real
 video, call AI APIs, start local model servers, or create generated media. The
 top-level verification report also records publish-gate manual review items for
-git history and optional Firebase Functions dependencies. See
+git history and optional Firebase Functions syntax/audit evidence. See
 `docs/PUBLIC_DEMO.md`.
 
 ## Target Workflow
@@ -177,9 +177,11 @@ The verifier runs the public snapshot scan, the local setup doctor, and the
 no-credential dry-run demo, then writes `public_verify_report.json` outside the
 repository. Add `--with-pytest` when you want the full public test suite in the
 same command, and add `--with-functions-audit` when you explicitly want npm's
-audit registry check for the optional Firebase Functions package. After
-`npm --prefix functions ci`, add `--with-functions-syntax` to confirm the
-optional `functions/index.js` entrypoint still loads under Node.
+audit registry check for the optional Firebase Functions package. A passing
+functions audit reports 0 production vulnerabilities without embedding raw npm
+output in the public report. After `npm --prefix functions ci`, add
+`--with-functions-syntax` to confirm the optional `functions/index.js` entrypoint
+still loads under Node.
 
 4. Install and run any local generation services you want to use, such as
    Stable Diffusion WebUI, ComfyUI, GPT-SoVITS, Supertonic 3, or a compatible

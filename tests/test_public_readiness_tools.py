@@ -124,7 +124,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "clean workspace" in checklist
     assert "path fingerprints" in security
     assert "raw local path names" in checklist
-    assert "structured counts, vulnerability names, and fix advice" in security
+    assert "structured counts and dependency versions" in security
     assert "Snapshot findings" in security
     assert "snapshot findings as counts/fingerprints" in checklist
     assert "env-like credential/token filenames" in security
@@ -136,7 +136,10 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "Stripe live key" in security
     assert "Hugging Face token" in security
     assert "NPM token" in security
-    assert "9 moderate" in security
+    assert "| Firebase Functions dependency audit | PASS |" in security
+    assert "| Firebase Functions dependency audit | PASS |" in checklist
+    assert "0 production vulnerabilities" in security
+    assert "9 moderate" not in security
     assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "--with-public-export" in workflow
     assert "--with-functions-syntax" in workflow

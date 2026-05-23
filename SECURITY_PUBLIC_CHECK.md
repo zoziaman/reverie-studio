@@ -13,18 +13,18 @@ NEEDS REVIEW
 The current tracked publish set has a one-command public verifier that scans
 tracked files, runs the local setup doctor, executes the no-credential dry-run,
 checks the current workspace state, and can include pytest evidence. Remaining
-review items are git history and the Firebase Functions dependency audit:
-`--with-history-scan` now adds redacted historical filename evidence and blocks
-this recovered branch for direct public conversion, so publish from a clean
-release branch/export unless the old commits are intentionally reviewed or
-rewritten. `python scripts\public_export.py --out <temp>` creates a history-free
-zip archive plus `public_export_manifest.json` from the current tracked snapshot
-after the snapshot check passes, and `public_verify.py --with-public-export`
-records that export verification in the public verifier report. After
-`npm --prefix functions ci`, `--with-functions-syntax` records whether
-`functions/index.js` loads under Node without embedding stack traces or local
-paths. Do not treat the optional functions surface as
-production-ready until the residual moderate audit chain is reviewed.
+review item is git history: `--with-history-scan` now adds redacted historical
+filename evidence and blocks this recovered branch for direct public conversion,
+so publish from a clean release branch/export unless the old commits are
+intentionally reviewed or rewritten. `python scripts\public_export.py --out
+<temp>` creates a history-free zip archive plus `public_export_manifest.json`
+from the current tracked snapshot after the snapshot check passes, and
+`public_verify.py --with-public-export` records that export verification in the
+public verifier report. After `npm --prefix functions ci`,
+`--with-functions-syntax` records whether `functions/index.js` loads under Node
+without embedding stack traces or local paths. `--with-functions-audit` now
+records 0 production vulnerabilities for the optional functions package,
+together with structured counts and dependency versions.
 
 ## Checklist
 
@@ -43,7 +43,7 @@ production-ready until the residual moderate audit chain is reviewed.
 | Firebase Functions syntax check | PASS | After `npm --prefix functions ci`, `python scripts\public_verify.py --with-functions-syntax --out <temp>` loads `functions/index.js` through Node and records only status, public-safe command text, return code, and generic detail in `checks.functions_syntax`. |
 | Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain` as counts and path fingerprints, not raw local path names; release review should use a clean branch/export before publishing. |
 | Git history filename scan | NEEDS REVIEW | `python scripts\public_verify.py --with-history-scan --out <temp>` reuses the public snapshot path rules against historical filenames and reports only counts/fingerprints. On this recovered branch it blocks direct public conversion because historical blocked roots, media/model extensions, and credential-like filenames still exist in old commits. |
-| Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` reduced audit output to 9 moderate production dependency findings; the remaining suggested fix requires a breaking `firebase-admin` / `firebase-functions` path. The public verifier records structured counts, vulnerability names, and fix advice instead of embedding raw parsed `npm audit` output. |
+| Firebase Functions dependency audit | PASS | `npm --prefix functions audit --package-lock-only --omit=dev --json` reports 0 production vulnerabilities after the lockfile refresh and root `uuid` override. The public verifier records structured counts and dependency versions instead of embedding raw parsed `npm audit` output. |
 | License boundary explicit | PASS | README and LICENSE state MIT for repository code/docs, while excluding rights to third-party local assets. |
 
 ## Focused Checks
