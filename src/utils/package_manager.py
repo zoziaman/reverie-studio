@@ -26,6 +26,8 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime
 from enum import Enum
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 # 현재 Reverie 버전
@@ -590,8 +592,9 @@ class PackageManager:
                 shutil.rmtree(temp_dir, ignore_errors=True)
 
         except Exception as e:
-            logger.error(f"[PackageManager] 패키지 내보내기 실패: {e}")
-            return False, f"내보내기 실패: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PackageManager] 패키지 내보내기 실패: {safe_error}")
+            return False, f"내보내기 실패: {safe_error}"
 
     def _copy_voice_models_to_package(self, package: ChannelPackage, temp_dir: Path) -> None:
         """
