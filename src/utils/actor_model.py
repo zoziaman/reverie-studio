@@ -1469,6 +1469,165 @@ def write_actor_episode_asset_plan(
     return output
 
 
+def _build_episode_variant_request(
+    actor_model_path: Path | str,
+    *,
+    actor_id: str,
+    variant_key: str,
+    expression: str,
+    pose: str,
+    scene_ids: list[str],
+    shot_types: list[str],
+    repo_root: Optional[Path | str],
+) -> dict[str, Any]:
+    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root)
+    if not validation.is_valid:
+        raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
+    actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+
+    actor_dir = actor_path.parent
+    identity_prompt = _read_template(actor_dir, "prompts/identity_prompt.txt")
+    variant_prompt = _read_template(actor_dir, "prompts/variant_prompt.txt")
+    negative_prompt = _read_template(actor_dir, "prompts/negative_prompt.txt")
+    prompt = "\n\n".join(
+        [
+            identity_prompt,
+            variant_prompt,
+            f"Episode supplement variant: {variant_key}",
+            f"Expression: {expression}",
+            f"Pose: {pose}",
+            f"Scene ids: {', '.join(scene_ids)}",
+            f"Shot types: {', '.join(shot_types)}",
+            "Output: one transparent-capable half-body video-toon actor image, no background, no text.",
+        ]
+    )
+    request = _asset_request(
+        actor_id=actor_id,
+        request_type="variant",
+        key=variant_key,
+        target_relative_path=f"variants/{variant_key}.png",
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        expression=expression,
+        pose=pose,
+    )
+    request["source"] = "episode_missing_variant"
+    request["scene_ids"] = scene_ids
+    request["shot_types"] = shot_types
+    request["source_actor_model_path"] = _relative_to_root(actor_path, repo_root)
+    return request
+
+
+def build_actor_episode_variant_request_manifest(
+    roster_plan: Mapping[str, Any],
+    episode: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Build supplemental variant requests for episode scenes missing actor assets."""
+    patch = _validate_roster_plan(roster_plan)
+    actor_pool = patch["actor_pool"]
+    episode_plan = build_actor_episode_asset_plan(
+        roster_plan,
+        episode,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+
+    grouped: dict[tuple[str, str], dict[str, Any]] = {}
+    for scene in episode_plan["scenes"]:
+        if scene.get("variant_available"):
+            continue
+        actor_id = str(scene.get("actor_id") or "").strip()
+        variant_key = str(scene.get("variant_key") or "").strip()
+        if not actor_id or not variant_key:
+            continue
+        group_key = (actor_id, variant_key)
+        grouped.setdefault(
+            group_key,
+            {
+                "actor_id": actor_id,
+                "variant_key": variant_key,
+                "expression": str(scene.get("emotion") or "neutral"),
+                "pose": str(scene.get("pose") or "standing"),
+                "scene_ids": [],
+                "shot_types": [],
+            },
+        )
+        scene_id = str(scene.get("scene_id") or "").strip()
+        shot_type = str(scene.get("shot_type") or "").strip()
+        if scene_id and scene_id not in grouped[group_key]["scene_ids"]:
+            grouped[group_key]["scene_ids"].append(scene_id)
+        if shot_type and shot_type not in grouped[group_key]["shot_types"]:
+            grouped[group_key]["shot_types"].append(shot_type)
+
+    requests: list[dict[str, Any]] = []
+    for (actor_id, _variant_key), group in grouped.items():
+        actor_data = actor_pool.get(actor_id)
+        if not isinstance(actor_data, Mapping):
+            continue
+        actor_model_path = _actor_model_path_from_roster_actor(
+            actor_id,
+            actor_data,
+            actor_root=actor_root,
+            repo_root=repo_root,
+        )
+        requests.append(
+            _build_episode_variant_request(
+                actor_model_path,
+                actor_id=actor_id,
+                variant_key=group["variant_key"],
+                expression=group["expression"],
+                pose=group["pose"],
+                scene_ids=group["scene_ids"],
+                shot_types=group["shot_types"],
+                repo_root=repo_root,
+            )
+        )
+
+    return {
+        "schema": "reverie.pack.actor_episode.variant_requests.v1",
+        "pack_id": episode_plan["pack_id"],
+        "episode_id": episode_plan["episode_id"],
+        "source_episode_asset_plan_schema": episode_plan["schema"],
+        "source_missing_variant_count": episode_plan["missing_variant_count"],
+        "request_count": len(requests),
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "requests": requests,
+    }
+
+
+def write_actor_episode_variant_request_manifest(
+    roster_plan_path: Path | str,
+    episode_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write supplemental variant requests for missing episode actor assets."""
+    roster_plan = _load_json_object(roster_plan_path, "actor roster plan")
+    episode = _load_json_object(episode_path, "episode")
+    manifest = build_actor_episode_variant_request_manifest(
+        roster_plan,
+        episode,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_coverage_report(
     actor_model_path: Path | str,
     *,
@@ -1735,6 +1894,16 @@ def main(argv: Optional[list[str]] = None) -> int:
     episode_asset_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
     episode_asset_parser.add_argument("--fail-on-invalid", action="store_true", help="Exit 1 when the asset plan is invalid.")
 
+    episode_variant_parser = subparsers.add_parser(
+        "episode-variant-requests",
+        help="Build supplemental variant requests for episode scenes missing actor assets.",
+    )
+    episode_variant_parser.add_argument("roster_plan_path", help="Input actor roster plan JSON path.")
+    episode_variant_parser.add_argument("episode_path", help="Input episode JSON with role_casting and scenes.")
+    episode_variant_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    episode_variant_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    episode_variant_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -1882,6 +2051,27 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(json.dumps(manifest, ensure_ascii=False, indent=2))
         if args.fail_on_invalid and not manifest["is_valid"]:
             return 1
+        return 0
+    if args.command == "episode-variant-requests":
+        if args.output:
+            output = write_actor_episode_variant_request_manifest(
+                args.roster_plan_path,
+                args.episode_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(f"Wrote episode variant requests: {output}")
+        else:
+            roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
+            episode = _load_json_object(args.episode_path, "episode")
+            manifest = build_actor_episode_variant_request_manifest(
+                roster_plan,
+                episode,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

@@ -1094,3 +1094,166 @@ def test_actor_model_cli_writes_episode_asset_plan(tmp_path, capsys):
     assert manifest["is_valid"] is True
     assert manifest["scene_count"] == 1
     assert "episode asset plan" in captured.out
+
+
+def test_build_actor_episode_variant_request_manifest_dedupes_missing_scene_variants(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "surprised",
+                "pose": "jumping",
+                "shot_type": "wide",
+            },
+            {
+                "scene_id": "s002",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "surprised",
+                "pose": "jumping",
+                "shot_type": "close",
+            },
+        ],
+    }
+
+    manifest = actor_model.build_actor_episode_variant_request_manifest(plan, episode, actor_root=actor_root)
+    request = manifest["requests"][0]
+
+    assert manifest["schema"] == "reverie.pack.actor_episode.variant_requests.v1"
+    assert manifest["pack_id"] == "daily_life_toon"
+    assert manifest["episode_id"] == "daily_life_toon_ep001"
+    assert manifest["request_count"] == 1
+    assert manifest["source_missing_variant_count"] == 2
+    assert request["actor_id"] == "actor_daily_adult_man_01"
+    assert request["request_type"] == "variant"
+    assert request["key"] == "surprised_jumping"
+    assert request["target_relative_path"] == "variants/surprised_jumping.png"
+    assert request["scene_ids"] == ["s001", "s002"]
+    assert "Episode supplement variant: surprised_jumping" in request["prompt"]
+    assert request["public_safe"] is True
+
+
+def test_actor_episode_variant_request_manifest_is_empty_when_episode_assets_exist(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode = {
+        "episode_id": "daily_life_toon_ep001",
+        "role_casting": plan["episode_cast_seed"]["role_casting"],
+        "scenes": [
+            {
+                "scene_id": "s001",
+                "role_id": "protagonist",
+                "actor_id": "actor_daily_adult_man_01",
+                "emotion": "happy",
+                "pose": "standing",
+                "shot_type": "medium",
+            }
+        ],
+    }
+
+    manifest = actor_model.build_actor_episode_variant_request_manifest(plan, episode, actor_root=actor_root)
+
+    assert manifest["request_count"] == 0
+    assert manifest["requests"] == []
+
+
+def test_actor_model_cli_writes_episode_variant_request_manifest(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    episode_path = tmp_path / "daily_life_toon.episode.json"
+    output_path = tmp_path / "daily_life_toon.episode_variant_requests.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    episode_path.write_text(
+        json.dumps(
+            {
+                "episode_id": "daily_life_toon_ep001",
+                "role_casting": plan["episode_cast_seed"]["role_casting"],
+                "scenes": [
+                    {
+                        "scene_id": "s001",
+                        "role_id": "protagonist",
+                        "actor_id": "actor_daily_adult_man_01",
+                        "emotion": "surprised",
+                        "pose": "jumping",
+                        "shot_type": "wide",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    exit_code = actor_model.main(
+        [
+            "episode-variant-requests",
+            str(plan_path),
+            str(episode_path),
+            "--actor-root",
+            str(actor_root),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert manifest["request_count"] == 1
+    assert manifest["requests"][0]["key"] == "surprised_jumping"
+    assert "episode variant requests" in captured.out

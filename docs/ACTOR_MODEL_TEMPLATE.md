@@ -227,6 +227,19 @@ Dialogue scenes also receive a default mouth layer target such as
 `face_parts/mouth_small_open.png`. Missing scene variants are reported before
 the run reaches ComfyUI, SD WebUI, or the renderer.
 
+When `episode-asset-plan` reports missing variants, turn those gaps into a
+deduplicated supplemental request manifest:
+
+```bash
+reverie-actor-model-requests episode-variant-requests data/actor_asset_requests/daily_life_toon.actor_roster_plan.json data/episodes/daily_life_toon_ep001.json --repo-root . --output data/actor_asset_requests/daily_life_toon_ep001.episode_variant_requests.json
+```
+
+`episode-variant-requests` writes one request per missing
+`actor_id + variant_key`, even when several scenes need the same pose or
+expression. It does not mutate `actor.json`; review the request manifest, create
+the local PNG, then decide whether that variant should be promoted into the
+actor package's durable `required_variants`.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash

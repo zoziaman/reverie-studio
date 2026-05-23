@@ -127,6 +127,9 @@ preflight between episode planning and rendering. It reads a roster plan plus an
 episode JSON, validates role-to-actor references, and maps each scene to the
 fixed actor variant, mouth layer, and eye layer expected by the actor model
 package. Missing scene variants are reported before image generation begins.
+Use `episode-variant-requests` to convert those missing variants into
+deduplicated local generation requests without mutating the public actor
+package contract.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 
