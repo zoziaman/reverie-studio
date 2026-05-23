@@ -19,6 +19,8 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 # v62.22: Fernet 토큰 암호화 (pickle 직접 노출 방지)
@@ -63,10 +65,10 @@ def _load_encrypted_pickle(path: str):
                 _save_encrypted_pickle(path, creds)
                 logger.info(f"[YouTube] pickle → Fernet 자동 마이그레이션 완료: {path}")
             except Exception as e:
-                logger.warning(f"[YouTube] pickle 마이그레이션 실패: {e}")
+                logger.warning(f"[YouTube] pickle 마이그레이션 실패: {redact_sensitive_text(e)}")
         return creds
     except Exception as e:
-        logger.error(f"[YouTube] 토큰 로드 실패: {e}")
+        logger.error(f"[YouTube] 토큰 로드 실패: {redact_sensitive_text(e)}")
         return None
 
 
@@ -542,12 +544,13 @@ class YouTubeUploader:
             }
 
         except Exception as e:
-            logger.error(f"   [ERROR] 썸네일 교체 실패: {e}")
-            logger.error(f"썸네일 교체 실패: {video_id} - {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"   [ERROR] 썸네일 교체 실패: {safe_error}")
+            logger.error(f"썸네일 교체 실패: {video_id} - {safe_error}")
             return {
                 'success': False,
                 'video_id': video_id,
-                'error': str(e)
+                'error': safe_error
             }
 
     def get_video_info(self, video_id: str) -> dict:
