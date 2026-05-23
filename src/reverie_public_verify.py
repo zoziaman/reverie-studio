@@ -624,6 +624,37 @@ def _release_options(
     ]
 
 
+def _release_option_status(
+    release_options: list[dict[str, str]],
+    option_id: str,
+) -> str:
+    for option in release_options:
+        if option.get("id") == option_id:
+            return option.get("status", "unknown")
+    return "unknown"
+
+
+def _publish_recommendation(
+    *,
+    failures: list[str],
+    release_options: list[dict[str, str]],
+) -> str:
+    history_free_status = _release_option_status(release_options, "history_free_export")
+    existing_history_status = _release_option_status(release_options, "existing_repo_history")
+    if failures:
+        if history_free_status == "available" and existing_history_status == "blocked":
+            return (
+                "Use the history-free public export for public distribution. "
+                "Do not publish the existing repository history until the history scan passes."
+            )
+        return "Do not publish until blocking failures are fixed."
+    return (
+        "Tracked files passed public safety checks. Publish only as a clean export/branch "
+        "unless git history is reviewed; keep Firebase Functions optional until its "
+        "dependency audit is reviewed."
+    )
+
+
 def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
     checks = report.get("checks", {})
     publish_gate = report.get("publish_gate", {})
@@ -838,25 +869,21 @@ def _build_publish_gate(
     publish_status = "blocked" if failures or any(
         check["status"] in {"blocked", "error", "fail", "timeout"} for check in machine_checks
     ) else "review_required"
-    recommendation = (
-        "Do not publish until blocking failures are fixed."
-        if failures
-        else (
-            "Tracked files passed public safety checks. Publish only as a clean export/branch "
-            "unless git history is reviewed; keep Firebase Functions optional until its "
-            "dependency audit is reviewed."
-        )
+    release_options = _release_options(
+        snapshot_findings=snapshot_findings,
+        history_filename_report=history_filename_report,
+        public_export_report=public_export_report,
+    )
+    recommendation = _publish_recommendation(
+        failures=failures,
+        release_options=release_options,
     )
     return {
         "status": publish_status,
         "recommendation": recommendation,
         "machine_checks": machine_checks,
         "manual_review_items": _review_items(functions_audit_report, history_filename_report),
-        "release_options": _release_options(
-            snapshot_findings=snapshot_findings,
-            history_filename_report=history_filename_report,
-            public_export_report=public_export_report,
-        ),
+        "release_options": release_options,
     }
 
 

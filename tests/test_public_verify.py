@@ -198,6 +198,64 @@ def test_public_verify_blocks_on_history_filename_findings(tmp_path, monkeypatch
     assert "client_secret_alice.json" not in serialized
 
 
+def test_public_verify_recommends_history_free_export_when_history_blocks_existing_repo(tmp_path, monkeypatch):
+    class SnapshotCheck:
+        def run_check(self, root):
+            return []
+
+        def run_history_filename_check(self, root):
+            return ["private/data.wav: historical blocked extension: .wav"]
+
+        def build_json_report(self, findings):
+            return {
+                "schema": "reverie.public_snapshot_check.v1",
+                "status": "fail" if findings else "pass",
+                "finding_count": len(findings),
+                "finding_types": {"historical blocked extension": len(findings)},
+                "finding_fingerprints": [{"reason": "historical blocked extension", "fingerprint": "abc123"}],
+                "truncated_finding_fingerprints": 0,
+            }
+
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: SnapshotCheck())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_public_export",
+        lambda out, allow_repo_output=False: {
+            "status": "pass",
+            "archive_path": "public_export/reverie-public-snapshot.zip",
+            "manifest_path": "public_export/public_export_manifest.json",
+            "manifest": {
+                "schema": "reverie.public_export.v1",
+                "source_commit": "abc123",
+                "archive_file_count": 2,
+                "archive_sha256": "1" * 64,
+                "archive_integrity": {"status": "pass"},
+                "git_history_included": False,
+                "workspace_state": {"status": "pass", "dirty_count": 0},
+                "public_snapshot": {"status": "pass", "finding_count": 0},
+            },
+            "verify": {"status": "pass"},
+        },
+    )
+
+    report = public_verify.run_public_verification(
+        tmp_path,
+        with_history_scan=True,
+        with_public_export=True,
+    )
+
+    recommendation = report["publish_gate"]["recommendation"]
+    assert report["publish_gate"]["status"] == "blocked"
+    assert "Use the history-free public export" in recommendation
+    assert "Do not publish the existing repository history" in recommendation
+
+
 def test_public_verify_summary_explains_history_block_release_options(tmp_path, monkeypatch):
     class SnapshotCheck:
         def run_check(self, root):
