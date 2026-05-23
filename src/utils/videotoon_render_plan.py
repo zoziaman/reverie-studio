@@ -9,6 +9,7 @@ from typing import Any, Optional
 
 RENDER_PLAN_SCHEMA = "reverie.pack.videotoon_render_plan.v1"
 REMOTION_PROPS_SCHEMA = "reverie.remotion.radio_drama_props.v1"
+ASSET_WORK_ORDER_SCHEMA = "reverie.pack.videotoon_asset_work_order.v1"
 PREPARE_SCHEMA = "reverie.pack.videotoon_episode_prepare.v1"
 ACTOR_PLAN_SCHEMA = "reverie.pack.actor_episode_asset_plan.v1"
 ACTOR_LAYER_SPECS_SCHEMA = "reverie.pack.actor_roster.layer_specs.v1"
@@ -217,6 +218,198 @@ def write_videotoon_render_plan_from_prepare_report(
     return output
 
 
+def _work_order_asset(
+    *,
+    actor_id: str,
+    asset_type: str,
+    key: str,
+    target_relative_path: str,
+    prompt: str,
+    scene_id: str,
+    role_id: str,
+) -> dict[str, Any]:
+    source_scene_ids = [scene_id] if scene_id else []
+    role_ids = [role_id] if role_id else []
+    actor_ids = [actor_id] if actor_id and asset_type != "background_plate" else []
+    return {
+        "asset_id": f"{actor_id or 'scene'}__{asset_type}__{key}",
+        "actor_id": actor_id if asset_type != "background_plate" else "",
+        "actor_ids": actor_ids,
+        "role_ids": role_ids,
+        "source_scene_ids": source_scene_ids,
+        "asset_type": asset_type,
+        "key": key,
+        "target_relative_path": target_relative_path,
+        "prompt": prompt,
+        "status": "needs_local_generation",
+        "public_safe": True,
+    }
+
+
+def _merge_work_order_asset(target: dict[str, dict[str, Any]], asset: dict[str, Any]) -> None:
+    path = str(asset.get("target_relative_path") or "")
+    if not path:
+        return
+    if path not in target:
+        target[path] = asset
+        return
+
+    existing = target[path]
+    for key in ("actor_ids", "role_ids", "source_scene_ids"):
+        values = existing.setdefault(key, [])
+        for value in asset.get(key, []):
+            if value not in values:
+                values.append(value)
+
+
+def _layer_assets_from_scene(
+    scene: Mapping[str, Any],
+    *,
+    actor: Mapping[str, Any],
+    actor_id: str,
+    role_id: str,
+    scene_id: str,
+    collection_name: str,
+    asset_type: str,
+    required_keys: set[str],
+) -> list[dict[str, Any]]:
+    layers = actor.get(collection_name)
+    if not isinstance(layers, Mapping):
+        return []
+    assets: list[dict[str, Any]] = []
+    for key, layer in layers.items():
+        key_text = str(key)
+        if key_text not in required_keys:
+            continue
+        if not isinstance(layer, Mapping):
+            continue
+        target = str(layer.get("target_relative_path") or "")
+        if not target:
+            continue
+        assets.append(
+            _work_order_asset(
+                actor_id=actor_id,
+                asset_type=asset_type,
+                key=key_text,
+                target_relative_path=target,
+                prompt=f"Create {asset_type} `{key}` for fixed video-toon actor `{actor_id}`.",
+                scene_id=scene_id,
+                role_id=role_id,
+            )
+        )
+    return assets
+
+
+def build_videotoon_asset_work_order_from_render_plan(
+    render_plan: Mapping[str, Any],
+    *,
+    schema: str = ASSET_WORK_ORDER_SCHEMA,
+) -> dict[str, Any]:
+    """Build a public-safe local asset work order from a video-toon render plan."""
+    _require_schema(render_plan, RENDER_PLAN_SCHEMA, "render plan")
+    assets_by_path: dict[str, dict[str, Any]] = {}
+    scenes = render_plan.get("scenes") if isinstance(render_plan.get("scenes"), list) else []
+
+    for scene in scenes:
+        if not isinstance(scene, Mapping):
+            continue
+        scene_id = str(scene.get("scene_id") or "")
+        actor_id = str(scene.get("actor_id") or "")
+        role_id = str(scene.get("role_id") or "")
+        background = scene.get("background") if isinstance(scene.get("background"), Mapping) else {}
+        background_target = str(background.get("target_relative_path") or "")
+        if background_target:
+            _merge_work_order_asset(
+                assets_by_path,
+                _work_order_asset(
+                    actor_id=actor_id,
+                    asset_type="background_plate",
+                    key=str(background.get("location_id") or "background"),
+                    target_relative_path=background_target,
+                    prompt="Create an empty reusable video-toon background plate with no people or private details.",
+                    scene_id=scene_id,
+                    role_id=role_id,
+                ),
+            )
+
+        actor = scene.get("actor") if isinstance(scene.get("actor"), Mapping) else {}
+        variant_keys = {str(actor.get("variant_key") or "")}
+        mouth_keys = {str(actor.get("mouth_shape_key") or ""), "mouth_closed"}
+        eye_keys = {str(actor.get("eye_shape_key") or ""), "eyes_closed"}
+        for asset in _layer_assets_from_scene(
+            scene,
+            actor=actor,
+            actor_id=actor_id,
+            role_id=role_id,
+            scene_id=scene_id,
+            collection_name="available_variant_layers",
+            asset_type="variant_base",
+            required_keys={key for key in variant_keys if key},
+        ):
+            _merge_work_order_asset(assets_by_path, asset)
+        for asset in _layer_assets_from_scene(
+            scene,
+            actor=actor,
+            actor_id=actor_id,
+            role_id=role_id,
+            scene_id=scene_id,
+            collection_name="available_mouth_layers",
+            asset_type="mouth_layer",
+            required_keys={key for key in mouth_keys if key},
+        ):
+            _merge_work_order_asset(assets_by_path, asset)
+        for asset in _layer_assets_from_scene(
+            scene,
+            actor=actor,
+            actor_id=actor_id,
+            role_id=role_id,
+            scene_id=scene_id,
+            collection_name="available_eye_layers",
+            asset_type="eye_layer",
+            required_keys={key for key in eye_keys if key},
+        ):
+            _merge_work_order_asset(assets_by_path, asset)
+
+    assets = list(assets_by_path.values())
+    actor_ids = []
+    for asset in assets:
+        for actor_id in asset.get("actor_ids", []):
+            if actor_id not in actor_ids:
+                actor_ids.append(actor_id)
+    return {
+        "schema": schema,
+        "pack_id": str(render_plan.get("pack_id") or ""),
+        "episode_id": str(render_plan.get("episode_id") or ""),
+        "actor_id": actor_ids[0] if len(actor_ids) == 1 else "",
+        "actor_ids": actor_ids,
+        "asset_count": len(assets),
+        "creates_media": False,
+        "source_render_plan_schema": RENDER_PLAN_SCHEMA,
+        "assets": assets,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def write_videotoon_asset_work_order_from_render_plan(
+    render_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    schema: str = ASSET_WORK_ORDER_SCHEMA,
+) -> Path:
+    """Write a public-safe local asset work order from a video-toon render plan."""
+    render_plan = _load_json_object(render_plan_path, "render plan")
+    work_order = build_videotoon_asset_work_order_from_render_plan(render_plan, schema=schema)
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(work_order, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def _layer_by_type(scene: Mapping[str, Any], layer_type: str) -> dict[str, Any]:
     layers = scene.get("composition_layers")
     if not isinstance(layers, list):
@@ -407,6 +600,13 @@ def main(argv: Optional[list[str]] = None) -> int:
     remotion_parser.add_argument("--width", type=int, default=1920, help="Composition width.")
     remotion_parser.add_argument("--height", type=int, default=1080, help="Composition height.")
 
+    work_order_parser = subparsers.add_parser(
+        "to-asset-work-order",
+        help="Convert a video-toon render plan into a local asset work order.",
+    )
+    work_order_parser.add_argument("render_plan_path", help="Input render_plan.json path.")
+    work_order_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     args = parser.parse_args(argv)
     if args.command == "from-prepare":
         plan = build_videotoon_render_plan_from_prepare_report(args.prepare_report_path)
@@ -437,6 +637,15 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(f"Wrote Remotion props for {props['motiontoon']['renderPlan']['episode_id']}: {output}")
         else:
             print(json.dumps(props, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "to-asset-work-order":
+        render_plan = _load_json_object(args.render_plan_path, "render plan")
+        work_order = build_videotoon_asset_work_order_from_render_plan(render_plan)
+        if args.output:
+            output = write_videotoon_asset_work_order_from_render_plan(args.render_plan_path, args.output)
+            print(f"Wrote video-toon asset work order for {work_order['episode_id']}: {output}")
+        else:
+            print(json.dumps(work_order, ensure_ascii=False, indent=2))
         return 0
 
     parser.error(f"unknown command: {args.command}")

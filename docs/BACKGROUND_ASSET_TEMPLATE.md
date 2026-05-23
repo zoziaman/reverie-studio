@@ -141,6 +141,9 @@ visible without reading every coverage file manually.
 After prepare, use `reverie-videotoon-render-plan from-prepare ...` to convert
 the checked actor and background artifacts into a scene composition plan for
 Remotion or another renderer.
+Use `reverie-videotoon-render-plan to-asset-work-order ...` when you need a
+single JSON checklist of the local actor and background PNG targets still
+needed by that render plan.
 Then use `reverie-videotoon-render-plan to-remotion-props ...` to export the
 current Remotion props JSON without creating media files.
 

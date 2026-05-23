@@ -177,6 +177,10 @@ those checked artifacts into `reverie.pack.videotoon_render_plan.v1`: a
 scene-level composition graph with background plate, actor base variant, eye
 layer, and mouth layer entries. This is the handoff shape for Remotion or any
 other renderer, while remaining public-safe JSON only.
+Use `reverie-videotoon-render-plan to-asset-work-order ...` when the render
+plan should be converted back into a local generation checklist. The command
+lists the background plate, actor variant, mouth layers, and eye layers needed
+for that render plan without creating media files.
 Use `reverie-videotoon-render-plan to-remotion-props ...` when the current
 Remotion `RadioDrama` composition needs its props JSON: the command maps the
 scene graph to `images[*].backgroundPath`, `foregroundPath`, eye layer, mouth

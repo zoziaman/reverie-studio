@@ -198,6 +198,56 @@ def test_build_remotion_props_from_videotoon_render_plan(tmp_path):
     assert "C:" + "\\Users\\" not in serialized
 
 
+def test_build_asset_work_order_from_videotoon_render_plan(tmp_path):
+    render_plan = _render_plan_module()
+    prepare_report_path = _write_prepare_bundle(tmp_path)
+    plan = render_plan.build_videotoon_render_plan_from_prepare_report(prepare_report_path)
+
+    work_order = render_plan.build_videotoon_asset_work_order_from_render_plan(plan)
+    serialized = json.dumps(work_order)
+    targets = {asset["target_relative_path"]: asset for asset in work_order["assets"]}
+
+    assert work_order["schema"] == "reverie.pack.videotoon_asset_work_order.v1"
+    assert work_order["pack_id"] == "daily_life_toon"
+    assert work_order["episode_id"] == "daily_life_toon_ep001"
+    assert work_order["asset_count"] == len(work_order["assets"])
+    assert work_order["creates_media"] is False
+    assert targets["street_day_00.png"]["asset_type"] == "background_plate"
+    assert targets["variants/happy_standing.png"]["asset_type"] == "variant_base"
+    assert targets["face_parts/eyes_open.png"]["asset_type"] == "eye_layer"
+    assert targets["face_parts/eyes_closed.png"]["asset_type"] == "eye_layer"
+    assert targets["face_parts/mouth_closed.png"]["asset_type"] == "mouth_layer"
+    assert targets["face_parts/mouth_small_open.png"]["asset_type"] == "mouth_layer"
+    assert all(asset["status"] == "needs_local_generation" for asset in work_order["assets"])
+    assert all(asset["public_safe"] is True for asset in work_order["assets"])
+    assert "C:" + "/Users/" not in serialized
+    assert "C:" + "\\Users\\" not in serialized
+
+
+def test_videotoon_render_plan_cli_writes_asset_work_order(tmp_path, capsys):
+    render_plan = _render_plan_module()
+    prepare_report_path = _write_prepare_bundle(tmp_path)
+    render_plan_path = tmp_path / "daily_life_toon_ep001.render_plan.json"
+    output_path = tmp_path / "daily_life_toon_ep001.asset_work_order.json"
+    render_plan.write_videotoon_render_plan_from_prepare_report(prepare_report_path, render_plan_path)
+
+    exit_code = render_plan.main(
+        [
+            "to-asset-work-order",
+            str(render_plan_path),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    work_order = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert work_order["schema"] == "reverie.pack.videotoon_asset_work_order.v1"
+    assert work_order["asset_count"] == 6
+    assert "asset work order" in captured.out
+
+
 def test_videotoon_render_plan_cli_writes_remotion_props(tmp_path, capsys):
     render_plan = _render_plan_module()
     prepare_report_path = _write_prepare_bundle(tmp_path)

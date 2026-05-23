@@ -125,6 +125,7 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "reverie-videotoon-prepare" in text
     assert "reverie-videotoon-render-plan" in text
     assert "to-remotion-props" in text
+    assert "to-asset-work-order" in text
     assert "mouthCues" in text
     assert "eyesClosedPath" in text
     assert "`next_actions`" in text

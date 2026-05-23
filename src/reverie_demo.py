@@ -275,96 +275,17 @@ def _build_videotoon_actor_template_render_plan(pack: dict) -> dict:
     }
 
 
-def _work_order_asset(
-    *,
-    actor_id: str,
-    asset_type: str,
-    key: str,
-    target_relative_path: str,
-    prompt: str,
-) -> dict:
-    return {
-        "asset_id": f"{actor_id}__{asset_type}__{key}",
-        "actor_id": actor_id if asset_type != "background_plate" else "",
-        "asset_type": asset_type,
-        "key": key,
-        "target_relative_path": target_relative_path,
-        "prompt": prompt,
-        "status": "needs_local_generation",
-        "public_safe": True,
-    }
-
-
-def _collect_layer_assets(actor_id: str, actor: dict, collection_name: str, asset_type: str) -> list[dict]:
-    layers = actor.get(collection_name)
-    if not isinstance(layers, dict):
-        return []
-    assets = []
-    for key, layer in layers.items():
-        if not isinstance(layer, dict):
-            continue
-        target = str(layer.get("target_relative_path") or "")
-        if not target:
-            continue
-        assets.append(
-            _work_order_asset(
-                actor_id=actor_id,
-                asset_type=asset_type,
-                key=str(key),
-                target_relative_path=target,
-                prompt=f"Create {asset_type} `{key}` for fixed public demo actor `{actor_id}`.",
-            )
-        )
-    return assets
-
-
-def _build_videotoon_actor_asset_work_order(render_plan: dict) -> dict:
-    scenes = render_plan.get("scenes") if isinstance(render_plan.get("scenes"), list) else []
-    first_scene = scenes[0] if scenes and isinstance(scenes[0], dict) else {}
-    actor_id = str(first_scene.get("actor_id") or "demo_fixed_actor_01")
-    actor = first_scene.get("actor") if isinstance(first_scene.get("actor"), dict) else {}
-    assets: list[dict] = []
-
-    background = first_scene.get("background") if isinstance(first_scene.get("background"), dict) else {}
-    background_target = str(background.get("target_relative_path") or "")
-    if background_target:
-        assets.append(
-            _work_order_asset(
-                actor_id=actor_id,
-                asset_type="background_plate",
-                key=str(background.get("location_id") or "background"),
-                target_relative_path=background_target,
-                prompt="Create an empty reusable video-toon background plate with no people or private details.",
-            )
-        )
-    assets.extend(_collect_layer_assets(actor_id, actor, "available_variant_layers", "variant_base"))
-    assets.extend(_collect_layer_assets(actor_id, actor, "available_mouth_layers", "mouth_layer"))
-    assets.extend(_collect_layer_assets(actor_id, actor, "available_eye_layers", "eye_layer"))
-
-    unique_assets = list({asset["target_relative_path"]: asset for asset in assets}.values())
-    return {
-        "schema": "reverie.public_demo.videotoon_actor_asset_work_order.v1",
-        "pack_id": str(render_plan.get("pack_id") or ""),
-        "episode_id": str(render_plan.get("episode_id") or ""),
-        "actor_id": actor_id,
-        "asset_count": len(unique_assets),
-        "creates_media": False,
-        "source_render_plan_schema": str(render_plan.get("schema") or ""),
-        "assets": unique_assets,
-        "public_release_boundary": {
-            "contains_generated_media": False,
-            "contains_voice_samples": False,
-            "contains_model_weights": False,
-            "contains_private_paths": False,
-        },
-    }
-
-
 def _write_videotoon_actor_template_demo(output_dir: Path, pack: dict) -> dict:
-    from utils.videotoon_render_plan import build_remotion_props_from_videotoon_render_plan
+    from utils.videotoon_render_plan import (
+        build_remotion_props_from_videotoon_render_plan,
+        build_videotoon_asset_work_order_from_render_plan,
+    )
 
     render_plan = _build_videotoon_actor_template_render_plan(pack)
-    work_order = _build_videotoon_actor_asset_work_order(render_plan)
+    work_order = build_videotoon_asset_work_order_from_render_plan(
+        render_plan,
+        schema="reverie.public_demo.videotoon_actor_asset_work_order.v1",
+    )
     props = build_remotion_props_from_videotoon_render_plan(
         render_plan,
         fps=30,

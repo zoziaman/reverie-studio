@@ -427,6 +427,17 @@ contains scene-level `background_plate`, `variant_base`, `eye_layer`, and
 It is still public-safe JSON only; no PNGs, audio, video, private paths, or
 model weights are produced.
 
+To turn that scene graph into a concrete local asset work order, run:
+
+```bash
+reverie-videotoon-render-plan to-asset-work-order data/actor_asset_requests/prepare/daily_life_toon_ep001/daily_life_toon_ep001.render_plan.json --output data/actor_asset_requests/prepare/daily_life_toon_ep001/daily_life_toon_ep001.asset_work_order.json
+```
+
+The asset work order writes schema `reverie.pack.videotoon_asset_work_order.v1`
+and lists only the local background, variant, mouth, and eye PNG targets needed
+by the current render plan. It does not create those files; it is a public-safe
+checklist for the next local generation or curation pass.
+
 To export the current Remotion `RadioDrama` props shape from that render plan,
 run:
 
