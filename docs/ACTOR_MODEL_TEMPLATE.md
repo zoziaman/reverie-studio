@@ -435,7 +435,10 @@ reverie-videotoon-render-plan to-remotion-props data/actor_asset_requests/prepar
 ```
 
 The Remotion props JSON uses schema `reverie.remotion.radio_drama_props.v1` and
-fills `images[*].backgroundPath`, `foregroundPath`, `eyesOpenPath`, and
-`mouthOpenPath` from the checked render plan. It also keeps the original render
-plan under `motiontoon.renderPlan` so the React side can evolve without losing
-the scene graph.
+fills `images[*].backgroundPath`, `foregroundPath`, `eyesOpenPath`,
+`eyesClosedPath`, `mouthClosedPath`, `mouthOpenPath`, and `mouthCues` from the
+checked render plan. It also keeps the original render plan under
+`motiontoon.renderPlan` so the React side can evolve without losing the scene
+graph. This is the first reusable face-rig handoff: the actor identity is still
+one fixed model, while the renderer can blink and alternate mouth layers during
+dialogue.

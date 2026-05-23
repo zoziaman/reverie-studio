@@ -119,6 +119,9 @@ def test_build_videotoon_render_plan_from_prepare_report(tmp_path):
     assert scene["actor"]["variant_key"] == "happy_standing"
     assert scene["actor"]["mouth_shape_key"] == "mouth_small_open"
     assert scene["actor"]["eye_shape_key"] == "eyes_open"
+    assert scene["actor"]["available_mouth_layers"]["mouth_closed"]["target_relative_path"] == "face_parts/mouth_closed.png"
+    assert scene["actor"]["available_mouth_layers"]["mouth_small_open"]["target_relative_path"] == "face_parts/mouth_small_open.png"
+    assert scene["actor"]["available_eye_layers"]["eyes_closed"]["target_relative_path"] == "face_parts/eyes_closed.png"
     assert scene["composition_layers"][1]["target_relative_path"] == "variants/happy_standing.png"
     assert scene["composition_layers"][2]["anchor_key"] == "eye_center"
     assert scene["composition_layers"][3]["anchor_key"] == "mouth_center"
@@ -176,11 +179,21 @@ def test_build_remotion_props_from_videotoon_render_plan(tmp_path):
     assert image["backgroundPath"] == "street_day_00.png"
     assert image["foregroundPath"] == "variants/happy_standing.png"
     assert image["eyesOpenPath"] == "face_parts/eyes_open.png"
+    assert image["eyesClosedPath"] == "face_parts/eyes_closed.png"
+    assert image["mouthClosedPath"] == "face_parts/mouth_closed.png"
     assert image["mouthOpenPath"] == "face_parts/mouth_small_open.png"
+    assert image["mouthCues"][:4] == [
+        {"frame": 0, "mouth": 0},
+        {"frame": 4, "mouth": 1},
+        {"frame": 8, "mouth": 0},
+        {"frame": 12, "mouth": 1},
+    ]
     assert image["startFrame"] == 0
     assert image["durationFrames"] == 90
     assert image["motion"]["scene_type"] == "video_toon_layered_scene"
     assert image["motion"]["use_layered_cutout"] is True
+    assert image["motion"]["face_rig"] is True
+    assert "subtitle_pulse" in image["motion"]["primitives"]
     assert "C:" + "/Users/" not in serialized
     assert "C:" + "\\Users\\" not in serialized
 

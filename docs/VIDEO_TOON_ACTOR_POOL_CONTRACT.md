@@ -180,7 +180,9 @@ other renderer, while remaining public-safe JSON only.
 Use `reverie-videotoon-render-plan to-remotion-props ...` when the current
 Remotion `RadioDrama` composition needs its props JSON: the command maps the
 scene graph to `images[*].backgroundPath`, `foregroundPath`, eye layer, mouth
-layer, and `motiontoon.renderPlan`.
+layer, `mouthCues`, and `motiontoon.renderPlan`. Speaking scenes include both
+closed and open mouth layer paths plus deterministic cue frames so the fixed
+actor can talk without regenerating the character image.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 

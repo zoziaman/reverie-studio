@@ -144,6 +144,9 @@ def _build_scene_composition(
             "eye_shape_key": eye_shape_key,
             "canvas": actor_spec.get("canvas", {}) if isinstance(actor_spec, Mapping) else {},
             "anchor_points": actor_spec.get("anchor_points", {}) if isinstance(actor_spec, Mapping) else {},
+            "available_variant_layers": variant_layers,
+            "available_mouth_layers": mouth_layers,
+            "available_eye_layers": eye_layers,
         },
         "composition_layers": composition_layers,
     }
@@ -224,6 +227,34 @@ def _layer_by_type(scene: Mapping[str, Any], layer_type: str) -> dict[str, Any]:
     return {}
 
 
+def _actor_available_layer_path(scene: Mapping[str, Any], collection_name: str, key: str) -> str:
+    actor = scene.get("actor")
+    if not isinstance(actor, Mapping):
+        return ""
+    layers = actor.get(collection_name)
+    if not isinstance(layers, Mapping):
+        return ""
+    layer = layers.get(key)
+    if not isinstance(layer, Mapping):
+        return ""
+    return str(layer.get("target_relative_path") or "")
+
+
+def _build_mouth_cues(*, is_speaking: bool, duration_frames: int) -> list[dict[str, int]]:
+    if not is_speaking or duration_frames <= 0:
+        return []
+    cues: list[dict[str, int]] = []
+    mouth = 0
+    for frame in range(0, duration_frames, 4):
+        cues.append({"frame": frame, "mouth": mouth})
+        mouth = 1 - mouth
+    if cues[-1]["frame"] != duration_frames - 1:
+        cues.append({"frame": duration_frames - 1, "mouth": 0})
+    else:
+        cues[-1]["mouth"] = 0
+    return cues
+
+
 def _remotion_image_from_scene(
     scene: Mapping[str, Any],
     *,
@@ -236,9 +267,17 @@ def _remotion_image_from_scene(
     mouth_layer = _layer_by_type(scene, "mouth_layer")
     background_path = str(background_layer.get("target_relative_path") or "")
     foreground_path = str(variant_layer.get("target_relative_path") or "")
-    eye_path = str(eye_layer.get("target_relative_path") or "")
+    eye_path = str(eye_layer.get("target_relative_path") or "") or _actor_available_layer_path(
+        scene, "available_eye_layers", "eyes_open"
+    )
+    eyes_closed_path = _actor_available_layer_path(scene, "available_eye_layers", "eyes_closed")
     mouth_path = str(mouth_layer.get("target_relative_path") or "")
+    mouth_closed_path = _actor_available_layer_path(scene, "available_mouth_layers", "mouth_closed")
+    mouth_open_path = mouth_path if str(mouth_layer.get("key") or "") != "mouth_closed" else ""
+    if not mouth_open_path:
+        mouth_open_path = _actor_available_layer_path(scene, "available_mouth_layers", "mouth_small_open")
     mouth_key = str(mouth_layer.get("key") or "")
+    is_speaking = bool(mouth_open_path and mouth_key != "mouth_closed")
 
     image = {
         "path": background_path or foreground_path,
@@ -253,15 +292,24 @@ def _remotion_image_from_scene(
             "actor_id": str(scene.get("actor_id") or ""),
             "role_id": str(scene.get("role_id") or ""),
             "variant_key": str((scene.get("actor") or {}).get("variant_key") or ""),
+            "primitives": ["subtitle_pulse"] if is_speaking else [],
+            "face_rig": bool(eye_path or eyes_closed_path or mouth_closed_path or mouth_open_path),
             "background_id": str((scene.get("background") or {}).get("location_id") or ""),
         },
     }
     if eye_path:
         image["eyesOpenPath"] = eye_path
-    if mouth_path and mouth_key == "mouth_closed":
+    if eyes_closed_path:
+        image["eyesClosedPath"] = eyes_closed_path
+    if mouth_closed_path:
+        image["mouthClosedPath"] = mouth_closed_path
+    elif mouth_path and mouth_key == "mouth_closed":
         image["mouthClosedPath"] = mouth_path
-    elif mouth_path:
-        image["mouthOpenPath"] = mouth_path
+    if mouth_open_path:
+        image["mouthOpenPath"] = mouth_open_path
+    mouth_cues = _build_mouth_cues(is_speaking=is_speaking, duration_frames=scene_duration_frames)
+    if mouth_cues:
+        image["mouthCues"] = mouth_cues
     return image
 
 
