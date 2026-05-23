@@ -86,6 +86,13 @@ PRESET_REQUIRED_FIELDS = (
     "visual_identity",
     "voice_profile",
 )
+DEFAULT_ROLE_CASTING_CONTRACT = {
+    "enabled": True,
+    "strict_actor_refs": True,
+    "allow_background_extras": True,
+    "assignment_key": "role_casting",
+    "required_scene_fields": ["scene_id", "role_id", "actor_id", "emotion", "shot_type"],
+}
 
 
 @dataclass
@@ -118,6 +125,10 @@ def _coerce_string_list(value: Any, default: tuple[str, ...]) -> list[str]:
     if isinstance(value, str):
         return [item.strip() for item in value.split(",") if item.strip()]
     return _string_list(value)
+
+
+def _normalize_aliases(value: Any) -> list[str]:
+    return _coerce_string_list(value, ())
 
 
 def _resolve_actor_path(actor_model_path: Path | str, repo_root: Optional[Path | str]) -> tuple[Path, Optional[str]]:
@@ -738,6 +749,153 @@ def scaffold_actor_model_from_preset(
     )
 
 
+def _normalize_roster_assignment(assignment: Mapping[str, Any]) -> dict[str, Any]:
+    role_id = str(assignment.get("role_id") or "").strip()
+    preset_id = str(assignment.get("preset_id") or "").strip()
+    actor_id = str(assignment.get("actor_id") or "").strip()
+    if not role_id:
+        raise ValueError("roster assignment role_id is required")
+    if not preset_id:
+        raise ValueError(f"roster assignment {role_id}.preset_id is required")
+    if not actor_id:
+        raise ValueError(f"roster assignment {role_id}.actor_id is required")
+    if not ACTOR_ID_PATTERN.fullmatch(actor_id):
+        raise ValueError(f"roster assignment {role_id}.actor_id must use lowercase letters, numbers, and underscores")
+    return {
+        "role_id": role_id,
+        "preset_id": preset_id,
+        "actor_id": actor_id,
+        "aliases": _normalize_aliases(assignment.get("aliases")),
+    }
+
+
+def _parse_roster_assignment(raw_assignment: str) -> dict[str, Any]:
+    raw = str(raw_assignment or "").strip()
+    role_part, separator, preset_actor_part = raw.partition("=")
+    if not separator:
+        raise ValueError("roster assignment must use role=preset:actor_id")
+    preset_part, separator, actor_alias_part = preset_actor_part.partition(":")
+    if not separator:
+        raise ValueError("roster assignment must use role=preset:actor_id")
+    actor_part, _, alias_part = actor_alias_part.partition(":")
+    return _normalize_roster_assignment(
+        {
+            "role_id": role_part,
+            "preset_id": preset_part,
+            "actor_id": actor_part,
+            "aliases": alias_part,
+        }
+    )
+
+
+def build_pack_actor_roster_plan(
+    pack_id: str,
+    assignments: list[Mapping[str, Any]],
+    *,
+    catalog_path: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+    actor_root_relative: str = "assets/actor_models",
+) -> dict[str, Any]:
+    """Build a public-safe pack actor roster patch from preset assignments."""
+    pack_key = str(pack_id or "").strip()
+    if not pack_key:
+        raise ValueError("pack_id is required")
+    if not assignments:
+        raise ValueError("at least one roster assignment is required")
+
+    catalog = load_actor_model_preset_catalog(catalog_path, repo_root=repo_root)
+    presets = catalog["presets"]
+    normalized_assignments = [_normalize_roster_assignment(assignment) for assignment in assignments]
+    actor_root = str(actor_root_relative or "assets/actor_models").strip().replace("\\", "/").strip("/")
+
+    actor_pool: dict[str, Any] = {}
+    cast_slots: dict[str, Any] = {}
+    role_casting: dict[str, str] = {}
+    seen_roles: set[str] = set()
+    seen_actors: set[str] = set()
+
+    for assignment in normalized_assignments:
+        role_id = assignment["role_id"]
+        preset_id = assignment["preset_id"]
+        actor_id = assignment["actor_id"]
+        aliases = assignment["aliases"]
+        if role_id in seen_roles:
+            raise ValueError(f"duplicate roster role_id: {role_id}")
+        if actor_id in seen_actors:
+            raise ValueError(f"duplicate roster actor_id: {actor_id}")
+        if preset_id not in presets:
+            raise ValueError(f"unknown actor model preset: {preset_id}")
+
+        preset = presets[preset_id]
+        seen_roles.add(role_id)
+        seen_actors.add(actor_id)
+        actor_pool[actor_id] = {
+            "character_id": actor_id,
+            "actor_model_path": f"{actor_root}/{actor_id}/actor.json",
+            "visual_identity": str(preset["visual_identity"]),
+            "voice_profile": str(preset["voice_profile"]),
+            "required_variants": _coerce_string_list(preset.get("required_variants"), DEFAULT_REQUIRED_VARIANTS),
+            "preset_id": preset_id,
+            "age_band": str(preset["age_band"]),
+            "gender_presentation": str(preset["gender_presentation"]),
+            "genre_tags": _string_list(preset["genre_tags"]),
+        }
+        cast_slots[role_id] = {
+            "actor_id": actor_id,
+            "character_id": actor_id,
+            "aliases": aliases,
+        }
+        role_casting[role_id] = actor_id
+
+    return {
+        "schema": "reverie.pack.actor_roster_plan.v1",
+        "pack_id": pack_key,
+        "role_reuse_policy": {
+            "stable_actor_identity": True,
+            "episode_roles_may_change": True,
+            "role_casting_is_episode_specific": True,
+        },
+        "motiontoon_patch": {
+            "actor_pool": actor_pool,
+            "role_casting_contract": dict(DEFAULT_ROLE_CASTING_CONTRACT),
+            "cast_slots": cast_slots,
+        },
+        "episode_cast_seed": {
+            "episode_id": f"{pack_key}_episode_seed",
+            "role_casting": role_casting,
+        },
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def write_pack_actor_roster_plan(
+    pack_id: str,
+    assignments: list[Mapping[str, Any]],
+    output_path: Path | str,
+    *,
+    catalog_path: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+    actor_root_relative: str = "assets/actor_models",
+) -> Path:
+    """Write a public-safe pack actor roster plan and return the output path."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    plan = build_pack_actor_roster_plan(
+        pack_id,
+        assignments,
+        catalog_path=catalog_path,
+        repo_root=repo_root,
+        actor_root_relative=actor_root_relative,
+    )
+    output.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_request_manifest(
     actor_model_path: Path | str,
     *,
@@ -991,6 +1149,26 @@ def main(argv: Optional[list[str]] = None) -> int:
     preset_parser.add_argument("--catalog", default=None, help="Preset catalog JSON path.")
     preset_parser.add_argument("--force", action="store_true", help="Overwrite an existing actor scaffold.")
 
+    roster_parser = subparsers.add_parser(
+        "roster-plan",
+        help="Build a pack motiontoon actor_pool/cast_slots plan from preset assignments.",
+    )
+    roster_parser.add_argument("pack_id", help="Pack id for the roster plan.")
+    roster_parser.add_argument(
+        "--assignment",
+        action="append",
+        required=True,
+        help="Role assignment in role=preset:actor_id or role=preset:actor_id:alias1,alias2 format.",
+    )
+    roster_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    roster_parser.add_argument("--catalog", default=None, help="Preset catalog JSON path.")
+    roster_parser.add_argument(
+        "--actor-root-relative",
+        default="assets/actor_models",
+        help="Relative actor model root used inside actor_model_path values.",
+    )
+    roster_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -1037,6 +1215,28 @@ def main(argv: Optional[list[str]] = None) -> int:
             force=args.force,
         )
         print(f"Scaffolded actor model {args.actor_id} from preset {args.preset_id}: {actor_path}")
+        return 0
+    if args.command == "roster-plan":
+        assignments = [_parse_roster_assignment(raw_assignment) for raw_assignment in args.assignment]
+        plan = build_pack_actor_roster_plan(
+            args.pack_id,
+            assignments,
+            catalog_path=args.catalog,
+            repo_root=args.repo_root,
+            actor_root_relative=args.actor_root_relative,
+        )
+        if args.output:
+            output = write_pack_actor_roster_plan(
+                args.pack_id,
+                assignments,
+                args.output,
+                catalog_path=args.catalog,
+                repo_root=args.repo_root,
+                actor_root_relative=args.actor_root_relative,
+            )
+            print(f"Wrote pack actor roster plan for {args.pack_id}: {output}")
+        else:
+            print(json.dumps(plan, ensure_ascii=False, indent=2))
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

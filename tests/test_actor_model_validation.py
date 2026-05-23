@@ -549,3 +549,80 @@ def test_actor_model_cli_scaffold_preset_creates_package(tmp_path, capsys):
     assert actor["age_band"] == "senior"
     assert "suspect" in actor["role_range"]
     assert "mystery_senior_man" in captured.out
+
+
+def test_build_pack_actor_roster_plan_maps_presets_to_actor_pool_and_casting():
+    actor_model = _actor_model_module()
+
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+                "aliases": ["lead", "office_worker"],
+            },
+            {
+                "role_id": "witness",
+                "preset_id": "daily_middle_woman",
+                "actor_id": "actor_daily_middle_woman_01",
+            },
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_pool = plan["motiontoon_patch"]["actor_pool"]
+    cast_slots = plan["motiontoon_patch"]["cast_slots"]
+    role_casting = plan["episode_cast_seed"]["role_casting"]
+
+    assert plan["schema"] == "reverie.pack.actor_roster_plan.v1"
+    assert plan["pack_id"] == "daily_life_toon"
+    assert plan["role_reuse_policy"]["stable_actor_identity"] is True
+    assert plan["role_reuse_policy"]["episode_roles_may_change"] is True
+    assert actor_pool["actor_daily_adult_man_01"]["actor_model_path"] == (
+        "assets/actor_models/actor_daily_adult_man_01/actor.json"
+    )
+    assert actor_pool["actor_daily_adult_man_01"]["voice_profile"] == "male_01"
+    assert "neutral_standing" in actor_pool["actor_daily_adult_man_01"]["required_variants"]
+    assert cast_slots["protagonist"]["actor_id"] == "actor_daily_adult_man_01"
+    assert cast_slots["protagonist"]["aliases"] == ["lead", "office_worker"]
+    assert role_casting["witness"] == "actor_daily_middle_woman_01"
+    assert plan["public_release_boundary"]["contains_generated_media"] is False
+
+
+def test_build_pack_actor_roster_plan_rejects_unknown_preset():
+    actor_model = _actor_model_module()
+
+    with pytest.raises(ValueError, match="unknown actor model preset"):
+        actor_model.build_pack_actor_roster_plan(
+            "daily_life_toon",
+            [{"role_id": "lead", "preset_id": "missing_preset", "actor_id": "actor_missing_01"}],
+            catalog_path=ACTOR_PRESET_CATALOG_PATH,
+        )
+
+
+def test_actor_model_cli_writes_pack_actor_roster_plan(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    output_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+
+    exit_code = actor_model.main(
+        [
+            "roster-plan",
+            "daily_life_toon",
+            "--assignment",
+            "protagonist=daily_adult_man:actor_daily_adult_man_01",
+            "--assignment",
+            "witness=daily_middle_woman:actor_daily_middle_woman_01",
+            "--catalog",
+            str(ACTOR_PRESET_CATALOG_PATH),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    plan = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert plan["pack_id"] == "daily_life_toon"
+    assert plan["motiontoon_patch"]["cast_slots"]["protagonist"]["actor_id"] == "actor_daily_adult_man_01"
+    assert "daily_life_toon" in captured.out

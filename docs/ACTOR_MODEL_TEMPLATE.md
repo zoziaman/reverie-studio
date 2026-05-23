@@ -177,6 +177,18 @@ reverie-actor-model-requests scaffold-preset daily_adult_man actor_daily_adult_m
 mouth layers, eye layers, voice samples, and model weights remain local user
 assets.
 
+To plan a pack roster from presets, use `roster-plan`:
+
+```bash
+reverie-actor-model-requests roster-plan daily_life_toon --assignment protagonist=daily_adult_man:actor_daily_adult_man_01 --assignment witness=daily_middle_woman:actor_daily_middle_woman_01 --output data/actor_asset_requests/daily_life_toon.actor_roster_plan.json
+```
+
+The roster plan writes a public-safe JSON patch shape with
+`motiontoon_patch.actor_pool`, `motiontoon_patch.cast_slots`,
+`motiontoon_patch.role_casting_contract`, and an `episode_cast_seed`. This is
+the bridge between reusable actor presets and pack-level casting: the actor id
+stays fixed, while episode role casting can change per omnibus story.
+
 ## Asset Request Manifest
 
 The template can produce a local work order for generating the actual variant,
