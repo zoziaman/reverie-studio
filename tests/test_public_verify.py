@@ -342,6 +342,23 @@ def test_public_verify_can_run_pytest_when_requested(tmp_path, monkeypatch):
 
 def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     captured_commands = []
+    functions_dir = tmp_path / "functions"
+    functions_dir.mkdir()
+    (functions_dir / "package-lock.json").write_text(
+        json.dumps({
+            "packages": {
+                "": {
+                    "dependencies": {
+                        "firebase-admin": "^13.6.0",
+                        "firebase-functions": "^7.0.0",
+                    }
+                },
+                "node_modules/firebase-admin": {"version": "13.10.0"},
+                "node_modules/firebase-functions": {"version": "7.2.5"},
+            }
+        }),
+        encoding="utf-8",
+    )
 
     class Completed:
         returncode = 1
@@ -397,6 +414,7 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
     monkeypatch.setattr(public_verify.shutil, "which", lambda command: "npm")
+    monkeypatch.setattr(public_verify, "FUNCTIONS_DIR", functions_dir)
 
     def fake_run(command, *args, **kwargs):
         captured_commands.append(command)
@@ -416,6 +434,10 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
         "force_fix_required": True,
         "force_fix_targets": ["firebase-admin@10.3.0", "firebase-functions@4.9.0"],
     }
+    assert report["checks"]["functions_audit"]["direct_dependency_versions"] == {
+        "firebase-admin": {"declared": "^13.6.0", "installed": "13.10.0"},
+        "firebase-functions": {"declared": "^7.0.0", "installed": "7.2.5"},
+    }
     assert report["checks"]["functions_audit"]["command"] == [
         "npm",
         "--prefix",
@@ -432,12 +454,17 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     assert "Optional Functions Audit" in summary
     assert "Moderate: `9`" in summary
     assert "Force-fix targets: `firebase-admin@10.3.0, firebase-functions@4.9.0`" in summary
+    assert (
+        "Direct dependency versions: `firebase-admin ^13.6.0 -> 13.10.0, "
+        "firebase-functions ^7.0.0 -> 7.2.5`"
+    ) in summary
     functions_check = [
         check for check in report["publish_gate"]["machine_checks"]
         if check["id"] == "firebase_functions_dependency_audit"
     ][0]
     assert "total=9" in functions_check["evidence"]
     assert "force_fix_required=true" in functions_check["evidence"]
+    assert "direct_dependency_versions=firebase-admin:^13.6.0->13.10.0|firebase-functions:^7.0.0->7.2.5" in functions_check["evidence"]
 
 
 def test_public_verify_can_include_functions_syntax(tmp_path, monkeypatch):

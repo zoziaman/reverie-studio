@@ -31,6 +31,7 @@ SNAPSHOT_CHECK_SCHEMA = "reverie.public_snapshot_check.v1"
 HISTORY_FILENAME_CHECK_SCHEMA = "reverie.public_history_filename_check.v1"
 DEFAULT_VERIFY_OUT = Path(tempfile.gettempdir()) / "reverie-public-verify"
 FUNCTIONS_DIR = REPO_ROOT / "functions"
+FUNCTIONS_AUDIT_DIRECT_DEPENDENCIES = ("firebase-admin", "firebase-functions")
 
 PUBLISH_REVIEW_ITEMS = (
     {
@@ -257,10 +258,14 @@ def _functions_audit_evidence(functions_audit_report: dict[str, Any]) -> str:
     counts = functions_audit_report.get("vulnerabilities") or {}
     fix_advice = functions_audit_report.get("fix_advice") or {}
     force_targets = fix_advice.get("force_fix_targets") or []
+    dependency_versions = _format_functions_dependency_versions(
+        functions_audit_report.get("direct_dependency_versions") or {}
+    )
     return (
         "functions npm audit status={status}, total={total}, moderate={moderate}, "
         "high={high}, critical={critical}, direct_fix_count={direct_fix_count}, "
-        "force_fix_required={force_fix_required}, force_fix_targets={force_fix_targets}"
+        "force_fix_required={force_fix_required}, force_fix_targets={force_fix_targets}, "
+        "direct_dependency_versions={direct_dependency_versions}"
     ).format(
         status=functions_audit_report.get("status", "unknown"),
         total=_safe_int(counts.get("total")),
@@ -270,6 +275,7 @@ def _functions_audit_evidence(functions_audit_report: dict[str, Any]) -> str:
         direct_fix_count=_safe_int(fix_advice.get("direct_fix_count")),
         force_fix_required=str(bool(fix_advice.get("force_fix_required"))).lower(),
         force_fix_targets="|".join(str(target) for target in force_targets),
+        direct_dependency_versions=dependency_versions or "not_available",
     )
 
 
@@ -293,6 +299,48 @@ def _functions_audit_fix_advice(payload: dict[str, Any]) -> dict[str, Any]:
         "force_fix_required": bool(force_fix_targets),
         "force_fix_targets": sorted(force_fix_targets),
     }
+
+
+def _functions_direct_dependency_versions() -> dict[str, dict[str, str]]:
+    lock_path = FUNCTIONS_DIR / "package-lock.json"
+    try:
+        payload = json.loads(lock_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+    packages = payload.get("packages") or {}
+    root_package = packages.get("") or {}
+    declared_dependencies = root_package.get("dependencies") or {}
+    versions: dict[str, dict[str, str]] = {}
+    for name in FUNCTIONS_AUDIT_DIRECT_DEPENDENCIES:
+        declared = declared_dependencies.get(name)
+        installed = (packages.get(f"node_modules/{name}") or {}).get("version")
+        if declared or installed:
+            versions[name] = {
+                "declared": str(declared or "not_declared"),
+                "installed": str(installed or "not_installed"),
+            }
+    return versions
+
+
+def _format_functions_dependency_versions(versions: dict[str, dict[str, str]]) -> str:
+    parts = []
+    for name in FUNCTIONS_AUDIT_DIRECT_DEPENDENCIES:
+        entry = versions.get(name)
+        if not entry:
+            continue
+        parts.append(f"{name}:{entry.get('declared', 'unknown')}->{entry.get('installed', 'unknown')}")
+    return "|".join(parts)
+
+
+def _format_functions_dependency_versions_summary(versions: dict[str, dict[str, str]]) -> str:
+    parts = []
+    for name in FUNCTIONS_AUDIT_DIRECT_DEPENDENCIES:
+        entry = versions.get(name)
+        if not entry:
+            continue
+        parts.append(f"{name} {entry.get('declared', 'unknown')} -> {entry.get('installed', 'unknown')}")
+    return ", ".join(parts)
 
 
 def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
@@ -375,6 +423,7 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
         "vulnerability_names": names[:25],
         "truncated_vulnerability_names": max(0, len(names) - 25),
         "fix_advice": _functions_audit_fix_advice(payload),
+        "direct_dependency_versions": _functions_direct_dependency_versions(),
     }
 
 
@@ -609,6 +658,11 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         )
         if force_fix_targets:
             lines.append(f"- Force-fix targets: `{', '.join(force_fix_targets)}`")
+        dependency_versions = _format_functions_dependency_versions_summary(
+            functions_audit.get("direct_dependency_versions") or {}
+        )
+        if dependency_versions:
+            lines.append(f"- Direct dependency versions: `{dependency_versions}`")
 
     if functions_syntax.get("status") not in {None, "not_run"}:
         lines.extend(
