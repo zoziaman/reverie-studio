@@ -17,6 +17,7 @@ from PIL import Image
 import numpy as np
 
 from utils.gemini_compat import configure_gemini, generate_vision_content, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -251,7 +252,7 @@ class GeminiContentReviewer:
             logger.info("[검수관] Gemini 3.0 Flash 모델 초기화 완료")
 
         except Exception as e:
-            logger.warning(f"[검수관] Gemini 초기화 실패: {e}")
+            logger.warning(f"[검수관] Gemini 초기화 실패: {redact_sensitive_text(e)}")
             self.model = None
 
     def review_image(
@@ -328,8 +329,9 @@ class GeminiContentReviewer:
                 return "WARN", f"응답 형식 오류: {result_text[:50]}"
 
         except Exception as e:
-            logger.error(f"[검수관] Gemini API 오류: {e}")
-            return "ERROR", f"API 오류: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[검수관] Gemini API 오류: {safe_error}")
+            return "ERROR", f"API 오류: {safe_error}"
 
     def suggest_fixed_prompt(self, original_prompt: str, violation_reason: str) -> Optional[str]:
         """
@@ -367,7 +369,7 @@ class GeminiContentReviewer:
             return fixed_prompt
 
         except Exception as e:
-            logger.error(f"[검수관] 프롬프트 수정 실패: {e}")
+            logger.error(f"[검수관] 프롬프트 수정 실패: {redact_sensitive_text(e)}")
             return None
 
     def review_and_regenerate(
