@@ -41,6 +41,8 @@ import logging
 from datetime import datetime, timedelta
 from typing import Tuple, Optional, Dict, Any, List
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -244,8 +246,9 @@ class CloudFunctionsClient:
                     logger.error("[CloudFunctions] 연결 실패 (재시도 소진)")
                     return False, "서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요."
             except Exception as e:
-                logger.error(f"[CloudFunctions] 오류: {e}")
-                return False, f"서버 통신 오류: {str(e)}"
+                safe_error = redact_sensitive_text(e)
+                logger.error(f"[CloudFunctions] 오류: {safe_error}")
+                return False, f"서버 통신 오류: {safe_error}"
 
         return False, "서버 통신 실패 (재시도 소진)"
 
@@ -303,8 +306,9 @@ class CloudFunctionsClient:
             return True, "조회 성공", packs
 
         except Exception as e:
-            logger.error(f"[CloudFunctions] 패키지 목록 조회 오류: {e}")
-            return False, str(e), []
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[CloudFunctions] 패키지 목록 조회 오류: {safe_error}")
+            return False, safe_error, []
 
     def get_pack_key(self, license_key: str, hwid: str, pack_id: str) -> Optional[str]:
         """
@@ -347,7 +351,7 @@ class CloudFunctionsClient:
                 logger.debug(f"[CloudFunctions] getPackKey: packKey=null (레거시 모드)")
             return pack_key
         except Exception as e:
-            logger.warning(f"[CloudFunctions] getPackKey 예외: {e}")
+            logger.warning(f"[CloudFunctions] getPackKey 예외: {redact_sensitive_text(e)}")
             return None
 
 
