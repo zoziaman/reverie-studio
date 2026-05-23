@@ -21,6 +21,12 @@ from datetime import datetime
 from enum import Enum
 
 try:
+    from utils.secret_redaction import redact_sensitive_text
+except ImportError:
+    def redact_sensitive_text(value):
+        return str(value or "")
+
+try:
     from utils.logger import get_logger
     logger = get_logger("quality_control")
 except ImportError:
@@ -670,11 +676,12 @@ class QualityControl:
             )
 
         except Exception as e:
-            logger.warning(f"[QC] uncanny_valley 로컬 검증 오류: {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.warning(f"[QC] uncanny_valley 로컬 검증 오류: {safe_error}")
             return QualityCheckResult(
                 check_name="uncanny_valley",
                 status=QualityStatus.SKIPPED,
-                message=f"로컬 검증 오류: {str(e)[:50]}"
+                message=f"로컬 검증 오류: {safe_error[:120]}"
             )
 
     # v62.11: validate_with_gemini() 제거 — Gemini 비전 API 호출 비용 절감

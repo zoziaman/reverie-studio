@@ -81,3 +81,26 @@ def test_quality_control_does_not_save_warning_reports(tmp_path, monkeypatch):
     assert report.overall_status == QualityStatus.WARNING
     assert report.passed is True
     assert calls == []
+
+
+def test_quality_control_redacts_secret_in_local_validation_error(monkeypatch, tmp_path, caplog):
+    import modules_pro.quality_control as quality_control
+
+    secret = "sk-" + ("q" * 32)
+    qc = QualityControl()
+    qc._cv2_available = True
+    caplog.set_level("WARNING")
+    image_path = tmp_path / "scene.png"
+    image_path.write_bytes(b"fake")
+
+    def failing_imread(*args, **kwargs):
+        raise RuntimeError(f"local validation failed for OPENAI_API_KEY={secret}")
+
+    monkeypatch.setattr(quality_control, "_cv2_imread_safe", failing_imread)
+
+    result = qc._check_uncanny_valley(str(image_path))
+
+    assert result.status == QualityStatus.SKIPPED
+    assert secret not in result.message
+    assert "OPENAI_API_KEY=<redacted>" in result.message
+    assert secret not in caplog.text
