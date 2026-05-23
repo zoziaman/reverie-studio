@@ -549,6 +549,7 @@ def _run_public_export(output_dir: Path, *, allow_repo_output: bool) -> dict[str
             "archive_file_count": manifest.get("archive_file_count"),
             "archive_sha256": manifest.get("archive_sha256"),
             "archive_integrity": manifest.get("archive_integrity"),
+            "release_guidance": manifest.get("release_guidance"),
             "git_history_included": manifest.get("git_history_included"),
             "workspace_state": manifest.get("workspace_state"),
             "public_snapshot": manifest.get("public_snapshot"),

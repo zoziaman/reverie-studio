@@ -774,6 +774,49 @@ def test_public_verify_can_include_public_export(tmp_path, monkeypatch):
     assert "public_export/reverie-public-snapshot.zip" in summary
 
 
+def test_public_verify_public_export_report_preserves_release_guidance(tmp_path, monkeypatch):
+    release_guidance = {
+        "distribution_path": "history_free_export",
+        "use_archive_for_public_distribution": True,
+        "existing_repo_history_included": False,
+        "existing_repo_history_requires_review": True,
+        "next_actions": [
+            "Distribute the generated source archive, not the private-history checkout.",
+            "Run public_verify.py with --with-history-scan before publishing existing repository history.",
+        ],
+    }
+
+    class PublicExport:
+        ARCHIVE_NAME = "reverie-public-snapshot.zip"
+        MANIFEST_NAME = "public_export_manifest.json"
+
+        def create_public_export(self, output_dir, allow_repo_output=False):
+            return {
+                "schema": "reverie.public_export.v1",
+                "source_commit": "abc123",
+                "source_tree": "def456",
+                "tracked_file_count": 2,
+                "archive_file_count": 2,
+                "archive_sha256": "1" * 64,
+                "archive_integrity": {"status": "pass"},
+                "release_guidance": release_guidance,
+                "git_history_included": False,
+                "workspace_state": {"status": "pass", "dirty_count": 0},
+                "public_snapshot": {"status": "pass", "finding_count": 0},
+            }
+
+        def verify_public_export(self, output_dir):
+            return {"status": "pass", "checks": {"release_guidance": {"status": "pass"}}}
+
+    monkeypatch.setattr(public_verify, "_load_public_export", lambda: PublicExport())
+
+    report = public_verify._run_public_export(tmp_path, allow_repo_output=False)
+
+    assert report["status"] == "pass"
+    assert report["manifest"]["release_guidance"] == release_guidance
+    assert str(tmp_path.resolve()) not in json.dumps(report)
+
+
 def test_public_verify_blocks_when_public_export_fails(tmp_path, monkeypatch):
     monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
     monkeypatch.setattr(
