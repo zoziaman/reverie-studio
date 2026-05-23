@@ -93,4 +93,6 @@ def test_public_demo_docs_include_videotoon_actor_template_output():
 
     assert "video_toon_actor_template.remotion_props.json" in readme
     assert "video_toon_actor_template.remotion_props.json" in public_demo
+    assert "storyboard.plan.json" in readme
+    assert "metadata.review.json" in public_demo
     assert "mouthCues" in public_demo

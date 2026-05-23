@@ -91,7 +91,7 @@ def _build_stages(pack: dict, backend_profile: dict, environment_report: dict) -
             status="dry_run",
             duration_seconds=0.0,
             cost_usd=0.0,
-            artifact="placeholder_frames.none",
+            artifact="placeholder_frames.manifest.json",
             note=f"Selected {image_provider} profile path; skipped model assets and media generation.",
         ),
         DemoStage(
@@ -99,7 +99,7 @@ def _build_stages(pack: dict, backend_profile: dict, environment_report: dict) -
             status="dry_run",
             duration_seconds=0.0,
             cost_usd=0.0,
-            artifact="placeholder_voice.none",
+            artifact="placeholder_voice.manifest.json",
             note=f"Selected {tts_provider} profile path; skipped voice data and generated audio.",
         ),
         DemoStage(
@@ -115,7 +115,7 @@ def _build_stages(pack: dict, backend_profile: dict, environment_report: dict) -
             status="dry_run",
             duration_seconds=0.0,
             cost_usd=0.0,
-            artifact="render.command.preview",
+            artifact="render.command.preview.json",
             note="Skipped Remotion render and media output.",
         ),
         DemoStage(
@@ -291,6 +291,155 @@ def _write_videotoon_actor_template_demo(output_dir: Path, pack: dict) -> dict:
     return props
 
 
+def _build_storyboard_plan(pack: dict) -> dict:
+    target_seconds = int(pack.get("target_runtime_seconds") or 10)
+    beats = pack["story_beats"]
+    duration_frames = max(30, int((target_seconds * 30) / max(1, len(beats))))
+    scenes = []
+    for index, beat in enumerate(beats):
+        scenes.append(
+            {
+                "scene_id": f"public_demo_s{index + 1:03d}",
+                "role": str(beat.get("role") or "narrator"),
+                "text": str(beat.get("text") or ""),
+                "startFrame": index * duration_frames,
+                "durationFrames": duration_frames,
+                "visual_placeholder": f"placeholder_frame_{index + 1:03d}",
+                "voice_placeholder": f"placeholder_voice_{index + 1:03d}",
+            }
+        )
+    return {
+        "schema": "reverie.public_demo.storyboard_plan.v1",
+        "pack_id": pack["pack_id"],
+        "target_runtime_seconds": target_seconds,
+        "fps": 30,
+        "scene_count": len(scenes),
+        "scenes": scenes,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def _build_placeholder_frames_manifest(storyboard: dict, backend_profile: dict) -> dict:
+    return {
+        "schema": "reverie.public_demo.placeholder_frames.v1",
+        "provider": backend_profile["image"]["provider"],
+        "creates_media": False,
+        "frame_count": storyboard["scene_count"],
+        "frames": [
+            {
+                "scene_id": scene["scene_id"],
+                "placeholder_id": scene["visual_placeholder"],
+                "status": "not_generated",
+                "target_path": "",
+            }
+            for scene in storyboard["scenes"]
+        ],
+    }
+
+
+def _build_placeholder_voice_manifest(storyboard: dict, backend_profile: dict) -> dict:
+    return {
+        "schema": "reverie.public_demo.placeholder_voice.v1",
+        "provider": backend_profile["tts"]["provider"],
+        "creates_audio": False,
+        "voice_count": storyboard["scene_count"],
+        "voice_slots": [
+            {
+                "scene_id": scene["scene_id"],
+                "role": scene["role"],
+                "placeholder_id": scene["voice_placeholder"],
+                "status": "not_generated",
+                "target_path": "",
+            }
+            for scene in storyboard["scenes"]
+        ],
+    }
+
+
+def _build_caption_preview(storyboard: dict) -> dict:
+    captions = [
+        {
+            "scene_id": scene["scene_id"],
+            "speaker": scene["role"],
+            "text": scene["text"],
+            "startFrame": scene["startFrame"],
+            "durationFrames": scene["durationFrames"],
+        }
+        for scene in storyboard["scenes"]
+    ]
+    return {
+        "schema": "reverie.public_demo.captions_preview.v1",
+        "caption_count": len(captions),
+        "captions": captions,
+    }
+
+
+def _build_render_command_preview() -> dict:
+    return {
+        "schema": "reverie.public_demo.render_command_preview.v1",
+        "renderer": "remotion",
+        "executes_command": False,
+        "would_use_props": "video_toon_actor_template.remotion_props.json",
+        "command_preview": [
+            "npx",
+            "remotion",
+            "render",
+            "RadioDrama",
+            "--props=video_toon_actor_template.remotion_props.json",
+        ],
+        "creates_media": False,
+    }
+
+
+def _build_metadata_review(pack: dict) -> dict:
+    return {
+        "schema": "reverie.public_demo.metadata_review.v1",
+        "title": f"{pack['name']} dry run",
+        "description": "Public no-credential dry-run. No generated media or upload is produced.",
+        "synthetic_media_disclosure_required": True,
+        "requires_human_review": True,
+        "upload_allowed": False,
+        "checks": [
+            {"id": "no_credentials", "status": "pass"},
+            {"id": "no_generated_media", "status": "pass"},
+            {"id": "manual_upload_review", "status": "blocked_for_review"},
+        ],
+    }
+
+
+def _build_upload_gate() -> dict:
+    return {
+        "schema": "reverie.public_demo.upload_gate.v1",
+        "starts_upload": False,
+        "upload_allowed": False,
+        "requires_human_review": True,
+        "reason": "Credentials, platform account, and private/test upload mode must be configured by the user.",
+    }
+
+
+def _write_named_stage_artifacts(output_dir: Path, pack: dict, backend_profile: dict) -> None:
+    storyboard = _build_storyboard_plan(pack)
+    _write_json(output_dir / "pack.public_demo.json", pack)
+    _write_json(output_dir / "storyboard.plan.json", storyboard)
+    _write_json(
+        output_dir / "placeholder_frames.manifest.json",
+        _build_placeholder_frames_manifest(storyboard, backend_profile),
+    )
+    _write_json(
+        output_dir / "placeholder_voice.manifest.json",
+        _build_placeholder_voice_manifest(storyboard, backend_profile),
+    )
+    _write_json(output_dir / "captions.preview.json", _build_caption_preview(storyboard))
+    _write_json(output_dir / "render.command.preview.json", _build_render_command_preview())
+    _write_json(output_dir / "metadata.review.json", _build_metadata_review(pack))
+    _write_json(output_dir / "youtube.private_upload.not_started.json", _build_upload_gate())
+
+
 def _write_report(
     path: Path,
     pack: dict,
@@ -372,7 +521,7 @@ def run_demo(
         status="blocked_for_review",
         duration_seconds=0.0,
         cost_usd=0.0,
-        artifact="youtube.private_upload.not_started",
+        artifact="youtube.private_upload.not_started.json",
         note="Upload remains blocked until a human configures credentials and approves private/test mode.",
     )
     quality_input = [asdict(stage) for stage in stages] + [asdict(upload_stage)]
@@ -415,6 +564,7 @@ def run_demo(
 
     _write_json(output_dir / "backend_profile.json", backend_profile)
     write_environment_report(output_dir / "environment_report.json", environment_report)
+    _write_named_stage_artifacts(output_dir, pack, backend_profile)
     _write_videotoon_actor_template_demo(output_dir, pack)
     _write_json(output_dir / "quality_gate.json", quality_gate)
     _write_json(output_dir / "run_manifest.json", manifest)

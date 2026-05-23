@@ -30,6 +30,33 @@ def test_public_demo_writes_safe_report_files(tmp_path):
     assert any(stage["status"] == "blocked_for_review" for stage in saved["stages"])
 
 
+def test_public_demo_writes_named_stage_artifacts(tmp_path):
+    run_demo(DEFAULT_PACK_PATH, tmp_path)
+
+    expected_artifacts = {
+        "pack.public_demo.json",
+        "storyboard.plan.json",
+        "placeholder_frames.manifest.json",
+        "placeholder_voice.manifest.json",
+        "captions.preview.json",
+        "render.command.preview.json",
+        "metadata.review.json",
+        "youtube.private_upload.not_started.json",
+    }
+    created_names = {path.name for path in Path(tmp_path).iterdir() if path.is_file()}
+    storyboard = json.loads((tmp_path / "storyboard.plan.json").read_text(encoding="utf-8"))
+    metadata = json.loads((tmp_path / "metadata.review.json").read_text(encoding="utf-8"))
+    render_preview = json.loads((tmp_path / "render.command.preview.json").read_text(encoding="utf-8"))
+
+    assert expected_artifacts.issubset(created_names)
+    assert storyboard["schema"] == "reverie.public_demo.storyboard_plan.v1"
+    assert storyboard["scene_count"] == len(storyboard["scenes"])
+    assert metadata["upload_allowed"] is False
+    assert metadata["requires_human_review"] is True
+    assert render_preview["executes_command"] is False
+    assert render_preview["would_use_props"] == "video_toon_actor_template.remotion_props.json"
+
+
 def test_public_demo_writes_videotoon_actor_template_props(tmp_path):
     manifest = run_demo(DEFAULT_PACK_PATH, tmp_path)
     props_path = tmp_path / "video_toon_actor_template.remotion_props.json"

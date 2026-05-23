@@ -19,6 +19,14 @@ Expected files:
 %TEMP%\reverie-public-demo\
   backend_profile.json
   environment_report.json
+  pack.public_demo.json
+  storyboard.plan.json
+  placeholder_frames.manifest.json
+  placeholder_voice.manifest.json
+  captions.preview.json
+  render.command.preview.json
+  metadata.review.json
+  youtube.private_upload.not_started.json
   quality_gate.json
   video_toon_actor_template.render_plan.json
   video_toon_actor_template.remotion_props.json
