@@ -132,7 +132,56 @@ def test_public_export_writes_archive_and_manifest(tmp_path, monkeypatch):
     assert manifest["source_tree"] == "def456"
     assert manifest["tracked_file_count"] == 2
     assert manifest["archive_file_count"] == 2
+    assert manifest["archive_integrity"] == {
+        "status": "pass",
+        "contains_git_metadata": False,
+        "contains_unsafe_paths": False,
+        "count_matches_tracked_files": True,
+    }
     assert manifest["workspace_state"]["status"] == "pass"
     assert manifest["public_snapshot"]["status"] == "pass"
     assert str(tmp_path.resolve()) not in json.dumps(manifest)
     assert any(command[:3] == ["git", "archive", "--format=zip"] for command in commands)
+
+
+def test_public_export_blocks_archive_integrity_failures(tmp_path, monkeypatch):
+    class SnapshotCheck:
+        def run_check(self, root):
+            return []
+
+        def build_json_report(self, findings):
+            return {
+                "schema": "reverie.public_snapshot_check.v1",
+                "status": "pass",
+                "finding_count": 0,
+                "finding_types": {},
+                "finding_fingerprints": [],
+                "truncated_finding_fingerprints": 0,
+            }
+
+    def fake_git(args):
+        if args == ["rev-parse", "HEAD"]:
+            return "abc123\n"
+        if args == ["rev-parse", "HEAD^{tree}"]:
+            return "def456\n"
+        if args == ["ls-files"]:
+            return "README.md\nsrc/reverie_demo.py\n"
+        if args == ["status", "--porcelain=v1", "--untracked-files=normal"]:
+            return ""
+        raise AssertionError(args)
+
+    def fake_run(command, **kwargs):
+        archive_path = Path(command[4])
+        with zipfile.ZipFile(archive_path, "w") as archive:
+            archive.writestr("README.md", "# demo\n")
+            archive.writestr(".git/config", "[core]\n")
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(public_export, "_load_public_snapshot_check", lambda: SnapshotCheck())
+    monkeypatch.setattr(public_export, "_git_stdout", fake_git)
+    monkeypatch.setattr(public_export.subprocess, "run", fake_run)
+
+    with pytest.raises(RuntimeError, match="archive integrity check failed"):
+        public_export.create_public_export(tmp_path)
+
+    assert not (tmp_path / "public_export_manifest.json").exists()

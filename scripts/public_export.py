@@ -54,6 +54,31 @@ def _archive_file_count(archive_path: Path) -> int:
         return len([name for name in archive.namelist() if not name.endswith("/")])
 
 
+def _archive_integrity_report(archive_path: Path, tracked_file_count: int) -> dict[str, Any]:
+    with zipfile.ZipFile(archive_path, "r") as archive:
+        file_names = [name.replace("\\", "/") for name in archive.namelist() if not name.endswith("/")]
+    contains_git_metadata = any(
+        name == ".git" or name.startswith(".git/") or "/.git/" in name
+        for name in file_names
+    )
+    contains_unsafe_paths = any(
+        name.startswith("/") or name == ".." or name.startswith("../") or "/../" in name
+        for name in file_names
+    )
+    count_matches_tracked_files = len(file_names) == tracked_file_count
+    status = (
+        "pass"
+        if not contains_git_metadata and not contains_unsafe_paths and count_matches_tracked_files
+        else "fail"
+    )
+    return {
+        "status": status,
+        "contains_git_metadata": contains_git_metadata,
+        "contains_unsafe_paths": contains_unsafe_paths,
+        "count_matches_tracked_files": count_matches_tracked_files,
+    }
+
+
 def _workspace_state() -> dict[str, Any]:
     changed_paths = [
         line for line in _git_stdout(["status", "--porcelain=v1", "--untracked-files=normal"]).splitlines()
@@ -99,6 +124,10 @@ def create_public_export(
         text=True,
     )
     tracked_files = [line for line in _git_stdout(["ls-files"]).splitlines() if line.strip()]
+    archive_file_count = _archive_file_count(archive_path)
+    archive_integrity = _archive_integrity_report(archive_path, len(tracked_files))
+    if archive_integrity["status"] != "pass":
+        raise RuntimeError("archive integrity check failed; refusing to write export manifest")
     manifest = {
         "schema": "reverie.public_export.v1",
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -107,7 +136,8 @@ def create_public_export(
         "source_commit": _git_stdout(["rev-parse", "HEAD"]).strip(),
         "source_tree": _git_stdout(["rev-parse", "HEAD^{tree}"]).strip(),
         "tracked_file_count": len(tracked_files),
-        "archive_file_count": _archive_file_count(archive_path),
+        "archive_file_count": archive_file_count,
+        "archive_integrity": archive_integrity,
         "git_history_included": False,
         "workspace_state": workspace_state,
         "public_snapshot": snapshot_report,
