@@ -13,6 +13,8 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field, asdict
 
+from utils.secret_redaction import redact_sensitive_text
+
 try:
     from utils.logger import get_logger
     logger = get_logger("scene_analyzer")
@@ -742,9 +744,9 @@ C. Background/Object/Atmosphere scene (★ USE THIS MORE OFTEN! ★):
                 if attempt < self.GEMINI_MAX_RETRIES:
                     time.sleep(self.GEMINI_RETRY_DELAY)
             except Exception as e:
-                last_error = str(e)
+                last_error = redact_sensitive_text(e)
                 logger.warning(
-                    f"[SceneAnalyzer] [{index}] 분석 실패 (시도 {attempt}/{self.GEMINI_MAX_RETRIES}): {e}"
+                    f"[SceneAnalyzer] [{index}] 분석 실패 (시도 {attempt}/{self.GEMINI_MAX_RETRIES}): {last_error}"
                 )
                 if attempt < self.GEMINI_MAX_RETRIES:
                     time.sleep(self.GEMINI_RETRY_DELAY)
@@ -1362,7 +1364,9 @@ Output the JSON array now (start with [ immediately):"""
                 # v62.20: 다음 청크를 위해 이 청크의 마지막 5개 sd_prompt 수집
                 prev_chunk_prompts = [r.sd_prompt for r in chunk_results[-5:] if r.sd_prompt]
             except Exception as e:
-                logger.warning(f"[SceneAnalyzer] {chunk_label}: 배치 실패 ({e}) → 병렬 폴백")
+                logger.warning(
+                    f"[SceneAnalyzer] {chunk_label}: 배치 실패 ({redact_sensitive_text(e)}) → 병렬 폴백"
+                )
                 # 해당 청크만 병렬 폴백 (전체가 아니라 실패 청크만)
                 fallback_results = self._analyze_batch_parallel(chunk_dialogues)
                 # 인덱스 보정
@@ -1702,7 +1706,7 @@ Output the JSON array now (start with [ immediately):"""
                             fallback_count += 1
 
                     except Exception as e:
-                        logger.error(f"[SceneAnalyzer] [{idx}] 병렬 분석 예외: {e}")
+                        logger.error(f"[SceneAnalyzer] [{idx}] 병렬 분석 예외: {redact_sensitive_text(e)}")
                         d = dialogues[idx]
                         # VER-4: 폴백 분석도 실패할 수 있으므로 이중 보호
                         try:
@@ -1710,7 +1714,7 @@ Output the JSON array now (start with [ immediately):"""
                                 d.get("text", ""), d.get("speaker", "나레이터"), idx
                             )
                         except Exception as e2:
-                            logger.error(f"[SceneAnalyzer] [{idx}] 폴백도 실패: {e2}")
+                            logger.error(f"[SceneAnalyzer] [{idx}] 폴백도 실패: {redact_sensitive_text(e2)}")
                             raw_results[idx] = SceneAnalysisResult(
                                 scene_id=f"scene_{idx:04d}",
                                 dialogue_index=idx,
