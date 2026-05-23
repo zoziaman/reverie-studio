@@ -177,6 +177,10 @@ those checked artifacts into `reverie.pack.videotoon_render_plan.v1`: a
 scene-level composition graph with background plate, actor base variant, eye
 layer, and mouth layer entries. This is the handoff shape for Remotion or any
 other renderer, while remaining public-safe JSON only.
+Use `reverie-videotoon-render-plan to-remotion-props ...` when the current
+Remotion `RadioDrama` composition needs its props JSON: the command maps the
+scene graph to `images[*].backgroundPath`, `foregroundPath`, eye layer, mouth
+layer, and `motiontoon.renderPlan`.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 

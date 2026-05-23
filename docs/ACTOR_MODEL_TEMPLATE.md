@@ -426,3 +426,16 @@ contains scene-level `background_plate`, `variant_base`, `eye_layer`, and
 `mouth_layer` composition layers for Remotion or another renderer to consume.
 It is still public-safe JSON only; no PNGs, audio, video, private paths, or
 model weights are produced.
+
+To export the current Remotion `RadioDrama` props shape from that render plan,
+run:
+
+```bash
+reverie-videotoon-render-plan to-remotion-props data/actor_asset_requests/prepare/daily_life_toon_ep001/daily_life_toon_ep001.render_plan.json --width 1080 --height 1920 --scene-duration-frames 90 --output data/actor_asset_requests/prepare/daily_life_toon_ep001/daily_life_toon_ep001.remotion_props.json
+```
+
+The Remotion props JSON uses schema `reverie.remotion.radio_drama_props.v1` and
+fills `images[*].backgroundPath`, `foregroundPath`, `eyesOpenPath`, and
+`mouthOpenPath` from the checked render plan. It also keeps the original render
+plan under `motiontoon.renderPlan` so the React side can evolve without losing
+the scene graph.

@@ -148,6 +148,73 @@ def test_videotoon_render_plan_cli_writes_manifest(tmp_path, capsys):
     assert "video-toon render plan" in captured.out
 
 
+def test_build_remotion_props_from_videotoon_render_plan(tmp_path):
+    render_plan = _render_plan_module()
+    prepare_report_path = _write_prepare_bundle(tmp_path)
+    plan = render_plan.build_videotoon_render_plan_from_prepare_report(prepare_report_path)
+
+    props = render_plan.build_remotion_props_from_videotoon_render_plan(
+        plan,
+        fps=30,
+        scene_duration_frames=90,
+        width=1080,
+        height=1920,
+    )
+    serialized = json.dumps(props)
+    image = props["images"][0]
+
+    assert props["schema"] == "reverie.remotion.radio_drama_props.v1"
+    assert props["fps"] == 30
+    assert props["width"] == 1080
+    assert props["height"] == 1920
+    assert props["totalFrames"] == 90
+    assert props["motiontoon"]["enabled"] is True
+    assert props["motiontoon"]["mode"] == "layered_actor_pool_v1"
+    assert props["motiontoon"]["sourceRenderPlanSchema"] == "reverie.pack.videotoon_render_plan.v1"
+    assert props["motiontoon"]["renderPlan"]["episode_id"] == "daily_life_toon_ep001"
+    assert image["path"] == "street_day_00.png"
+    assert image["backgroundPath"] == "street_day_00.png"
+    assert image["foregroundPath"] == "variants/happy_standing.png"
+    assert image["eyesOpenPath"] == "face_parts/eyes_open.png"
+    assert image["mouthOpenPath"] == "face_parts/mouth_small_open.png"
+    assert image["startFrame"] == 0
+    assert image["durationFrames"] == 90
+    assert image["motion"]["scene_type"] == "video_toon_layered_scene"
+    assert image["motion"]["use_layered_cutout"] is True
+    assert "C:" + "/Users/" not in serialized
+    assert "C:" + "\\Users\\" not in serialized
+
+
+def test_videotoon_render_plan_cli_writes_remotion_props(tmp_path, capsys):
+    render_plan = _render_plan_module()
+    prepare_report_path = _write_prepare_bundle(tmp_path)
+    render_plan_path = tmp_path / "daily_life_toon_ep001.render_plan.json"
+    output_path = tmp_path / "daily_life_toon_ep001.remotion_props.json"
+    render_plan.write_videotoon_render_plan_from_prepare_report(prepare_report_path, render_plan_path)
+
+    exit_code = render_plan.main(
+        [
+            "to-remotion-props",
+            str(render_plan_path),
+            "--output",
+            str(output_path),
+            "--width",
+            "1080",
+            "--height",
+            "1920",
+            "--scene-duration-frames",
+            "90",
+        ]
+    )
+    captured = capsys.readouterr()
+    props = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert props["schema"] == "reverie.remotion.radio_drama_props.v1"
+    assert props["images"][0]["foregroundPath"] == "variants/happy_standing.png"
+    assert "Remotion props" in captured.out
+
+
 def test_pyproject_exposes_videotoon_render_plan_cli():
     pyproject = tomllib.loads(PYPROJECT_PATH.read_text(encoding="utf-8"))
 

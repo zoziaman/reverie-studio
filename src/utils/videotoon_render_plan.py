@@ -8,6 +8,7 @@ from typing import Any, Optional
 
 
 RENDER_PLAN_SCHEMA = "reverie.pack.videotoon_render_plan.v1"
+REMOTION_PROPS_SCHEMA = "reverie.remotion.radio_drama_props.v1"
 PREPARE_SCHEMA = "reverie.pack.videotoon_episode_prepare.v1"
 ACTOR_PLAN_SCHEMA = "reverie.pack.actor_episode_asset_plan.v1"
 ACTOR_LAYER_SPECS_SCHEMA = "reverie.pack.actor_roster.layer_specs.v1"
@@ -213,6 +214,129 @@ def write_videotoon_render_plan_from_prepare_report(
     return output
 
 
+def _layer_by_type(scene: Mapping[str, Any], layer_type: str) -> dict[str, Any]:
+    layers = scene.get("composition_layers")
+    if not isinstance(layers, list):
+        return {}
+    for layer in layers:
+        if isinstance(layer, Mapping) and layer.get("layer_type") == layer_type:
+            return dict(layer)
+    return {}
+
+
+def _remotion_image_from_scene(
+    scene: Mapping[str, Any],
+    *,
+    scene_index: int,
+    scene_duration_frames: int,
+) -> dict[str, Any]:
+    background_layer = _layer_by_type(scene, "background_plate")
+    variant_layer = _layer_by_type(scene, "variant_base")
+    eye_layer = _layer_by_type(scene, "eye_layer")
+    mouth_layer = _layer_by_type(scene, "mouth_layer")
+    background_path = str(background_layer.get("target_relative_path") or "")
+    foreground_path = str(variant_layer.get("target_relative_path") or "")
+    eye_path = str(eye_layer.get("target_relative_path") or "")
+    mouth_path = str(mouth_layer.get("target_relative_path") or "")
+    mouth_key = str(mouth_layer.get("key") or "")
+
+    image = {
+        "path": background_path or foreground_path,
+        "backgroundPath": background_path,
+        "foregroundPath": foreground_path,
+        "startFrame": scene_index * scene_duration_frames,
+        "durationFrames": scene_duration_frames,
+        "motion": {
+            "scene_type": "video_toon_layered_scene",
+            "use_layered_cutout": True,
+            "character_layer_mode": "layered_actor_pool_v1",
+            "actor_id": str(scene.get("actor_id") or ""),
+            "role_id": str(scene.get("role_id") or ""),
+            "variant_key": str((scene.get("actor") or {}).get("variant_key") or ""),
+            "background_id": str((scene.get("background") or {}).get("location_id") or ""),
+        },
+    }
+    if eye_path:
+        image["eyesOpenPath"] = eye_path
+    if mouth_path and mouth_key == "mouth_closed":
+        image["mouthClosedPath"] = mouth_path
+    elif mouth_path:
+        image["mouthOpenPath"] = mouth_path
+    return image
+
+
+def build_remotion_props_from_videotoon_render_plan(
+    render_plan: Mapping[str, Any],
+    *,
+    fps: int = 30,
+    scene_duration_frames: int = 90,
+    width: int = 1920,
+    height: int = 1080,
+) -> dict[str, Any]:
+    """Convert a video-toon render plan into Remotion RadioDrama props."""
+    _require_schema(render_plan, RENDER_PLAN_SCHEMA, "render plan")
+    if scene_duration_frames <= 0:
+        raise ValueError("scene_duration_frames must be positive")
+    if fps <= 0:
+        raise ValueError("fps must be positive")
+    if width <= 0 or height <= 0:
+        raise ValueError("width and height must be positive")
+
+    scenes = render_plan.get("scenes") if isinstance(render_plan.get("scenes"), list) else []
+    images = [
+        _remotion_image_from_scene(scene, scene_index=index, scene_duration_frames=scene_duration_frames)
+        for index, scene in enumerate(scenes)
+        if isinstance(scene, Mapping)
+    ]
+
+    return {
+        "schema": REMOTION_PROPS_SCHEMA,
+        "images": images,
+        "audioSegments": [],
+        "subtitles": [],
+        "motiontoon": {
+            "enabled": True,
+            "mode": "layered_actor_pool_v1",
+            "sourceRenderPlanSchema": RENDER_PLAN_SCHEMA,
+            "renderPlan": dict(render_plan),
+        },
+        "totalFrames": len(images) * scene_duration_frames,
+        "fps": fps,
+        "width": width,
+        "height": height,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def write_remotion_props_from_videotoon_render_plan(
+    render_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    fps: int = 30,
+    scene_duration_frames: int = 90,
+    width: int = 1920,
+    height: int = 1080,
+) -> Path:
+    """Write Remotion RadioDrama props from a video-toon render plan."""
+    render_plan = _load_json_object(render_plan_path, "render plan")
+    props = build_remotion_props_from_videotoon_render_plan(
+        render_plan,
+        fps=fps,
+        scene_duration_frames=scene_duration_frames,
+        width=width,
+        height=height,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(props, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Build a public-safe video-toon scene render plan.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -224,6 +348,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     prepare_parser.add_argument("prepare_report_path", help="Input prepare_report.json path.")
     prepare_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    remotion_parser = subparsers.add_parser(
+        "to-remotion-props",
+        help="Convert a video-toon render plan into Remotion RadioDrama props.",
+    )
+    remotion_parser.add_argument("render_plan_path", help="Input render_plan.json path.")
+    remotion_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    remotion_parser.add_argument("--fps", type=int, default=30, help="Frames per second.")
+    remotion_parser.add_argument("--scene-duration-frames", type=int, default=90, help="Default duration per scene.")
+    remotion_parser.add_argument("--width", type=int, default=1920, help="Composition width.")
+    remotion_parser.add_argument("--height", type=int, default=1080, help="Composition height.")
+
     args = parser.parse_args(argv)
     if args.command == "from-prepare":
         plan = build_videotoon_render_plan_from_prepare_report(args.prepare_report_path)
@@ -232,6 +367,28 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(f"Wrote video-toon render plan for {plan['episode_id']}: {output}")
         else:
             print(json.dumps(plan, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "to-remotion-props":
+        render_plan = _load_json_object(args.render_plan_path, "render plan")
+        props = build_remotion_props_from_videotoon_render_plan(
+            render_plan,
+            fps=args.fps,
+            scene_duration_frames=args.scene_duration_frames,
+            width=args.width,
+            height=args.height,
+        )
+        if args.output:
+            output = write_remotion_props_from_videotoon_render_plan(
+                args.render_plan_path,
+                args.output,
+                fps=args.fps,
+                scene_duration_frames=args.scene_duration_frames,
+                width=args.width,
+                height=args.height,
+            )
+            print(f"Wrote Remotion props for {props['motiontoon']['renderPlan']['episode_id']}: {output}")
+        else:
+            print(json.dumps(props, ensure_ascii=False, indent=2))
         return 0
 
     parser.error(f"unknown command: {args.command}")
