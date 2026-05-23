@@ -49,6 +49,20 @@ MEMORY_KEYWORDS = ["그날", "예전", "기억", "처음", "오래전", "다시"
 REVEAL_KEYWORDS = ["진실", "비밀", "들켰", "증거", "알고", "밝혀", "고백", "폭로"]
 CONFRONTATION_KEYWORDS = ["왜", "당신", "네가", "거짓말", "그만", "대답", "?"]
 
+NARRATOR_SPEAKER_ALIASES = {
+    "narrator",
+    "narration",
+    "narrator_male",
+    "narrator_female",
+    "voiceover",
+    "나레이터",
+    "나레이션",
+    "내레이터",
+    "내레이션",
+    "해설",
+    "해설자",
+}
+
 
 def _coerce_dict(raw: Any) -> Dict[str, Any]:
     if raw is None:
@@ -105,11 +119,18 @@ def _contains_any(text: str, keywords: List[str]) -> bool:
     return any(keyword.lower() in lowered for keyword in keywords)
 
 
+def _speaker_key(speaker: str) -> str:
+    return (speaker or "").strip().lower()
+
+
+def _is_narrator_speaker(speaker: str) -> bool:
+    return _speaker_key(speaker) in NARRATOR_SPEAKER_ALIASES
+
+
 def infer_scene_type(text: str, speaker: str, config: Optional[Dict[str, Any]] = None) -> str:
     config = config or {}
     prop_keywords = config.get("prop_keywords") or DEFAULT_PROP_KEYWORDS
     stripped = (text or "").strip()
-    speaker_name = (speaker or "").strip().lower()
 
     if _contains_any(stripped, CONFRONTATION_KEYWORDS):
         return "confrontation"
@@ -119,7 +140,7 @@ def infer_scene_type(text: str, speaker: str, config: Optional[Dict[str, Any]] =
         return "shock_entry"
     if _contains_any(stripped, REVEAL_KEYWORDS):
         return "reveal"
-    if speaker_name in {"나레이션", "narrator", "narration"} and _contains_any(stripped, MEMORY_KEYWORDS):
+    if _is_narrator_speaker(speaker) and _contains_any(stripped, MEMORY_KEYWORDS):
         return "memory_object"
     return config.get("default_scene_type", "dialogue")
 
@@ -386,9 +407,7 @@ def infer_face_rig(scene_type: str, speaker: str, config: Optional[Dict[str, Any
         }
     cast_hint = infer_cast_slot(speaker, scene_type, cfg)
     puppet_profiles = cfg.get("puppet_profiles") or {}
-    speaker_lower = (speaker or "").strip().lower()
-    is_narration = speaker_lower in {"narrator", "narration", "나레이터", "나레이션"}
-    if is_narration:
+    if _is_narrator_speaker(speaker):
         return {
             "face_rig": False,
             "face_anchor_x": 0.5,
@@ -512,7 +531,7 @@ def build_scene_motion_directive(
         if cfg.get("idle_drift_enabled"):
             primitives.append("idle_drift")
 
-    if speaker and speaker.lower() not in {"????", "narrator", "narration"} and cfg.get("subtitle_pulse_enabled"):
+    if _speaker_key(speaker) and not _is_narrator_speaker(speaker) and cfg.get("subtitle_pulse_enabled"):
         primitives.append("subtitle_pulse")
 
     motion_priority = "low"

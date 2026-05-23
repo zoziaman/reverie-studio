@@ -385,7 +385,7 @@ class ProductionMixin:
         return plan_data, fallback_json_path
 
     def _find_manual_resume_candidate(self, channel: str, mode: str):
-        """?? ??/??? ?? ?? ?? ??? ???."""
+        """Find the latest compatible failed-plan candidate for manual resume."""
         candidate_json_paths = []
         resume_state = getattr(self, "_last_failed_plan_state", None)
         if isinstance(resume_state, dict):
@@ -435,7 +435,7 @@ class ProductionMixin:
         return None
 
     def _prompt_manual_resume_choice(self, channel: str, mode: str) -> None:
-        """?? ?? ? ?? ??? ??? ???? ???? ???."""
+        """Ask whether to reuse an existing plan before manual checkpoint resume."""
         self._manual_resume_plan_choice = None
         if not bool(self._safe_get_var("resume_from_checkpoint_var", False)):
             return
@@ -476,7 +476,7 @@ class ProductionMixin:
         }
 
     def _load_reused_plan_for_manual_resume(self, channel: str, mode: str):
-        """?? ??? ???? ??? ?? JSON? ?????."""
+        """Load a plan JSON selected for manual resume reuse."""
         if not bool(self._safe_get_var("resume_from_checkpoint_var", False)):
             return None, ""
 

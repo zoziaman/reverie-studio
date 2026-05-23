@@ -186,10 +186,10 @@ class SettingsMixin:
 
         if provider == "claude_cli":
             if not claude_cli_path:
-                messagebox.showerror("?ㅻ쪟", "Claude CLI 寃쎈줈瑜??낅젰?댁＜?몄슂.")
+                messagebox.showerror("오류", "Claude CLI 경로를 입력해주세요.")
                 return
             if not claude_cli_model:
-                messagebox.showerror("?ㅻ쪟", "Claude CLI 紐⑤뜽紐낆쓣 ?낅젰?댁＜?몄슂.")
+                messagebox.showerror("오류", "Claude CLI 모델명을 입력해주세요.")
                 return
             if not gemini_key:
                 gemini_key = "__claude_cli__"
@@ -199,7 +199,7 @@ class SettingsMixin:
                 timeout_text or str(getattr(config, "STORY_LLM_TIMEOUT_SEC", 600))
             )
         except ValueError:
-            messagebox.showerror("?ㅻ쪟", "Story LLM timeout? 1 ?댁긽 ?뺤닔濡??낅젰?댁＜?몄슂.")
+            messagebox.showerror("오류", "Story LLM timeout은 1 이상의 정수로 입력해주세요.")
             return
 
         story_llm_model = self._resolve_story_llm_model(provider, claude_cli_model)
@@ -1051,7 +1051,7 @@ class SettingsMixin:
             if requested_mode == "classic_dynamic" and support.get("support_level") == "gishini":
                 self._apply_motiontoon_render_mode("gishini_motiontoon")
                 if log_if_downgraded:
-                    self._add_log("[???] ?? ?? Gishini Ready?? ???? ????? ?? ?????.")
+                    self._add_log("[Motiontoon] 현재 팩은 Gishini Ready라서 Gishini Motiontoon으로 전환했습니다.")
                 support = get_motiontoon_support_info(requested_mode="gishini_motiontoon")
             elif (
                 requested_mode == "gishini_motiontoon"
@@ -1060,9 +1060,9 @@ class SettingsMixin:
                 self._apply_motiontoon_render_mode("classic_dynamic")
                 if log_if_downgraded:
                     if support.get("reason") == "pack_basic_only":
-                        self._add_log("[???] ?? ?? Basic Only?? ?? ????? ?? ?????.")
+                        self._add_log("[Motiontoon] 현재 팩은 Basic Only라서 Classic Dynamic으로 전환했습니다.")
                     elif support.get("reason") == "pack_disabled":
-                        self._add_log("[???] ?? ?? ??? ?????? ?? ????? ?? ?????.")
+                        self._add_log("[Motiontoon] 현재 팩에서 Motiontoon이 비활성화되어 Classic Dynamic으로 전환했습니다.")
             self._update_motiontoon_status()
             return self.settings_manager.get_motiontoon_render_mode()
         except Exception:
