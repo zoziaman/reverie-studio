@@ -11,6 +11,7 @@ from config.pack_validator import PackValidator
 
 ROOT = Path(__file__).resolve().parents[1]
 ACTOR_MODEL_PATH = ROOT / "assets" / "actor_models" / "actor_adult_woman_01" / "actor.json"
+ACTOR_PRESET_CATALOG_PATH = ROOT / "assets" / "actor_model_presets" / "catalog.json"
 ACTOR_POOL_SCHEMA_PATH = ROOT / "schemas" / "video_toon_actor_pool.schema.json"
 PYPROJECT_PATH = ROOT / "pyproject.toml"
 
@@ -476,3 +477,75 @@ def test_actor_model_cli_scaffold_creates_package(tmp_path, capsys):
     assert actor_path.exists()
     assert actor["role_range"] == ["lead", "support", "neighbor"]
     assert "actor_middle_woman_01" in captured.out
+
+
+def test_actor_model_preset_catalog_is_public_safe_and_genre_ready():
+    actor_model = _actor_model_module()
+
+    catalog = actor_model.load_actor_model_preset_catalog(ACTOR_PRESET_CATALOG_PATH)
+    presets = catalog["presets"]
+    serialized = json.dumps(catalog)
+
+    assert catalog["schema"] == "reverie.actor_model.presets.v1"
+    assert {"daily_adult_man", "daily_middle_woman", "mystery_senior_man", "saguk_elder_woman"}.issubset(presets)
+    assert "C:" + "/Users/" not in serialized
+    assert "C:" + "\\Users\\" not in serialized
+    for preset_id, preset in presets.items():
+        assert preset_id
+        assert preset["display_name"]
+        assert preset["age_band"]
+        assert preset["gender_presentation"]
+        assert preset["genre_tags"]
+        assert preset["role_range"]
+        assert preset["visual_identity"]
+        assert preset["voice_profile"]
+
+
+def test_scaffold_actor_model_from_preset_creates_actor_package(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+
+    actor_path = actor_model.scaffold_actor_model_from_preset(
+        "daily_adult_man",
+        "actor_daily_adult_man_01",
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    actor = json.loads(actor_path.read_text(encoding="utf-8"))
+    identity_prompt = (actor_path.parent / "prompts" / "identity_prompt.txt").read_text(encoding="utf-8")
+    result = actor_model.validate_actor_model_package(actor_path)
+
+    assert actor["actor_id"] == "actor_daily_adult_man_01"
+    assert actor["display_name"] == "Daily Adult Man"
+    assert actor["age_band"] == "adult"
+    assert actor["gender_presentation"] == "man"
+    assert "office_worker" in actor["role_range"]
+    assert actor["voice_profile"]["recommended_slot"] == "male_01"
+    assert "ordinary adult Korean man" in identity_prompt
+    assert result.is_valid is True
+
+
+def test_actor_model_cli_scaffold_preset_creates_package(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+
+    exit_code = actor_model.main(
+        [
+            "scaffold-preset",
+            "mystery_senior_man",
+            "actor_mystery_senior_man_01",
+            "--actor-root",
+            str(actor_root),
+            "--catalog",
+            str(ACTOR_PRESET_CATALOG_PATH),
+        ]
+    )
+    captured = capsys.readouterr()
+    actor_path = actor_root / "actor_mystery_senior_man_01" / "actor.json"
+    actor = json.loads(actor_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert actor["age_band"] == "senior"
+    assert "suspect" in actor["role_range"]
+    assert "mystery_senior_man" in captured.out

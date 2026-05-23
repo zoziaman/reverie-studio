@@ -1,0 +1,163 @@
+{
+  "schema": "reverie.actor_model.presets.v1",
+  "description": "Public-safe starter presets for reusable video-toon actor model scaffolds.",
+  "presets": {
+    "daily_adult_man": {
+      "display_name": "Daily Adult Man",
+      "age_band": "adult",
+      "gender_presentation": "man",
+      "genre_tags": [
+        "daily_life",
+        "office",
+        "family"
+      ],
+      "role_range": [
+        "lead",
+        "support",
+        "office_worker",
+        "neighbor",
+        "father",
+        "witness"
+      ],
+      "visual_identity": "ordinary adult Korean man with tidy short dark hair, practical casual jacket, and grounded everyday expression",
+      "voice_profile": "male_01"
+    },
+    "daily_adult_woman": {
+      "display_name": "Daily Adult Woman",
+      "age_band": "adult",
+      "gender_presentation": "woman",
+      "genre_tags": [
+        "daily_life",
+        "office",
+        "family"
+      ],
+      "role_range": [
+        "lead",
+        "support",
+        "office_worker",
+        "neighbor",
+        "mother",
+        "witness"
+      ],
+      "visual_identity": "ordinary adult Korean woman with neat dark hair, simple cardigan or blouse silhouette, and readable everyday expression",
+      "voice_profile": "female_01"
+    },
+    "daily_middle_woman": {
+      "display_name": "Daily Middle Woman",
+      "age_band": "middle_aged",
+      "gender_presentation": "woman",
+      "genre_tags": [
+        "daily_life",
+        "family",
+        "neighborhood"
+      ],
+      "role_range": [
+        "lead",
+        "support",
+        "neighbor",
+        "parent",
+        "shop_owner",
+        "witness"
+      ],
+      "visual_identity": "middle-aged Korean woman with short neat hair, comfortable cardigan silhouette, and expressive video-toon face",
+      "voice_profile": "female_02"
+    },
+    "mystery_senior_man": {
+      "display_name": "Mystery Senior Man",
+      "age_band": "senior",
+      "gender_presentation": "man",
+      "genre_tags": [
+        "mystery",
+        "thriller",
+        "neighborhood"
+      ],
+      "role_range": [
+        "suspect",
+        "witness",
+        "neighbor",
+        "elder",
+        "support"
+      ],
+      "visual_identity": "senior Korean man with lined face, sparse gray hair, simple dark jacket, and guarded expression suitable for mystery scenes",
+      "voice_profile": "male_senior_01"
+    },
+    "mystery_adult_woman": {
+      "display_name": "Mystery Adult Woman",
+      "age_band": "adult",
+      "gender_presentation": "woman",
+      "genre_tags": [
+        "mystery",
+        "thriller",
+        "investigation"
+      ],
+      "role_range": [
+        "lead",
+        "support",
+        "victim",
+        "suspect",
+        "witness",
+        "investigator"
+      ],
+      "visual_identity": "adult Korean woman with sharp readable eyes, controlled expression, neat dark hair, and a restrained coat silhouette",
+      "voice_profile": "female_01"
+    },
+    "saguk_elder_woman": {
+      "display_name": "Saguk Elder Woman",
+      "age_band": "senior",
+      "gender_presentation": "woman",
+      "genre_tags": [
+        "saguk",
+        "historical",
+        "family"
+      ],
+      "role_range": [
+        "elder",
+        "matriarch",
+        "witness",
+        "support",
+        "advisor"
+      ],
+      "visual_identity": "senior Korean historical-drama woman with composed face, gray tied hair silhouette, and simple hanbok-inspired layered clothing",
+      "voice_profile": "female_senior_01"
+    },
+    "saguk_young_man": {
+      "display_name": "Saguk Young Man",
+      "age_band": "young_adult",
+      "gender_presentation": "man",
+      "genre_tags": [
+        "saguk",
+        "historical",
+        "adventure"
+      ],
+      "role_range": [
+        "lead",
+        "support",
+        "messenger",
+        "guard",
+        "son",
+        "witness"
+      ],
+      "visual_identity": "young adult Korean historical-drama man with tied dark hair silhouette, clean face, and simple hanbok-inspired clothing",
+      "voice_profile": "male_young_01"
+    },
+    "omniverse_teen_woman": {
+      "display_name": "Omniverse Teen Woman",
+      "age_band": "teen",
+      "gender_presentation": "woman",
+      "genre_tags": [
+        "school",
+        "daily_life",
+        "omniverse"
+      ],
+      "role_range": [
+        "lead",
+        "support",
+        "student",
+        "sibling",
+        "witness"
+      ],
+      "visual_identity": "teen Korean woman with youthful face, shoulder-length dark hair silhouette, casual school-friendly outfit, and clear video-toon expressions",
+      "voice_profile": "female_young_01"
+    }
+  }
+}

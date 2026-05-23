@@ -96,6 +96,8 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "docs/VIDEO_TOON_ACTOR_POOL_CONTRACT.md" in text
     assert "reverie-actor-model-requests" in text
     assert "scaffold" in text
+    assert "scaffold-preset" in text
+    assert "actor_model_presets" in text
     assert "asset coverage" in text
     assert "pack-coverage" in text
     assert "public-safe" in text

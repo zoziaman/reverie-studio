@@ -76,6 +76,16 @@ DEFAULT_ROLE_RANGE = (
     "witness",
     "neighbor",
 )
+DEFAULT_PRESET_CATALOG_PATH = Path("assets") / "actor_model_presets" / "catalog.json"
+PRESET_REQUIRED_FIELDS = (
+    "display_name",
+    "age_band",
+    "gender_presentation",
+    "genre_tags",
+    "role_range",
+    "visual_identity",
+    "voice_profile",
+)
 
 
 @dataclass
@@ -161,6 +171,12 @@ def _resolve_actor_root(actor_root: Optional[Path | str], repo_root: Optional[Pa
     if root is not None and not (resolved == root or root in resolved.parents):
         raise ValueError("actor_root must stay inside repo_root")
     return resolved
+
+
+def _resolve_preset_catalog_path(catalog_path: Optional[Path | str], repo_root: Optional[Path | str]) -> Path:
+    root = Path(repo_root).resolve() if repo_root is not None else None
+    raw_path = Path(catalog_path) if catalog_path is not None else DEFAULT_PRESET_CATALOG_PATH
+    return raw_path.resolve() if raw_path.is_absolute() else ((root or Path.cwd()) / raw_path).resolve()
 
 
 def _write_text_file(path: Path, text: str) -> None:
@@ -645,6 +661,83 @@ def scaffold_actor_model(
     return actor_path
 
 
+def load_actor_model_preset_catalog(
+    catalog_path: Optional[Path | str] = None,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Load and validate the public-safe actor preset catalog."""
+    path = _resolve_preset_catalog_path(catalog_path, repo_root)
+    if not path.exists():
+        raise ValueError(f"actor model preset catalog does not exist: {path}")
+
+    catalog = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(catalog, dict):
+        raise ValueError("actor model preset catalog must contain a JSON object")
+    if catalog.get("schema") != "reverie.actor_model.presets.v1":
+        raise ValueError("actor model preset catalog schema must be reverie.actor_model.presets.v1")
+
+    presets = catalog.get("presets")
+    if not isinstance(presets, dict) or not presets:
+        raise ValueError("actor model preset catalog must contain non-empty presets")
+
+    serialized = json.dumps(catalog, ensure_ascii=False)
+    for pattern in PRIVATE_TEXT_PATTERNS:
+        if pattern.search(serialized):
+            raise ValueError("actor model preset catalog contains private path, key, or credential-like text")
+
+    for preset_id, preset in presets.items():
+        if not isinstance(preset_id, str) or not preset_id.strip():
+            raise ValueError("actor model preset ids must be non-empty strings")
+        if not isinstance(preset, dict):
+            raise ValueError(f"actor model preset {preset_id} must be an object")
+        missing = [field_name for field_name in PRESET_REQUIRED_FIELDS if field_name not in preset]
+        if missing:
+            raise ValueError(f"actor model preset {preset_id} missing required fields: {', '.join(missing)}")
+        for field_name in ("display_name", "age_band", "gender_presentation", "visual_identity", "voice_profile"):
+            if not str(preset.get(field_name) or "").strip():
+                raise ValueError(f"actor model preset {preset_id}.{field_name} must be a non-empty string")
+        for field_name in ("genre_tags", "role_range"):
+            if not _string_list(preset.get(field_name)):
+                raise ValueError(f"actor model preset {preset_id}.{field_name} must be a non-empty string list")
+
+    return catalog
+
+
+def scaffold_actor_model_from_preset(
+    preset_id: str,
+    actor_id: str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+    catalog_path: Optional[Path | str] = None,
+    force: bool = False,
+) -> Path:
+    """Create an actor model package from a reusable preset catalog entry."""
+    preset_key = str(preset_id or "").strip()
+    catalog = load_actor_model_preset_catalog(catalog_path, repo_root=repo_root)
+    presets = catalog["presets"]
+    if preset_key not in presets:
+        raise ValueError(f"unknown actor model preset: {preset_key}")
+
+    preset = presets[preset_key]
+    return scaffold_actor_model(
+        actor_id,
+        actor_root=actor_root,
+        repo_root=repo_root,
+        display_name=str(preset["display_name"]),
+        age_band=str(preset["age_band"]),
+        gender_presentation=str(preset["gender_presentation"]),
+        role_range=_string_list(preset["role_range"]),
+        visual_identity=str(preset["visual_identity"]),
+        voice_profile=str(preset["voice_profile"]),
+        required_variants=preset.get("required_variants"),
+        mouth_shapes=preset.get("mouth_shapes"),
+        eye_shapes=preset.get("eye_shapes"),
+        force=force,
+    )
+
+
 def build_actor_asset_request_manifest(
     actor_model_path: Path | str,
     *,
@@ -887,6 +980,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     scaffold_parser.add_argument("--force", action="store_true", help="Overwrite an existing actor scaffold.")
 
+    preset_parser = subparsers.add_parser(
+        "scaffold-preset",
+        help="Create a public-safe actor model package from a preset catalog entry.",
+    )
+    preset_parser.add_argument("preset_id", help="Preset key from assets/actor_model_presets/catalog.json")
+    preset_parser.add_argument("actor_id", help="Actor model id to create from the preset")
+    preset_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    preset_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    preset_parser.add_argument("--catalog", default=None, help="Preset catalog JSON path.")
+    preset_parser.add_argument("--force", action="store_true", help="Overwrite an existing actor scaffold.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -922,6 +1026,17 @@ def main(argv: Optional[list[str]] = None) -> int:
             force=args.force,
         )
         print(f"Scaffolded actor model {args.actor_id}: {actor_path}")
+        return 0
+    if args.command == "scaffold-preset":
+        actor_path = scaffold_actor_model_from_preset(
+            args.preset_id,
+            args.actor_id,
+            actor_root=args.actor_root,
+            repo_root=args.repo_root,
+            catalog_path=args.catalog,
+            force=args.force,
+        )
+        print(f"Scaffolded actor model {args.actor_id} from preset {args.preset_id}: {actor_path}")
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

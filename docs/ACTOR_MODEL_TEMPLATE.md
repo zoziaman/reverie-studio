@@ -158,6 +158,25 @@ overwrite an existing actor package unless `--force` is passed. The generated
 package is a template only; it does not create or bundle PNGs, voice samples,
 checkpoints, LoRAs, private paths, or generation logs.
 
+For repeated pack work, start from the public-safe preset catalog:
+
+```text
+assets/actor_model_presets/catalog.json
+```
+
+The catalog contains starter archetypes for daily-life, mystery, historical,
+school, family, office, and omniverse casting. Use `scaffold-preset` when the
+actor should inherit a known age band, role range, voice slot, genre tags, and
+visual identity:
+
+```bash
+reverie-actor-model-requests scaffold-preset daily_adult_man actor_daily_adult_man_01 --repo-root .
+```
+
+`scaffold-preset` still writes only the template package. Generated images,
+mouth layers, eye layers, voice samples, and model weights remain local user
+assets.
+
 ## Asset Request Manifest
 
 The template can produce a local work order for generating the actual variant,
