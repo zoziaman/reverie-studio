@@ -26,6 +26,7 @@ from PySide6.QtGui import QFont, QTextCursor
 
 import google.generativeai as genai
 from dotenv import load_dotenv
+from utils.secret_redaction import redact_sensitive_text
 
 # .env 로드
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
@@ -121,7 +122,7 @@ class ChatWorker(QThread):
             response = self.chat.send_message(self.message)
             self.response_ready.emit(response.text)
         except Exception as e:
-            self.error_occurred.emit(str(e))
+            self.error_occurred.emit(redact_sensitive_text(e))
 
 
 class PackChatbotWindow(QMainWindow):
