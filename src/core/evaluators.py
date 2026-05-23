@@ -31,6 +31,7 @@ from utils.gemini_compat import (
     generate_vision_content,
     get_gemini_model,
 )
+from utils.secret_redaction import redact_sensitive_text
 
 
 # ============================================================
@@ -152,7 +153,7 @@ class StoryCritic:
                     self._model = get_gemini_model("gemini-1.5-flash")
                 logger.info("[StoryCritic] Gemini 모델 초기화 완료")
             except Exception as e:
-                logger.error(f"[StoryCritic] 모델 초기화 실패: {e}")
+                logger.error(f"[StoryCritic] 모델 초기화 실패: {redact_sensitive_text(e)}")
 
     @property
     def is_available(self) -> bool:
@@ -232,9 +233,11 @@ class StoryCritic:
                     }
                 )
         except Exception as e:
-            logger.error(f"[StoryCritic] 평가 실패: {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[StoryCritic] 평가 실패: {safe_error}")
+            return EvaluationResult(score=0, passed=False, feedback=f"평가 오류: {safe_error}")
 
-        return EvaluationResult(score=0, passed=False, feedback=f"평가 오류: {e}")
+        return EvaluationResult(score=0, passed=False, feedback="평가 오류")
 
     def evaluate_script(
         self,
@@ -304,7 +307,7 @@ class StoryCritic:
                     details=result_json.get("details", {})
                 )
         except Exception as e:
-            logger.error(f"[StoryCritic] 대본 평가 실패: {e}")
+            logger.error(f"[StoryCritic] 대본 평가 실패: {redact_sensitive_text(e)}")
 
         return EvaluationResult(score=0, passed=False, feedback="평가 오류")
 
@@ -346,7 +349,7 @@ class StoryCritic:
             response = self._model.generate_content(prompt)
             return response.text.strip()
         except Exception as e:
-            logger.error(f"[StoryCritic] 개선 제안 실패: {e}")
+            logger.error(f"[StoryCritic] 개선 제안 실패: {redact_sensitive_text(e)}")
             return content
 
 
@@ -390,7 +393,7 @@ class VisualCritic:
                     self._model = get_gemini_model("gemini-1.5-flash")
                 logger.info("[VisualCritic] Gemini Vision 모델 초기화 완료")
             except Exception as e:
-                logger.error(f"[VisualCritic] 모델 초기화 실패: {e}")
+                logger.error(f"[VisualCritic] 모델 초기화 실패: {redact_sensitive_text(e)}")
 
     @property
     def is_available(self) -> bool:
@@ -469,7 +472,7 @@ JSON으로 응답:
                     improved_content=result_json.get("improved_prompt")
                 )
         except Exception as e:
-            logger.error(f"[VisualCritic] 스타일 평가 실패: {e}")
+            logger.error(f"[VisualCritic] 스타일 평가 실패: {redact_sensitive_text(e)}")
 
         return EvaluationResult(score=0, passed=False, feedback="평가 오류")
 
@@ -546,7 +549,7 @@ JSON으로 응답:
                     details=result_json.get("details", {})
                 )
         except Exception as e:
-            logger.error(f"[VisualCritic] 캐릭터 일관성 평가 실패: {e}")
+            logger.error(f"[VisualCritic] 캐릭터 일관성 평가 실패: {redact_sensitive_text(e)}")
 
         return EvaluationResult(score=0, passed=False, feedback="평가 오류")
 
