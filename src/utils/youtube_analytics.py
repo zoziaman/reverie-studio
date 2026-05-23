@@ -14,6 +14,8 @@ import logging
 from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, timedelta
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 # v62.22: Fernet 토큰 암호화 (youtube_uploader.py와 동일 키 공유)
@@ -843,7 +845,7 @@ class YouTubeAnalytics:
             return response.text
 
         except Exception as e:
-            logger.error(f"Gemini 분석 실패: {e}")
+            logger.error(f"Gemini 분석 실패: {redact_sensitive_text(e)}")
             return None
 
     def save_report(self, report: Dict[str, Any], filename: str = None) -> str:
