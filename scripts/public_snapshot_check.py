@@ -82,13 +82,13 @@ CONTENT_SCAN_SKIP = {
 }
 
 
-def _git_lines(args: list[str]) -> list[str]:
-    result = subprocess.run(["git", *args], check=True, capture_output=True, text=True)
+def _git_lines(args: list[str], cwd: Path | None = None) -> list[str]:
+    result = subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
     return [line for line in result.stdout.splitlines() if line.strip()]
 
 
-def _tracked_files() -> list[Path]:
-    return [Path(line) for line in _git_lines(["ls-files"])]
+def _tracked_files(repo_root: Path) -> list[Path]:
+    return [Path(line) for line in _git_lines(["ls-files"], cwd=repo_root)]
 
 
 def _is_blocked_path(path: Path) -> str | None:
@@ -122,7 +122,8 @@ def _scan_contents(repo_root: Path, files: list[Path]) -> list[str]:
 
 
 def run_check(repo_root: Path) -> list[str]:
-    files = _tracked_files()
+    repo_root = repo_root.resolve()
+    files = _tracked_files(repo_root)
     findings: list[str] = []
     for path in files:
         reason = _is_blocked_path(path)
@@ -133,7 +134,8 @@ def run_check(repo_root: Path) -> list[str]:
 
 
 def main() -> int:
-    repo_root = Path(_git_lines(["rev-parse", "--show-toplevel"])[0])
+    script_root = Path(__file__).resolve().parents[1]
+    repo_root = Path(_git_lines(["rev-parse", "--show-toplevel"], cwd=script_root)[0])
     findings = run_check(repo_root)
     if findings:
         print("Public snapshot check: NEEDS REVIEW")

@@ -82,6 +82,7 @@ def test_codex_setup_prompt_is_present_for_non_developer_onboarding():
     assert guide.exists()
     text = guide.read_text(encoding="utf-8")
     assert "Codex" in text
+    assert "python scripts/public_verify.py" in text
     assert "python -m reverie_doctor" in text
     assert "python -m reverie_demo" in text
     assert "do not paste real api keys" in text.lower()

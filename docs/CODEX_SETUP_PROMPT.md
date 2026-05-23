@@ -15,10 +15,13 @@ PUBLIC_RELEASE_CHECKLIST.md.
 
 Start with the safe public checks only:
 
-1. Run python scripts/public_snapshot_check.py.
-2. Run python -m reverie_doctor --json.
-3. Run python -m reverie_demo --out <a temporary folder outside the repo>.
-4. Run the public pytest tests if pytest is available.
+1. Run python scripts/public_verify.py --out <a temporary folder outside the repo>.
+2. Run python scripts/public_verify.py --with-pytest --out <a temporary folder outside the repo> if pytest is available.
+3. Read public_verify_report.json and the generated public_demo reports.
+
+The verifier wraps the same safe checks that used to be run separately:
+python scripts/public_snapshot_check.py, python -m reverie_doctor --json, and
+python -m reverie_demo --out <a temporary folder outside the repo>.
 
 Do not paste real API keys, OAuth secrets, Firebase service accounts, private
 keys, local personal paths, voice datasets, model weights, BGM/SFX libraries, or
@@ -45,10 +48,9 @@ a credential or private local file, stop and report BLOCKED before committing.
 git clone https://github.com/zoziaman/reverie-studio.git
 cd reverie-studio
 $env:PYTHONPATH="src"
-python scripts\public_snapshot_check.py
-python -m reverie_doctor --json
-python -m reverie_demo --out "$env:TEMP\reverie-public-demo"
-Get-Content "$env:TEMP\reverie-public-demo\pipeline_report.md"
+python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
+Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
+Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
 ```
 
 ## Expected First Outcome

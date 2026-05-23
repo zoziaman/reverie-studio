@@ -160,13 +160,17 @@ assets. A typical setup looks like this:
 
 1. Install Python 3.11+.
 2. Install project dependencies from `pyproject.toml` or `requirements.txt`.
-3. Run the public doctor and dry-run before adding real credentials:
+3. Run the public verification bundle before adding real credentials:
 
 ```powershell
 $env:PYTHONPATH="src"
-python -m reverie_doctor --json
-python -m reverie_demo --backend-profile local_dry_run --out "$env:TEMP\reverie-public-demo"
+python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
 ```
+
+The verifier runs the public snapshot scan, the local setup doctor, and the
+no-credential dry-run demo, then writes `public_verify_report.json` outside the
+repository. Add `--with-pytest` when you want the full public test suite in the
+same command.
 
 4. Install and run any local generation services you want to use, such as
    Stable Diffusion WebUI, ComfyUI, GPT-SoVITS, Supertonic 3, or a compatible
@@ -188,10 +192,9 @@ Short version:
 Clone this repository, read README.md, .env.example, EXTERNAL_ASSETS.md,
 docs/PUBLIC_DEMO.md, docs/BACKEND_PROFILES.md, docs/CODEX_SETUP_PROMPT.md,
 SECURITY_PUBLIC_CHECK.md, and PUBLIC_RELEASE_CHECKLIST.md. First run
-python scripts/public_snapshot_check.py, python -m reverie_doctor --json, and
-the no-credential dry-run demo. Then set up a local Windows development run
-without adding real credentials, local paths, model files, voice data, or
-generated outputs to git.
+python scripts/public_verify.py --out <a temporary folder outside the repo>.
+Then set up a local Windows development run without adding real credentials,
+local paths, model files, voice data, or generated outputs to git.
 ```
 
 ## Backend Profiles
@@ -257,7 +260,7 @@ Before publishing, run the public checks against the exact branch or exported
 folder you plan to release:
 
 ```powershell
-python scripts\public_snapshot_check.py
+python scripts\public_verify.py --with-pytest --out "$env:TEMP\reverie-public-verify"
 Get-Content SECURITY_PUBLIC_CHECK.md
 Get-Content PUBLIC_RELEASE_CHECKLIST.md
 ```
