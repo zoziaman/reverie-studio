@@ -126,6 +126,8 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "`next_actions`" in text
     assert "layering_contract" in text
     assert "layer-spec" in text
+    assert "roster-layer-specs" in text
+    assert "actor_layer_specs" in text
     assert "actor_model_presets" in text
     assert "asset coverage" in text
     assert "pack-coverage" in text

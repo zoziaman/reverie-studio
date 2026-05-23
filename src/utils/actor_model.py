@@ -1693,6 +1693,88 @@ def write_actor_roster_asset_request_manifest(
     return output
 
 
+def build_actor_roster_layer_spec_manifest(
+    roster_plan: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Build one public-safe layer spec manifest for every actor in a roster plan."""
+    patch = _validate_roster_plan(roster_plan)
+    pack_id = str(roster_plan.get("pack_id") or "").strip()
+    if not pack_id:
+        raise ValueError("actor roster plan pack_id is required")
+
+    actor_pool = patch["actor_pool"]
+    if not actor_pool:
+        raise ValueError("actor roster plan motiontoon_patch.actor_pool must not be empty")
+
+    cast_slots = patch["cast_slots"]
+    actors: dict[str, Any] = {}
+    for actor_id, actor_data in actor_pool.items():
+        actor_key = str(actor_id or "").strip()
+        if not actor_key:
+            raise ValueError("actor roster plan actor_pool contains an empty actor id")
+        if not isinstance(actor_data, Mapping):
+            raise ValueError(f"actor roster plan actor_pool.{actor_key} must be an object")
+
+        actor_model_path = _actor_model_path_from_roster_actor(
+            actor_key,
+            actor_data,
+            actor_root=actor_root,
+            repo_root=repo_root,
+        )
+        layer_spec = build_actor_layer_spec_manifest(actor_model_path, repo_root=repo_root)
+        if layer_spec["actor_id"] != actor_key:
+            raise ValueError(
+                f"actor roster plan actor_pool.{actor_key} points to actor package "
+                f"{layer_spec['actor_id']}"
+            )
+
+        role_ids = [
+            str(role_id)
+            for role_id, slot in cast_slots.items()
+            if isinstance(slot, Mapping) and str(slot.get("actor_id") or "").strip() == actor_key
+        ]
+        actor_spec = copy.deepcopy(layer_spec)
+        actor_spec["preset_id"] = str(actor_data.get("preset_id") or "")
+        actor_spec["role_ids"] = role_ids
+        actors[actor_key] = actor_spec
+
+    return {
+        "schema": "reverie.pack.actor_roster.layer_specs.v1",
+        "pack_id": pack_id,
+        "actor_count": len(actors),
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "actors": actors,
+    }
+
+
+def write_actor_roster_layer_spec_manifest(
+    roster_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write one combined public-safe layer spec manifest for a roster plan."""
+    roster_plan = _load_json_object(roster_plan_path, "actor roster plan")
+    manifest = build_actor_roster_layer_spec_manifest(
+        roster_plan,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def _scene_value(scene: Any, key: str, default: Any = "") -> Any:
     if isinstance(scene, Mapping):
         return scene.get(key, default)
@@ -2840,6 +2922,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     roster_request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
     roster_request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    roster_layer_parser = subparsers.add_parser(
+        "roster-layer-specs",
+        help="Build one JSON layer spec manifest for every actor in a roster plan.",
+    )
+    roster_layer_parser.add_argument("roster_plan_path", help="Input actor roster plan JSON path.")
+    roster_layer_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    roster_layer_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    roster_layer_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     episode_asset_parser = subparsers.add_parser(
         "episode-asset-plan",
         help="Map episode scenes to fixed actor variant assets before generation.",
@@ -3040,6 +3131,24 @@ def main(argv: Optional[list[str]] = None) -> int:
         else:
             roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
             manifest = build_actor_roster_asset_request_manifest(
+                roster_plan,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "roster-layer-specs":
+        if args.output:
+            output = write_actor_roster_layer_spec_manifest(
+                args.roster_plan_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(f"Wrote actor roster layer specs: {output}")
+        else:
+            roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
+            manifest = build_actor_roster_layer_spec_manifest(
                 roster_plan,
                 actor_root=args.actor_root,
                 repo_root=args.repo_root,

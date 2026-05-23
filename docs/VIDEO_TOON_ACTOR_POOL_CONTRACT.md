@@ -130,6 +130,9 @@ package. Missing scene variants are reported before image generation begins.
 `reverie-actor-model-requests layer-spec ...` exports the actor model's
 renderer-facing canvas, anchor points, layer order, and target PNG paths so the
 same fixed actor can be composited consistently across packs.
+Use `reverie-actor-model-requests roster-layer-specs ...` when a whole pack
+roster needs the same renderer-facing layer contracts in one public-safe
+manifest.
 Use `episode-asset-coverage` as the broad render-readiness gate: it verifies
 each scene's fixed actor variant, mouth layer, and eye layer exist locally.
 Use `episode-variant-requests` to convert those missing variants into
@@ -163,8 +166,8 @@ render gate before assembling a video-toon episode.
 
 Use `reverie-videotoon-prepare episode ...` when you want the whole JSON
 preflight bundle written in one pass: actor asset plan, actor asset coverage,
-episode background requests, episode background coverage, final preflight, and
-the prepare report. The prepare report includes `missing_assets` and
+actor layer specs, episode background requests, episode background coverage,
+final preflight, and the prepare report. The prepare report includes `missing_assets` and
 `next_actions`, so a fixed actor model such as `actor_adult_woman_01` can move
 through many omnibus roles while each episode lists only the actor/background
 assets still missing for render readiness.

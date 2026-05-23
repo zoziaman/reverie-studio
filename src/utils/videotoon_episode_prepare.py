@@ -100,6 +100,7 @@ def write_videotoon_episode_prepare_bundle(
 
     actor_asset_plan_path = out_dir / f"{stem}.actor_asset_plan.json"
     actor_asset_coverage_path = out_dir / f"{stem}.actor_asset_coverage.json"
+    actor_layer_specs_path = out_dir / f"{stem}.actor_layer_specs.json"
     background_requests_path = out_dir / f"{stem}.background_requests.json"
     background_coverage_path = out_dir / f"{stem}.background_coverage.json"
     preflight_path = out_dir / f"{stem}.preflight.json"
@@ -115,6 +116,12 @@ def write_videotoon_episode_prepare_bundle(
     actor_model.write_actor_episode_asset_coverage_report(
         actor_asset_plan_path,
         actor_asset_coverage_path,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    actor_model.write_actor_roster_layer_spec_manifest(
+        roster_plan_path,
+        actor_layer_specs_path,
         actor_root=actor_root,
         repo_root=repo_root,
     )
@@ -145,6 +152,7 @@ def write_videotoon_episode_prepare_bundle(
     artifacts = {
         "actor_asset_plan": actor_asset_plan_path.name,
         "actor_asset_coverage": actor_asset_coverage_path.name,
+        "actor_layer_specs": actor_layer_specs_path.name,
         "background_requests": background_requests_path.name,
         "background_coverage": background_coverage_path.name,
         "preflight": preflight_path.name,

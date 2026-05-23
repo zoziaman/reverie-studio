@@ -1039,6 +1039,89 @@ def test_actor_model_cli_writes_roster_asset_request_manifest(tmp_path, capsys):
     assert "actor roster asset requests" in captured.out
 
 
+def test_build_actor_roster_layer_spec_manifest_expands_all_roster_actors(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            },
+            {
+                "role_id": "witness",
+                "preset_id": "daily_middle_woman",
+                "actor_id": "actor_daily_middle_woman_01",
+            },
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    manifest = actor_model.build_actor_roster_layer_spec_manifest(plan, actor_root=actor_root)
+    serialized = json.dumps(manifest)
+
+    assert manifest["schema"] == "reverie.pack.actor_roster.layer_specs.v1"
+    assert manifest["pack_id"] == "daily_life_toon"
+    assert manifest["actor_count"] == 2
+    assert manifest["actors"]["actor_daily_adult_man_01"]["schema"] == "reverie.actor_model.layer_spec.v1"
+    assert manifest["actors"]["actor_daily_adult_man_01"]["role_ids"] == ["protagonist"]
+    assert manifest["actors"]["actor_daily_adult_man_01"]["variant_layers"]
+    assert manifest["actors"]["actor_daily_middle_woman_01"]["role_ids"] == ["witness"]
+    assert manifest["public_release_boundary"]["contains_generated_media"] is False
+    assert "C:" + "/Users/" not in serialized
+    assert "C:" + "\\Users\\" not in serialized
+
+
+def test_actor_model_cli_writes_roster_layer_spec_manifest(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    output_path = tmp_path / "daily_life_toon.actor_roster_layer_specs.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    exit_code = actor_model.main(
+        [
+            "roster-layer-specs",
+            str(plan_path),
+            "--actor-root",
+            str(actor_root),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert manifest["schema"] == "reverie.pack.actor_roster.layer_specs.v1"
+    assert manifest["actor_count"] == 1
+    assert "actor roster layer specs" in captured.out
+
+
 def test_build_actor_episode_asset_plan_maps_scene_roles_to_actor_variants(tmp_path):
     actor_model = _actor_model_module()
     actor_root = tmp_path / "actor_models"

@@ -105,10 +105,14 @@ def test_videotoon_episode_prepare_writes_all_preflight_artifacts(tmp_path):
     background_requests = json.loads(
         (output_dir / "daily_life_toon_ep001.background_requests.json").read_text(encoding="utf-8")
     )
+    actor_layer_specs = json.loads(
+        (output_dir / "daily_life_toon_ep001.actor_layer_specs.json").read_text(encoding="utf-8")
+    )
 
     assert report["schema"] == "reverie.pack.videotoon_episode_prepare.v1"
     assert report["episode_id"] == "daily_life_toon_ep001"
     assert report["ready_for_render"] is False
+    assert report["artifacts"]["actor_layer_specs"] == "daily_life_toon_ep001.actor_layer_specs.json"
     assert report["artifacts"]["actor_asset_plan"] == "daily_life_toon_ep001.actor_asset_plan.json"
     assert report["artifacts"]["actor_asset_coverage"] == "daily_life_toon_ep001.actor_asset_coverage.json"
     assert report["artifacts"]["background_requests"] == "daily_life_toon_ep001.background_requests.json"
@@ -121,6 +125,13 @@ def test_videotoon_episode_prepare_writes_all_preflight_artifacts(tmp_path):
     assert any(action["action_id"] == "rerun_prepare" for action in report["next_actions"])
     assert "C:" + "/Users/" not in json.dumps(report)
     assert "C:" + "\\Users\\" not in json.dumps(report)
+    assert actor_layer_specs["schema"] == "reverie.pack.actor_roster.layer_specs.v1"
+    assert actor_layer_specs["actor_count"] == 1
+    assert actor_layer_specs["actors"]["actor_daily_adult_man_01"]["layer_order"] == [
+        "variant_base",
+        "eye_layer",
+        "mouth_layer",
+    ]
     assert background_requests["schema"] == "reverie.background_library.episode_asset_requests.v1"
     assert background_requests["request_count"] == 1
     assert not any(output_dir.rglob("*.png"))

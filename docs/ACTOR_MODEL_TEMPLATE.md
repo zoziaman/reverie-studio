@@ -264,6 +264,18 @@ created in a separate local directory. The output is still only a work order:
 it lists prompt text and target PNG paths, but does not create images, voice
 samples, model weights, or runtime artifacts.
 
+Export renderer-facing layer specs for the whole roster with:
+
+```bash
+reverie-actor-model-requests roster-layer-specs data/actor_asset_requests/daily_life_toon.actor_roster_plan.json --repo-root . --output data/actor_asset_requests/daily_life_toon.actor_roster_layer_specs.json
+```
+
+`roster-layer-specs` expands each actor into `variant_base`, `eye_layer`, and
+`mouth_layer` entries with canvas size, anchors, z-index order, role ids, and
+target PNG paths. This is the renderer handoff beside the asset request
+manifest: it still contains no generated media, private paths, voice samples,
+or model weights.
+
 Before rendering an omnibus episode, map scene roles to fixed actor assets with
 `episode-asset-plan`:
 
@@ -396,7 +408,9 @@ reverie-videotoon-prepare episode data/actor_asset_requests/daily_life_toon.acto
 ```
 
 The prepare report keeps `actor_adult_woman_01` as the fixed identity target,
-then reports episode-specific `missing_assets` and `next_actions`. That is the
-working loop for this gold model: create or place only the missing local actor
-variants, mouth layers, eye layers, and background plates, rerun prepare, then
-render when the report is ready.
+then reports episode-specific `missing_assets` and `next_actions`. The prepare
+bundle also writes `actor_layer_specs` so a renderer can read the same actor
+canvas, anchors, layer order, and target PNG paths that were checked during
+preflight. That is the working loop for this gold model: create or place only
+the missing local actor variants, mouth layers, eye layers, and background
+plates, rerun prepare, then render when the report is ready.
