@@ -18,6 +18,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime
 
 from utils.gemini_compat import configure_gemini, generate_vision_content, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class ThumbnailReviewer:
             logger.info("Gemini 3.0 Flash Vision 초기화 완료")
 
         except Exception as e:
-            logger.error(f"Gemini 초기화 실패: {e}")
+            logger.error(f"Gemini 초기화 실패: {redact_sensitive_text(e)}")
             self.model = None
             self.vision_available = False
 
@@ -240,7 +241,7 @@ class ThumbnailReviewer:
             return result
 
         except Exception as e:
-            logger.error(f"썸네일 검수 실패: {e}")
+            logger.error(f"썸네일 검수 실패: {redact_sensitive_text(e)}")
             return self._fallback_review(thumbnail_path)
 
     def _parse_review_response(self, response_text: str) -> Dict[str, Any]:
@@ -356,13 +357,14 @@ class ThumbnailReviewer:
             }
 
         except Exception as e:
+            safe_error = redact_sensitive_text(e)
             return {
                 'passed': False,
                 'score': 0,
-                'issues': [f'이미지 로드 실패: {str(e)}'],
+                'issues': [f'이미지 로드 실패: {safe_error}'],
                 'suggestions': [],
                 'regenerate_prompt': '',
-                'review_text': f'Error: {str(e)}'
+                'review_text': f'Error: {safe_error}'
             }
 
     def review_and_regenerate(
@@ -429,7 +431,7 @@ class ThumbnailReviewer:
                     logger.error("재생성 실패 - 새 경로 없음")
                     break
             except Exception as e:
-                logger.error(f"재생성 콜백 오류: {e}")
+                logger.error(f"재생성 콜백 오류: {redact_sensitive_text(e)}")
                 break
 
         # 최대 시도 초과
