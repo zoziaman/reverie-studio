@@ -6,6 +6,7 @@ v59: Background Library Manager
 설계서 섹션 3.4 구현
 """
 
+import argparse
 import os
 import json
 import random
@@ -719,6 +720,169 @@ class BackgroundLibrary:
 
         return None
 
+    def _public_target_base_path(self) -> str:
+        """Return a relative publishable background root for request manifests."""
+        configured = str(getattr(self.config, "library_path", "") or "").strip()
+        if configured and not Path(configured).is_absolute():
+            return Path(configured).as_posix()
+        return (Path("assets") / "backgrounds" / self.pack_id).as_posix()
+
+    def _target_location_templates(self, locations: Optional[List[str]]) -> Dict[str, LocationTemplate]:
+        if not locations:
+            return dict(self.config.location_templates)
+
+        selected: Dict[str, LocationTemplate] = {}
+        for raw_location in locations:
+            matched = self._match_location(raw_location)
+            if matched and matched in self.config.location_templates:
+                selected[matched] = self.config.location_templates[matched]
+        return selected
+
+    def _request_times(self, times: Optional[List[str]], time_variants: bool) -> List[str]:
+        clean_times = [str(time).strip() for time in (times or []) if str(time).strip()]
+        if clean_times:
+            return clean_times
+        if not time_variants:
+            return ["any"]
+
+        configured_times = [
+            str(time).strip()
+            for time in self.config.time_modifiers.keys()
+            if str(time).strip()
+        ]
+        return configured_times[:2] if configured_times else ["any"]
+
+    def _stable_request_seed(self, location_id: str, time: str, index: int) -> int:
+        return int(hashlib.md5(f"{self.pack_id}_{location_id}_{time}_{index}".encode()).hexdigest()[:8], 16)
+
+    def build_asset_request_manifest(
+        self,
+        locations: Optional[List[str]] = None,
+        images_per_location: Optional[int] = None,
+        times: Optional[List[str]] = None,
+        time_variants: bool = True,
+    ) -> Dict[str, Any]:
+        """Build public-safe background plate generation requests without generating images."""
+        target_locations = self._target_location_templates(locations)
+        request_times = self._request_times(times, time_variants)
+        count_per_location = int(images_per_location or self.config.images_per_location or 1)
+        if count_per_location < 1:
+            count_per_location = 1
+
+        requests: List[Dict[str, Any]] = []
+        manifest_locations: List[Dict[str, Any]] = []
+
+        for location_id, template in target_locations.items():
+            manifest_locations.append(
+                {
+                    "location_id": location_id,
+                    "template_id": template.id,
+                    "name_ko": template.name_ko,
+                    "name_en": template.name_en,
+                    "keywords": list(template.keywords),
+                }
+            )
+            for time in request_times:
+                prompt = self._compose_background_prompt(template, time)
+                negative_prompt = self._compose_negative_prompt(template)
+                for index in range(count_per_location):
+                    filename = f"{location_id}_{time}_{index:02d}.png"
+                    requests.append(
+                        {
+                            "request_id": f"{self.pack_id}__background_plate__{location_id}__{time}__{index:02d}",
+                            "request_type": "background_plate",
+                            "pack_id": self.pack_id,
+                            "genre": self.genre,
+                            "location_id": location_id,
+                            "location_template_id": template.id,
+                            "location_name_ko": template.name_ko,
+                            "location_name_en": template.name_en,
+                            "time": time,
+                            "index": index,
+                            "target_relative_path": filename,
+                            "prompt": prompt,
+                            "negative_prompt": negative_prompt,
+                            "seed": self._stable_request_seed(location_id, time, index),
+                            "width": 1024,
+                            "height": 576,
+                            "public_safe": True,
+                        }
+                    )
+
+        return {
+            "schema": "reverie.background_library.asset_requests.v1",
+            "pack_id": self.pack_id,
+            "genre": self.genre,
+            "target_base_path": self._public_target_base_path(),
+            "location_count": len(manifest_locations),
+            "locations": manifest_locations,
+            "times": request_times,
+            "images_per_location": count_per_location,
+            "request_count": len(requests),
+            "requests": requests,
+            "public_release_boundary": {
+                "contains_generated_media": False,
+                "contains_voice_samples": False,
+                "contains_model_weights": False,
+                "contains_private_paths": False,
+            },
+        }
+
+    def build_asset_coverage_report(
+        self,
+        request_manifest: Dict[str, Any],
+        base_path: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Report which requested background plates exist locally."""
+        if request_manifest.get("schema") != "reverie.background_library.asset_requests.v1":
+            raise ValueError("background asset request manifest schema must be reverie.background_library.asset_requests.v1")
+
+        root = Path(base_path) if base_path else self.base_path
+        requests = list(request_manifest.get("requests", []) or [])
+        assets: List[Dict[str, Any]] = []
+        missing_assets: List[str] = []
+
+        for request in requests:
+            target_relative_path = str(request.get("target_relative_path") or "").strip()
+            exists = bool(target_relative_path and (root / target_relative_path).exists())
+            if not exists and target_relative_path:
+                missing_assets.append(target_relative_path)
+            assets.append(
+                {
+                    "request_id": str(request.get("request_id") or ""),
+                    "request_type": str(request.get("request_type") or ""),
+                    "location_id": str(request.get("location_id") or ""),
+                    "time": str(request.get("time") or ""),
+                    "target_relative_path": target_relative_path,
+                    "exists": exists,
+                }
+            )
+
+        expected_count = len(assets)
+        existing_count = sum(1 for asset in assets if asset["exists"])
+        missing_count = expected_count - existing_count
+        coverage_ratio = round(existing_count / expected_count, 4) if expected_count else 0.0
+
+        return {
+            "schema": "reverie.background_library.asset_coverage.v1",
+            "pack_id": str(request_manifest.get("pack_id") or self.pack_id),
+            "genre": str(request_manifest.get("genre") or self.genre),
+            "target_base_path": str(request_manifest.get("target_base_path") or self._public_target_base_path()),
+            "expected_count": expected_count,
+            "existing_count": existing_count,
+            "missing_count": missing_count,
+            "coverage_ratio": coverage_ratio,
+            "ready_for_render": expected_count > 0 and missing_count == 0,
+            "missing_assets": missing_assets,
+            "assets": assets,
+            "public_release_boundary": {
+                "contains_generated_media": False,
+                "contains_voice_samples": False,
+                "contains_model_weights": False,
+                "contains_private_paths": False,
+            },
+        }
+
     # ========================================================================
     # 배경 이미지 생성
     # ========================================================================
@@ -1059,12 +1223,251 @@ class BackgroundLibrary:
         }
 
 
+def _load_json_object(path: Path | str, label: str) -> Dict[str, Any]:
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must contain a JSON object")
+    return data
+
+
+def _infer_pack_id(settings_path: Path | str, pack_id: Optional[str]) -> str:
+    clean_pack_id = str(pack_id or "").strip()
+    if clean_pack_id:
+        return clean_pack_id
+    return Path(settings_path).resolve().parent.name
+
+
+def _background_base_paths(
+    pack_id: str,
+    *,
+    background_root: Optional[str] = None,
+    repo_root: Optional[str] = None,
+) -> Tuple[Path, str]:
+    raw_root = Path(background_root) if background_root else Path("assets") / "backgrounds"
+    target_base_path = (
+        (Path("assets") / "backgrounds" / pack_id).as_posix()
+        if raw_root.is_absolute()
+        else (raw_root / pack_id).as_posix()
+    )
+    if raw_root.is_absolute():
+        base_path = raw_root / pack_id
+    else:
+        base_path = ((Path(repo_root).resolve() if repo_root else Path.cwd()) / raw_root / pack_id).resolve()
+    return base_path, target_base_path
+
+
+def build_background_asset_request_manifest(
+    settings_path: Path | str,
+    *,
+    pack_id: Optional[str] = None,
+    genre: Optional[str] = None,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+    locations: Optional[List[str]] = None,
+    images_per_location: Optional[int] = None,
+    times: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    settings = _load_json_object(settings_path, "settings")
+    resolved_pack_id = _infer_pack_id(settings_path, pack_id)
+    resolved_genre = str(genre or resolved_pack_id or "daily_life_toon")
+    base_path, target_base_path = _background_base_paths(
+        resolved_pack_id,
+        background_root=background_root,
+        repo_root=repo_root,
+    )
+    raw_config = settings.get("background_library", {}) or {}
+    if not isinstance(raw_config, dict):
+        raise ValueError("settings.background_library must be an object")
+    config = build_background_library_config(
+        genre=resolved_genre,
+        config_data=raw_config,
+        library_path=target_base_path,
+    )
+    library = BackgroundLibrary(
+        pack_id=resolved_pack_id,
+        genre=resolved_genre,
+        config=config,
+        base_path=str(base_path),
+    )
+    return library.build_asset_request_manifest(
+        locations=locations,
+        images_per_location=images_per_location,
+        times=times,
+    )
+
+
+def write_background_asset_request_manifest(
+    settings_path: Path | str,
+    output_path: Path | str,
+    *,
+    pack_id: Optional[str] = None,
+    genre: Optional[str] = None,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+    locations: Optional[List[str]] = None,
+    images_per_location: Optional[int] = None,
+    times: Optional[List[str]] = None,
+) -> Path:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    manifest = build_background_asset_request_manifest(
+        settings_path,
+        pack_id=pack_id,
+        genre=genre,
+        repo_root=repo_root,
+        background_root=background_root,
+        locations=locations,
+        images_per_location=images_per_location,
+        times=times,
+    )
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
+def build_background_asset_coverage_report(
+    request_manifest: Dict[str, Any] | Path | str,
+    *,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+) -> Dict[str, Any]:
+    manifest = (
+        _load_json_object(request_manifest, "background asset request manifest")
+        if isinstance(request_manifest, (str, Path))
+        else request_manifest
+    )
+    pack_id = str(manifest.get("pack_id") or "").strip()
+    if not pack_id:
+        raise ValueError("background asset request manifest pack_id is required")
+    genre = str(manifest.get("genre") or pack_id)
+    if background_root:
+        base_path, target_base_path = _background_base_paths(
+            pack_id,
+            background_root=background_root,
+            repo_root=repo_root,
+        )
+    else:
+        target_base_path = str(manifest.get("target_base_path") or (Path("assets") / "backgrounds" / pack_id).as_posix())
+        raw_target = Path(target_base_path)
+        base_path = (
+            raw_target
+            if raw_target.is_absolute()
+            else ((Path(repo_root).resolve() if repo_root else Path.cwd()) / raw_target).resolve()
+        )
+    config = BackgroundLibraryConfig(library_path=target_base_path)
+    library = BackgroundLibrary(pack_id=pack_id, genre=genre, config=config, base_path=str(base_path))
+    return library.build_asset_coverage_report(manifest)
+
+
+def write_background_asset_coverage_report(
+    request_manifest_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[str] = None,
+    background_root: Optional[str] = None,
+) -> Path:
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    report = build_background_asset_coverage_report(
+        request_manifest_path,
+        repo_root=repo_root,
+        background_root=background_root,
+    )
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Write public-safe background asset requests and local coverage reports."
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    request_parser = subparsers.add_parser(
+        "asset-requests",
+        help="Build background plate generation requests from a pack settings.json file.",
+    )
+    request_parser.add_argument("settings_path", help="Path to pack settings.json")
+    request_parser.add_argument("--pack-id", default=None, help="Pack id. Defaults to the settings directory name.")
+    request_parser.add_argument("--genre", default=None, help="Background profile/genre. Defaults to pack id.")
+    request_parser.add_argument("--repo-root", default=None, help="Repository root for resolving relative background roots.")
+    request_parser.add_argument("--background-root", default=None, help="Directory that contains per-pack background folders.")
+    request_parser.add_argument("--location", action="append", default=None, help="Location text/template id. Can be repeated.")
+    request_parser.add_argument("--time", action="append", default=None, help="Requested time variant. Can be repeated.")
+    request_parser.add_argument("--images-per-location", type=int, default=None, help="Image count per location and time.")
+    request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
+    coverage_parser = subparsers.add_parser(
+        "coverage",
+        help="Report which requested background plates exist locally.",
+    )
+    coverage_parser.add_argument("request_manifest_path", help="Input background asset request manifest JSON path.")
+    coverage_parser.add_argument("--repo-root", default=None, help="Repository root for resolving relative background roots.")
+    coverage_parser.add_argument("--background-root", default=None, help="Directory that contains per-pack background folders.")
+    coverage_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+    coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any background is missing.")
+
+    args = parser.parse_args(argv)
+    if args.command == "asset-requests":
+        manifest = build_background_asset_request_manifest(
+            args.settings_path,
+            pack_id=args.pack_id,
+            genre=args.genre,
+            repo_root=args.repo_root,
+            background_root=args.background_root,
+            locations=args.location,
+            images_per_location=args.images_per_location,
+            times=args.time,
+        )
+        if args.output:
+            output = write_background_asset_request_manifest(
+                args.settings_path,
+                args.output,
+                pack_id=args.pack_id,
+                genre=args.genre,
+                repo_root=args.repo_root,
+                background_root=args.background_root,
+                locations=args.location,
+                images_per_location=args.images_per_location,
+                times=args.time,
+            )
+            print(f"Wrote background asset requests for {manifest['pack_id']}: {output}")
+        else:
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "coverage":
+        report = build_background_asset_coverage_report(
+            args.request_manifest_path,
+            repo_root=args.repo_root,
+            background_root=args.background_root,
+        )
+        if args.output:
+            output = write_background_asset_coverage_report(
+                args.request_manifest_path,
+                args.output,
+                repo_root=args.repo_root,
+                background_root=args.background_root,
+            )
+            print(
+                f"Wrote background asset coverage for {report['pack_id']}: {output} "
+                f"(missing {report['missing_count']}/{report['expected_count']})"
+            )
+        else:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            print(f"backgrounds missing {report['missing_count']}/{report['expected_count']}")
+        if args.fail_on_missing and report["missing_count"]:
+            return 1
+        return 0
+
+    parser.error(f"unknown command: {args.command}")
+    return 2
+
+
 # ============================================================================
 # 테스트
 # ============================================================================
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    raise SystemExit(main())
 
     # 테스트 초기화
     bg_lib = BackgroundLibrary(

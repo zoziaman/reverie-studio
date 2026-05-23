@@ -1,0 +1,85 @@
+# Background Asset Template
+
+Status: public-safe background plate contract
+
+Video-toon packs need reusable background plates for omnibus episodes. The
+actor identity stays fixed, while the location, time, and episode role can
+change. This document defines how Reverie Studio turns pack background
+templates into local generation requests and render-readiness coverage reports.
+
+## Purpose
+
+Background assets are not committed generated media. The public repository
+stores:
+
+- Location templates in pack `settings.json`.
+- Prompt and negative prompt contracts.
+- JSON request manifests.
+- Coverage reports that say which local files are missing.
+
+Generated PNGs remain local user assets under a background folder such as:
+
+```text
+assets/backgrounds/daily_life_toon/
+```
+
+## Request Manifest
+
+Use the CLI to create a background plate work order from a pack settings file:
+
+```bash
+reverie-background-library-requests asset-requests assets/packs/daily_life_toon/settings.json --repo-root . --pack-id daily_life_toon --time day --time night --images-per-location 2 --output data/background_asset_requests/daily_life_toon.background_requests.json
+```
+
+The manifest schema is:
+
+```text
+reverie.background_library.asset_requests.v1
+```
+
+Each request contains:
+
+- `request_type`: `background_plate`
+- `location_id`
+- `time`
+- `target_relative_path`
+- `prompt`
+- `negative_prompt`
+- deterministic `seed`
+- 16:9 `width` and `height`
+- `public_safe: true`
+
+The command does not call SD WebUI, ComfyUI, or any image backend. It writes
+only a public-safe JSON work order.
+
+## Coverage
+
+After local generation or curation, verify that every requested background file
+exists:
+
+```bash
+reverie-background-library-requests coverage data/background_asset_requests/daily_life_toon.background_requests.json --repo-root . --output data/background_asset_requests/daily_life_toon.background_coverage.json --fail-on-missing
+```
+
+The coverage schema is:
+
+```text
+reverie.background_library.asset_coverage.v1
+```
+
+The report includes `expected_count`, `existing_count`, `missing_count`,
+`coverage_ratio`, `missing_assets`, and `ready_for_render`.
+
+## Public Boundary
+
+Background request manifests and coverage reports must not contain:
+
+- Generated PNGs or video output.
+- Voice samples.
+- Model weights, LoRAs, checkpoints, or vendor caches.
+- Absolute private paths.
+- API keys, OAuth tokens, Firebase service accounts, memory DBs, or session
+  logs.
+
+This keeps the public repo useful as an asset-production contract while the
+actual generated media stays local.

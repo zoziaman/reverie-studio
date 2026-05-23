@@ -141,6 +141,14 @@ Use `apply-episode-variant-promotions` only after that review to update the
 local actor package's `required_variants`; generated media still remains a
 local asset and should not be committed by default.
 
+Background plates follow the same public-safe asset rule. Pack
+`background_library.location_templates` can be expanded with
+`reverie-background-library-requests asset-requests ...` into
+`reverie.background_library.asset_requests.v1`, then checked with
+`reverie-background-library-requests coverage ...` before rendering. See
+`docs/BACKGROUND_ASSET_TEMPLATE.md` for the background request and coverage
+contract.
+
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 
 `PackValidator(repo_root=...)` validates `actor_model_path` when it is present.
