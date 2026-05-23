@@ -49,6 +49,7 @@ reverie-doctor = "reverie_doctor:main"
 reverie-actor-model-requests = "utils.actor_model:main"
 reverie-background-library-requests = "modules_pro.background_library:main"
 reverie-videotoon-preflight = "utils.videotoon_preflight:main"
+reverie-videotoon-prepare = "utils.videotoon_episode_prepare:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -125,6 +125,16 @@ This is the first gate that answers the practical question: can this episode be
 rendered without missing fixed actors, mouth or eye layers, or background
 plates?
 
+To write the actor reports, background reports, and preflight report in one
+pass, use:
+
+```bash
+reverie-videotoon-prepare episode data/actor_asset_requests/daily_life_toon.actor_roster_plan.json data/episodes/daily_life_toon_ep001.json assets/packs/daily_life_toon/settings.json --repo-root . --output-dir data/preflight/daily_life_toon_ep001 --fail-on-not-ready
+```
+
+This command still writes JSON reports only. It does not generate actor images,
+background images, voices, or video files.
+
 ## Public Boundary
 
 Background request manifests and coverage reports must not contain:

@@ -158,6 +158,11 @@ episode's scenes. Preflight combines both reports into
 `reverie.pack.videotoon_episode_preflight.v1` and should be the final local
 render gate before assembling a video-toon episode.
 
+Use `reverie-videotoon-prepare episode ...` when you want the whole JSON
+preflight bundle written in one pass: actor asset plan, actor asset coverage,
+episode background requests, episode background coverage, final preflight, and
+the prepare report.
+
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 
 `PackValidator(repo_root=...)` validates `actor_model_path` when it is present.
