@@ -29,6 +29,7 @@ Expected files:
   youtube.private_upload.not_started.json
   quality_gate.json
   video_toon_actor_template.render_plan.json
+  video_toon_actor_template.asset_work_order.json
   video_toon_actor_template.remotion_props.json
   run_manifest.json
   stage_log.jsonl
@@ -58,6 +59,8 @@ The demo proves that a fresh public clone can:
 - describe the selected backend profile
 - check local prerequisites without reading credentials
 - write a fixed-actor video-toon render plan and Remotion props dry-run
+- write an asset work order listing the local variant, mouth, eye, and
+  background PNG targets that a real run would need
 - expose reusable face-rig fields such as `eyesClosedPath`, `mouthOpenPath`,
   `mouthClosedPath`, and `mouthCues`
 - write a dry-run quality gate result

@@ -47,6 +47,7 @@ The demo writes only safe report files outside the repository:
   youtube.private_upload.not_started.json
   quality_gate.json
   video_toon_actor_template.render_plan.json
+  video_toon_actor_template.asset_work_order.json
   video_toon_actor_template.remotion_props.json
   run_manifest.json
   stage_log.jsonl

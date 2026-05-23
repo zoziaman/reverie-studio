@@ -80,6 +80,29 @@ def test_public_demo_writes_videotoon_actor_template_props(tmp_path):
     assert "C:" + "\\Users\\" not in serialized
 
 
+def test_public_demo_writes_videotoon_actor_asset_work_order(tmp_path):
+    run_demo(DEFAULT_PACK_PATH, tmp_path)
+    work_order_path = tmp_path / "video_toon_actor_template.asset_work_order.json"
+
+    work_order = json.loads(work_order_path.read_text(encoding="utf-8"))
+    serialized = json.dumps(work_order)
+    targets = {asset["target_relative_path"]: asset for asset in work_order["assets"]}
+
+    assert work_order["schema"] == "reverie.public_demo.videotoon_actor_asset_work_order.v1"
+    assert work_order["actor_id"] == "demo_fixed_actor_01"
+    assert work_order["asset_count"] == len(work_order["assets"])
+    assert work_order["creates_media"] is False
+    assert targets["actor_models/demo_fixed_actor_01/variants/talking_standing.png"]["asset_type"] == "variant_base"
+    assert targets["actor_models/demo_fixed_actor_01/face_parts/mouth_closed.png"]["asset_type"] == "mouth_layer"
+    assert targets["actor_models/demo_fixed_actor_01/face_parts/mouth_small_open.png"]["asset_type"] == "mouth_layer"
+    assert targets["actor_models/demo_fixed_actor_01/face_parts/eyes_closed.png"]["asset_type"] == "eye_layer"
+    assert targets["backgrounds/demo_neighborhood_day.png"]["asset_type"] == "background_plate"
+    assert all(asset["status"] == "needs_local_generation" for asset in work_order["assets"])
+    assert all(asset["public_safe"] is True for asset in work_order["assets"])
+    assert "C:" + "/Users/" not in serialized
+    assert "C:" + "\\Users\\" not in serialized
+
+
 def test_public_demo_does_not_create_media_or_secret_files(tmp_path):
     run_demo(DEFAULT_PACK_PATH, tmp_path)
 
