@@ -21,6 +21,7 @@ from pathlib import Path
 from enum import Enum
 
 from utils.gemini_compat import GEMINI_AVAILABLE, configure_gemini, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -339,7 +340,7 @@ class PackDesigner:
                     self.gemini_model = get_gemini_model("gemini-1.5-flash")
                 logger.info("PackDesigner: Gemini 모델 초기화 완료")
             except Exception as e:
-                logger.warning(f"PackDesigner: Gemini 초기화 실패: {e}")
+                logger.warning(f"PackDesigner: Gemini 초기화 실패: {redact_sensitive_text(e)}")
 
         # 출력 디렉토리
         if output_dir is None:
@@ -508,7 +509,7 @@ JSON 형식으로 응답하세요:
                 return self._generate_fallback_concept(genre, theme, style_type)
 
         except Exception as e:
-            logger.warning(f"AI 컨셉 생성 실패: {e}")
+            logger.warning(f"AI 컨셉 생성 실패: {redact_sensitive_text(e)}")
             return self._generate_fallback_concept(genre, theme, style_type)
 
     def _generate_fallback_concept(
