@@ -79,6 +79,14 @@ def _build_stages(pack: dict, backend_profile: dict, environment_report: dict) -
             note="Converted beats into a deterministic placeholder scene plan.",
         ),
         DemoStage(
+            name="videotoon_actor_template",
+            status="pass",
+            duration_seconds=0.02,
+            cost_usd=0.0,
+            artifact="video_toon_actor_template.remotion_props.json",
+            note="Wrote a fixed-actor, mouth/eye layer Remotion props dry-run without media files.",
+        ),
+        DemoStage(
             name="image_backend",
             status="dry_run",
             duration_seconds=0.0,
@@ -129,6 +137,158 @@ def _write_jsonl(path: Path, rows: Iterable[dict]) -> None:
     with path.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
+
+
+def _layer(
+    actor_id: str,
+    layer_type: str,
+    key: str,
+    target_relative_path: str,
+    anchor_key: str,
+    z_index: int,
+) -> dict:
+    return {
+        "layer_id": f"{actor_id}__{layer_type}__{key}",
+        "layer_type": layer_type,
+        "key": key,
+        "target_relative_path": target_relative_path,
+        "anchor_key": anchor_key,
+        "z_index": z_index,
+        "public_safe": True,
+    }
+
+
+def _build_videotoon_actor_template_render_plan(pack: dict) -> dict:
+    actor_id = "demo_fixed_actor_01"
+    background_path = "backgrounds/demo_neighborhood_day.png"
+    variant_layers = {
+        "talking_standing": _layer(
+            actor_id,
+            "variant_base",
+            "talking_standing",
+            "actor_models/demo_fixed_actor_01/variants/talking_standing.png",
+            "actor_root",
+            1,
+        )
+    }
+    mouth_layers = {
+        "mouth_closed": _layer(
+            actor_id,
+            "mouth_layer",
+            "mouth_closed",
+            "actor_models/demo_fixed_actor_01/face_parts/mouth_closed.png",
+            "mouth_center",
+            3,
+        ),
+        "mouth_small_open": _layer(
+            actor_id,
+            "mouth_layer",
+            "mouth_small_open",
+            "actor_models/demo_fixed_actor_01/face_parts/mouth_small_open.png",
+            "mouth_center",
+            3,
+        ),
+    }
+    eye_layers = {
+        "eyes_open": _layer(
+            actor_id,
+            "eye_layer",
+            "eyes_open",
+            "actor_models/demo_fixed_actor_01/face_parts/eyes_open.png",
+            "eye_center",
+            2,
+        ),
+        "eyes_closed": _layer(
+            actor_id,
+            "eye_layer",
+            "eyes_closed",
+            "actor_models/demo_fixed_actor_01/face_parts/eyes_closed.png",
+            "eye_center",
+            2,
+        ),
+    }
+    return {
+        "schema": "reverie.pack.videotoon_render_plan.v1",
+        "pack_id": pack["pack_id"],
+        "episode_id": "public_demo_videotoon_actor_template",
+        "ready_for_render": False,
+        "scene_count": 1,
+        "source_artifacts": {
+            "actor_model": "demo_fixed_actor_01.public_template",
+            "background": "demo_neighborhood_day.public_template",
+        },
+        "missing_assets": [
+            "demo_fixed_actor_01:variant:talking_standing",
+            "demo_fixed_actor_01:mouth_shape:mouth_closed",
+            "demo_fixed_actor_01:mouth_shape:mouth_small_open",
+            "demo_fixed_actor_01:eye_shape:eyes_open",
+            "demo_fixed_actor_01:eye_shape:eyes_closed",
+            "background:demo_neighborhood_day",
+        ],
+        "scenes": [
+            {
+                "scene_id": "demo_s001",
+                "role_id": "protagonist",
+                "actor_id": actor_id,
+                "shot_type": "medium_close",
+                "background": {
+                    "target_relative_path": background_path,
+                    "location_id": "demo_neighborhood",
+                    "time": "day",
+                    "exists": False,
+                },
+                "actor": {
+                    "variant_key": "talking_standing",
+                    "mouth_shape_key": "mouth_small_open",
+                    "eye_shape_key": "eyes_open",
+                    "canvas": {"width": 1024, "height": 1536},
+                    "anchor_points": {
+                        "actor_root": {"x": 0.5, "y": 0.92},
+                        "eye_center": {"x": 0.5, "y": 0.25},
+                        "mouth_center": {"x": 0.5, "y": 0.38},
+                    },
+                    "available_variant_layers": variant_layers,
+                    "available_mouth_layers": mouth_layers,
+                    "available_eye_layers": eye_layers,
+                },
+                "composition_layers": [
+                    {
+                        "layer_type": "background_plate",
+                        "target_relative_path": background_path,
+                        "location_id": "demo_neighborhood",
+                        "time": "day",
+                        "exists": False,
+                        "z_index": 0,
+                    },
+                    variant_layers["talking_standing"],
+                    eye_layers["eyes_open"],
+                    mouth_layers["mouth_small_open"],
+                ],
+            }
+        ],
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+
+def _write_videotoon_actor_template_demo(output_dir: Path, pack: dict) -> dict:
+    from utils.videotoon_render_plan import build_remotion_props_from_videotoon_render_plan
+
+    render_plan = _build_videotoon_actor_template_render_plan(pack)
+    props = build_remotion_props_from_videotoon_render_plan(
+        render_plan,
+        fps=30,
+        scene_duration_frames=90,
+        width=1080,
+        height=1920,
+    )
+    _write_json(output_dir / "video_toon_actor_template.render_plan.json", render_plan)
+    _write_json(output_dir / "video_toon_actor_template.remotion_props.json", props)
+    return props
 
 
 def _write_report(
@@ -255,6 +415,7 @@ def run_demo(
 
     _write_json(output_dir / "backend_profile.json", backend_profile)
     write_environment_report(output_dir / "environment_report.json", environment_report)
+    _write_videotoon_actor_template_demo(output_dir, pack)
     _write_json(output_dir / "quality_gate.json", quality_gate)
     _write_json(output_dir / "run_manifest.json", manifest)
     _write_jsonl(output_dir / "stage_log.jsonl", (asdict(stage) for stage in stages))

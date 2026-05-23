@@ -20,6 +20,8 @@ Expected files:
   backend_profile.json
   environment_report.json
   quality_gate.json
+  video_toon_actor_template.render_plan.json
+  video_toon_actor_template.remotion_props.json
   run_manifest.json
   stage_log.jsonl
   pipeline_report.md
@@ -47,6 +49,9 @@ The demo proves that a fresh public clone can:
 - produce a deterministic stage manifest
 - describe the selected backend profile
 - check local prerequisites without reading credentials
+- write a fixed-actor video-toon render plan and Remotion props dry-run
+- expose reusable face-rig fields such as `eyesClosedPath`, `mouthOpenPath`,
+  `mouthClosedPath`, and `mouthCues`
 - write a dry-run quality gate result
 - write duration, cost, artifact, and status rows
 - keep upload behind a manual review gate

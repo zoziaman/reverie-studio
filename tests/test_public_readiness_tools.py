@@ -85,3 +85,12 @@ def test_codex_setup_prompt_is_present_for_non_developer_onboarding():
     assert "python -m reverie_doctor" in text
     assert "python -m reverie_demo" in text
     assert "do not paste real api keys" in text.lower()
+
+
+def test_public_demo_docs_include_videotoon_actor_template_output():
+    readme = Path("README.md").read_text(encoding="utf-8")
+    public_demo = Path("docs/PUBLIC_DEMO.md").read_text(encoding="utf-8")
+
+    assert "video_toon_actor_template.remotion_props.json" in readme
+    assert "video_toon_actor_template.remotion_props.json" in public_demo
+    assert "mouthCues" in public_demo

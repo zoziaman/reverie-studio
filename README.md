@@ -38,6 +38,8 @@ The demo writes only safe report files outside the repository:
   backend_profile.json
   environment_report.json
   quality_gate.json
+  video_toon_actor_template.render_plan.json
+  video_toon_actor_template.remotion_props.json
   run_manifest.json
   stage_log.jsonl
   pipeline_report.md
@@ -45,9 +47,10 @@ The demo writes only safe report files outside the repository:
 
 It proves that a fresh public clone can load a public content pack, map the
 workflow stages, record duration/cost/status rows, choose a backend profile,
-run a local setup doctor, score a public quality gate, and stop before upload.
-It does not render real video, call AI APIs, start local model servers, or
-create generated media. See `docs/PUBLIC_DEMO.md`.
+run a local setup doctor, write a fixed-actor video-toon Remotion props dry-run,
+score a public quality gate, and stop before upload. It does not render real
+video, call AI APIs, start local model servers, or create generated media. See
+`docs/PUBLIC_DEMO.md`.
 
 ## Target Workflow
 
