@@ -40,3 +40,17 @@ def test_credential_token_and_oauth_filenames_are_blocked():
     assert snapshot_check._is_blocked_path(Path("config/firebase-service-account.json")) == (
         "blocked filename pattern: firebase-service-account.json"
     )
+
+
+def test_content_scan_detects_slack_tokens(tmp_path):
+    snapshot_check = _load_snapshot_check()
+    secret_file = tmp_path / "notes.txt"
+    token = "xox" + "b-" + "123456789012-abcdefghijklmnopqrst"
+    secret_file.write_text(
+        f"SLACK_BOT_TOKEN={token}\n",
+        encoding="utf-8",
+    )
+
+    findings = snapshot_check._scan_contents(tmp_path, [Path("notes.txt")])
+
+    assert findings == ["notes.txt: content pattern matched: slack_token"]

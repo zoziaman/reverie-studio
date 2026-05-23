@@ -83,6 +83,7 @@ CONTENT_PATTERNS = {
     "openai_key": re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
     "github_token": re.compile(r"(ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})"),
     "google_oauth_token": re.compile(r"ya29\.[A-Za-z0-9_-]+"),
+    "slack_token": re.compile(r"xox[baprs]-[A-Za-z0-9-]{20,}"),
     "private_key_block": re.compile(r"BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY"),
     "private_user": re.compile(r"(kky86|aftersleep123|C:\\Users\\kky86|C:/Users/kky86)"),
     "private_project_path": re.compile(r"(C:\\Anti reverie|C:/Anti reverie|D:\\AI)"),
