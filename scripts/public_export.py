@@ -269,6 +269,15 @@ def _manifest_int(manifest: dict[str, Any], field_name: str) -> int | None:
         return None
 
 
+def _manifest_object(manifest: dict[str, Any], field_name: str) -> dict[str, Any] | None:
+    value = manifest.get(field_name)
+    if value is None:
+        return {}
+    if isinstance(value, dict):
+        return value
+    return None
+
+
 def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[str, Any]:
     out = Path(output_dir).resolve()
     manifest_path = out / MANIFEST_NAME
@@ -309,6 +318,12 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             archive_path,
             detail="manifest numeric field is invalid: archive_file_count",
         )
+    public_snapshot = _manifest_object(manifest, "public_snapshot")
+    if public_snapshot is None:
+        return _invalid_manifest_report(
+            archive_path,
+            detail="manifest object field is invalid: public_snapshot",
+        )
     actual_integrity = (
         _archive_integrity_report(archive_path, tracked_file_count)
         if archive_exists
@@ -344,7 +359,7 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             "status": _check_status(manifest.get("git_history_included") is False),
         },
         "public_snapshot": {
-            "status": _check_status((manifest.get("public_snapshot") or {}).get("status") == "pass"),
+            "status": _check_status(public_snapshot.get("status") == "pass"),
         },
     }
     status = "pass" if all(check.get("status") == "pass" for check in checks.values()) else "fail"
