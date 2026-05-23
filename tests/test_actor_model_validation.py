@@ -626,3 +626,114 @@ def test_actor_model_cli_writes_pack_actor_roster_plan(tmp_path, capsys):
     assert plan["pack_id"] == "daily_life_toon"
     assert plan["motiontoon_patch"]["cast_slots"]["protagonist"]["actor_id"] == "actor_daily_adult_man_01"
     assert "daily_life_toon" in captured.out
+
+
+def test_apply_pack_actor_roster_plan_merges_motiontoon_patch_and_validates(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "assets" / "actor_models"
+    for preset_id, actor_id in (
+        ("daily_adult_man", "actor_daily_adult_man_01"),
+        ("daily_middle_woman", "actor_daily_middle_woman_01"),
+    ):
+        actor_model.scaffold_actor_model_from_preset(
+            preset_id,
+            actor_id,
+            actor_root=actor_root,
+            catalog_path=ACTOR_PRESET_CATALOG_PATH,
+        )
+    settings = _base_settings({"actor_seed_01": {"visual_identity": "seed actor"}})
+    settings["motiontoon"]["cast_slots"] = {}
+    settings["motiontoon"]["actor_pool"] = {}
+    settings["motiontoon"]["slow_push_enabled"] = True
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            },
+            {
+                "role_id": "witness",
+                "preset_id": "daily_middle_woman",
+                "actor_id": "actor_daily_middle_woman_01",
+            },
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    applied = actor_model.apply_pack_actor_roster_plan(settings, plan)
+    result = PackValidator(repo_root=tmp_path).validate_settings(applied)
+
+    assert applied["motiontoon"]["slow_push_enabled"] is True
+    assert applied["motiontoon"]["actor_pool"]["actor_daily_adult_man_01"]["voice_profile"] == "male_01"
+    assert applied["motiontoon"]["cast_slots"]["protagonist"]["actor_id"] == "actor_daily_adult_man_01"
+    assert applied["motiontoon"]["role_casting_contract"]["strict_actor_refs"] is True
+    assert result.is_valid is True
+    assert result.errors == []
+
+
+def test_apply_pack_actor_roster_plan_refuses_conflicting_actor_by_default():
+    actor_model = _actor_model_module()
+    settings = _base_settings(
+        {
+            "actor_daily_adult_man_01": {
+                "visual_identity": "existing actor",
+                "voice_profile": "male_legacy",
+            }
+        }
+    )
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    with pytest.raises(ValueError, match="already exists"):
+        actor_model.apply_pack_actor_roster_plan(settings, plan)
+
+
+def test_actor_model_cli_applies_roster_plan_to_settings_output(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    settings_path = tmp_path / "settings.json"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    output_path = tmp_path / "settings.with_roster.json"
+    settings = _base_settings({"actor_seed_01": {"visual_identity": "seed actor"}})
+    settings["motiontoon"]["cast_slots"] = {}
+    settings["motiontoon"]["actor_pool"] = {}
+    settings_path.write_text(json.dumps(settings), encoding="utf-8")
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    exit_code = actor_model.main(
+        [
+            "apply-roster-plan",
+            str(settings_path),
+            str(plan_path),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    applied = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert applied["motiontoon"]["cast_slots"]["protagonist"]["actor_id"] == "actor_daily_adult_man_01"
+    assert applied["motiontoon"]["actor_pool"]["actor_daily_adult_man_01"]["preset_id"] == "daily_adult_man"
+    assert "settings.with_roster.json" in captured.out

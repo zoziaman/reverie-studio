@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import re
 from collections.abc import Mapping
@@ -896,6 +897,108 @@ def write_pack_actor_roster_plan(
     return output
 
 
+def _load_json_object(path: Path | str, label: str) -> dict[str, Any]:
+    json_path = Path(path)
+    data = json.loads(json_path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{label} must contain a JSON object")
+    return data
+
+
+def _validate_roster_plan(plan: Mapping[str, Any]) -> dict[str, Any]:
+    if not isinstance(plan, Mapping):
+        raise ValueError("actor roster plan must be an object")
+    if plan.get("schema") != "reverie.pack.actor_roster_plan.v1":
+        raise ValueError("actor roster plan schema must be reverie.pack.actor_roster_plan.v1")
+    boundary = plan.get("public_release_boundary")
+    if not isinstance(boundary, Mapping):
+        raise ValueError("actor roster plan public_release_boundary must be an object")
+    for field_name in ("contains_generated_media", "contains_voice_samples", "contains_model_weights", "contains_private_paths"):
+        if boundary.get(field_name) is not False:
+            raise ValueError(f"actor roster plan public_release_boundary.{field_name} must be false")
+
+    patch = plan.get("motiontoon_patch")
+    if not isinstance(patch, Mapping):
+        raise ValueError("actor roster plan motiontoon_patch must be an object")
+    for field_name in ("actor_pool", "cast_slots", "role_casting_contract"):
+        if not isinstance(patch.get(field_name), Mapping):
+            raise ValueError(f"actor roster plan motiontoon_patch.{field_name} must be an object")
+    return dict(patch)
+
+
+def _merge_mapping_without_conflicts(
+    target: dict[str, Any],
+    patch: Mapping[str, Any],
+    *,
+    label: str,
+    force: bool,
+) -> None:
+    for key, value in patch.items():
+        key_text = str(key)
+        if key_text in target and not force:
+            raise ValueError(f"{label}.{key_text} already exists; pass force=True to overwrite")
+        target[key_text] = copy.deepcopy(value)
+
+
+def apply_pack_actor_roster_plan(
+    settings: Mapping[str, Any],
+    roster_plan: Mapping[str, Any],
+    *,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Apply a public-safe actor roster plan to a pack settings object."""
+    if not isinstance(settings, Mapping):
+        raise ValueError("settings must be an object")
+    patch = _validate_roster_plan(roster_plan)
+    applied = copy.deepcopy(dict(settings))
+    motiontoon = applied.setdefault("motiontoon", {})
+    if not isinstance(motiontoon, dict):
+        raise ValueError("settings.motiontoon must be an object")
+
+    actor_pool = motiontoon.setdefault("actor_pool", {})
+    if not isinstance(actor_pool, dict):
+        raise ValueError("settings.motiontoon.actor_pool must be an object")
+    cast_slots = motiontoon.setdefault("cast_slots", {})
+    if not isinstance(cast_slots, dict):
+        raise ValueError("settings.motiontoon.cast_slots must be an object")
+
+    _merge_mapping_without_conflicts(
+        actor_pool,
+        patch["actor_pool"],
+        label="settings.motiontoon.actor_pool",
+        force=force,
+    )
+    _merge_mapping_without_conflicts(
+        cast_slots,
+        patch["cast_slots"],
+        label="settings.motiontoon.cast_slots",
+        force=force,
+    )
+
+    role_contract = motiontoon.setdefault("role_casting_contract", {})
+    if not isinstance(role_contract, dict):
+        raise ValueError("settings.motiontoon.role_casting_contract must be an object")
+    role_contract.update(copy.deepcopy(dict(patch["role_casting_contract"])))
+    return applied
+
+
+def write_applied_pack_actor_roster_plan(
+    settings_path: Path | str,
+    roster_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    force: bool = False,
+) -> Path:
+    """Apply a roster plan to a settings JSON file and write the result."""
+    settings = _load_json_object(settings_path, "settings")
+    roster_plan = _load_json_object(roster_plan_path, "actor roster plan")
+    applied = apply_pack_actor_roster_plan(settings, roster_plan, force=force)
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(applied, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_request_manifest(
     actor_model_path: Path | str,
     *,
@@ -1169,6 +1272,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     )
     roster_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
 
+    apply_roster_parser = subparsers.add_parser(
+        "apply-roster-plan",
+        help="Apply a roster plan JSON patch to a pack settings.json file.",
+    )
+    apply_roster_parser.add_argument("settings_path", help="Input pack settings.json path.")
+    apply_roster_parser.add_argument("roster_plan_path", help="Input actor roster plan JSON path.")
+    apply_roster_parser.add_argument("--output", default=None, help="Output settings JSON path. Prints JSON when omitted.")
+    apply_roster_parser.add_argument("--force", action="store_true", help="Overwrite existing actor_pool or cast_slots entries.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -1237,6 +1349,21 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(f"Wrote pack actor roster plan for {args.pack_id}: {output}")
         else:
             print(json.dumps(plan, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "apply-roster-plan":
+        if args.output:
+            output = write_applied_pack_actor_roster_plan(
+                args.settings_path,
+                args.roster_plan_path,
+                args.output,
+                force=args.force,
+            )
+            print(f"Wrote settings with actor roster plan applied: {output}")
+        else:
+            settings = _load_json_object(args.settings_path, "settings")
+            roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
+            applied = apply_pack_actor_roster_plan(settings, roster_plan, force=args.force)
+            print(json.dumps(applied, ensure_ascii=False, indent=2))
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

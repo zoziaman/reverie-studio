@@ -189,6 +189,16 @@ The roster plan writes a public-safe JSON patch shape with
 the bridge between reusable actor presets and pack-level casting: the actor id
 stays fixed, while episode role casting can change per omnibus story.
 
+Apply the roster plan to a pack settings file by writing a new output file:
+
+```bash
+reverie-actor-model-requests apply-roster-plan assets/packs/daily_life_toon/settings.json data/actor_asset_requests/daily_life_toon.actor_roster_plan.json --output data/actor_asset_requests/daily_life_toon.settings.with_roster.json
+```
+
+`apply-roster-plan` refuses to overwrite existing `actor_pool` or `cast_slots`
+entries unless `--force` is passed. The default workflow writes a new settings
+file, so public pack files are not changed during planning.
+
 ## Asset Request Manifest
 
 The template can produce a local work order for generating the actual variant,
