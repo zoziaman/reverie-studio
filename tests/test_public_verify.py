@@ -726,6 +726,16 @@ def test_public_verify_blocks_when_functions_syntax_fails(tmp_path, monkeypatch)
 
 
 def test_public_verify_can_include_public_export(tmp_path, monkeypatch):
+    release_guidance = {
+        "distribution_path": "history_free_export",
+        "use_archive_for_public_distribution": True,
+        "existing_repo_history_included": False,
+        "existing_repo_history_requires_review": True,
+        "next_actions": [
+            "Distribute the generated source archive, not the private-history checkout.",
+            "Run public_verify.py with --with-history-scan before publishing existing repository history.",
+        ],
+    }
     monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
     monkeypatch.setattr(
         public_verify,
@@ -748,6 +758,7 @@ def test_public_verify_can_include_public_export(tmp_path, monkeypatch):
                 "archive_file_count": 2,
                 "archive_sha256": "1" * 64,
                 "archive_integrity": {"status": "pass"},
+                "release_guidance": release_guidance,
                 "git_history_included": False,
                 "workspace_state": {"status": "pass", "dirty_count": 0},
                 "public_snapshot": {"status": "pass", "finding_count": 0},
@@ -772,6 +783,8 @@ def test_public_verify_can_include_public_export(tmp_path, monkeypatch):
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
     assert "Optional Public Export" in summary
     assert "public_export/reverie-public-snapshot.zip" in summary
+    assert "Release guidance: `history_free_export`" in summary
+    assert "Existing repo history requires review: `true`" in summary
 
 
 def test_public_verify_public_export_report_preserves_release_guidance(tmp_path, monkeypatch):

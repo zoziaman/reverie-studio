@@ -801,6 +801,17 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
                 f"- Git history included: `{str(bool(manifest.get('git_history_included'))).lower()}`",
             ]
         )
+        release_guidance = manifest.get("release_guidance") or {}
+        distribution_path = release_guidance.get("distribution_path")
+        if distribution_path:
+            lines.append(f"- Release guidance: `{distribution_path}`")
+            lines.append(
+                "- Existing repo history requires review: `{requires_review}`".format(
+                    requires_review=str(
+                        bool(release_guidance.get("existing_repo_history_requires_review")),
+                    ).lower(),
+                )
+            )
 
     lines.extend(
         [
