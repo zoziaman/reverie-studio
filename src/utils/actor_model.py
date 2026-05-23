@@ -1141,6 +1141,114 @@ def write_actor_asset_request_manifest(
     return output
 
 
+def _actor_model_path_from_roster_actor(
+    actor_id: str,
+    actor_data: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str],
+    repo_root: Optional[Path | str],
+) -> Path | str:
+    if actor_root is not None:
+        return _resolve_actor_root(actor_root, repo_root) / actor_id / "actor.json"
+
+    actor_model_path = str(actor_data.get("actor_model_path") or "").strip()
+    if not actor_model_path:
+        raise ValueError(f"actor roster plan actor_pool.{actor_id}.actor_model_path is required")
+    return actor_model_path
+
+
+def build_actor_roster_asset_request_manifest(
+    roster_plan: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Build one public-safe asset request manifest for every actor in a roster plan."""
+    patch = _validate_roster_plan(roster_plan)
+    pack_id = str(roster_plan.get("pack_id") or "").strip()
+    if not pack_id:
+        raise ValueError("actor roster plan pack_id is required")
+
+    actor_pool = patch["actor_pool"]
+    if not actor_pool:
+        raise ValueError("actor roster plan motiontoon_patch.actor_pool must not be empty")
+
+    cast_slots = patch["cast_slots"]
+    actors: dict[str, Any] = {}
+    requests: list[dict[str, Any]] = []
+    for actor_id, actor_data in actor_pool.items():
+        actor_key = str(actor_id or "").strip()
+        if not actor_key:
+            raise ValueError("actor roster plan actor_pool contains an empty actor id")
+        if not isinstance(actor_data, Mapping):
+            raise ValueError(f"actor roster plan actor_pool.{actor_key} must be an object")
+
+        actor_model_path = _actor_model_path_from_roster_actor(
+            actor_key,
+            actor_data,
+            actor_root=actor_root,
+            repo_root=repo_root,
+        )
+        actor_manifest = build_actor_asset_request_manifest(actor_model_path, repo_root=repo_root)
+        if actor_manifest["actor_id"] != actor_key:
+            raise ValueError(
+                f"actor roster plan actor_pool.{actor_key} points to actor package "
+                f"{actor_manifest['actor_id']}"
+            )
+
+        actor_requests = copy.deepcopy(actor_manifest["requests"])
+        requests.extend(actor_requests)
+        role_ids = [
+            str(role_id)
+            for role_id, slot in cast_slots.items()
+            if isinstance(slot, Mapping) and str(slot.get("actor_id") or "").strip() == actor_key
+        ]
+        actors[actor_key] = {
+            "actor_id": actor_key,
+            "preset_id": str(actor_data.get("preset_id") or ""),
+            "source_actor_model_path": actor_manifest["source_actor_model_path"],
+            "template_version": actor_manifest["template_version"],
+            "readiness_state": actor_manifest["readiness_state"],
+            "role_ids": role_ids,
+            "request_count": actor_manifest["request_count"],
+        }
+
+    return {
+        "schema": "reverie.pack.actor_roster.asset_requests.v1",
+        "pack_id": pack_id,
+        "actor_count": len(actors),
+        "request_count": len(requests),
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "actors": actors,
+        "requests": requests,
+    }
+
+
+def write_actor_roster_asset_request_manifest(
+    roster_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write one combined public-safe asset request manifest for a roster plan."""
+    roster_plan = _load_json_object(roster_plan_path, "actor roster plan")
+    manifest = build_actor_roster_asset_request_manifest(
+        roster_plan,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_coverage_report(
     actor_model_path: Path | str,
     *,
@@ -1387,6 +1495,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     scaffold_roster_parser.add_argument("--output", default=None, help="Output scaffold report path. Prints JSON when omitted.")
     scaffold_roster_parser.add_argument("--force", action="store_true", help="Overwrite existing actor scaffolds.")
 
+    roster_request_parser = subparsers.add_parser(
+        "roster-asset-requests",
+        help="Build one JSON asset request manifest for every actor in a roster plan.",
+    )
+    roster_request_parser.add_argument("roster_plan_path", help="Input actor roster plan JSON path.")
+    roster_request_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    roster_request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    roster_request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -1492,6 +1609,24 @@ def main(argv: Optional[list[str]] = None) -> int:
                 force=args.force,
             )
             print(json.dumps(report, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "roster-asset-requests":
+        if args.output:
+            output = write_actor_roster_asset_request_manifest(
+                args.roster_plan_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(f"Wrote actor roster asset requests: {output}")
+        else:
+            roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
+            manifest = build_actor_roster_asset_request_manifest(
+                roster_plan,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

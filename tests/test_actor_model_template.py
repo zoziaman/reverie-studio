@@ -99,6 +99,7 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "scaffold-preset" in text
     assert "scaffold-roster" in text
     assert "roster-plan" in text
+    assert "roster-asset-requests" in text
     assert "apply-roster-plan" in text
     assert "actor_model_presets" in text
     assert "asset coverage" in text

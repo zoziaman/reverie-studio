@@ -200,6 +200,19 @@ The scaffold report lists which actor folders were created and whether each
 generated `actor.json` validates. Existing actor folders are not overwritten
 unless `--force` is passed.
 
+After the roster actors exist, write one combined request manifest for every
+variant, mouth shape, and eye shape needed by that pack roster:
+
+```bash
+reverie-actor-model-requests roster-asset-requests data/actor_asset_requests/daily_life_toon.actor_roster_plan.json --repo-root . --output data/actor_asset_requests/daily_life_toon.actor_roster_asset_requests.json
+```
+
+`roster-asset-requests` expands each actor in `motiontoon_patch.actor_pool`
+through its `actor_model_path`, or through `--actor-root` when the scaffold was
+created in a separate local directory. The output is still only a work order:
+it lists prompt text and target PNG paths, but does not create images, voice
+samples, model weights, or runtime artifacts.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash

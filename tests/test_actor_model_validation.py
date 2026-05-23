@@ -843,3 +843,85 @@ def test_actor_model_cli_scaffold_roster_creates_actor_packages(tmp_path, capsys
     assert (actor_root / "actor_daily_adult_man_01" / "actor.json").exists()
     assert report["created_count"] == 1
     assert "actor_roster_scaffold" in captured.out
+
+
+def test_build_actor_roster_asset_request_manifest_expands_all_roster_actor_requests(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            },
+            {
+                "role_id": "witness",
+                "preset_id": "daily_middle_woman",
+                "actor_id": "actor_daily_middle_woman_01",
+            },
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    manifest = actor_model.build_actor_roster_asset_request_manifest(plan, actor_root=actor_root)
+    request_actor_ids = {request["actor_id"] for request in manifest["requests"]}
+
+    assert manifest["schema"] == "reverie.pack.actor_roster.asset_requests.v1"
+    assert manifest["pack_id"] == "daily_life_toon"
+    assert manifest["actor_count"] == 2
+    assert manifest["request_count"] == 36
+    assert manifest["public_release_boundary"]["contains_generated_media"] is False
+    assert manifest["actors"]["actor_daily_adult_man_01"]["request_count"] == 18
+    assert manifest["actors"]["actor_daily_middle_woman_01"]["request_count"] == 18
+    assert request_actor_ids == {"actor_daily_adult_man_01", "actor_daily_middle_woman_01"}
+    assert all(request["public_safe"] is True for request in manifest["requests"])
+
+
+def test_actor_model_cli_writes_roster_asset_request_manifest(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    output_path = tmp_path / "daily_life_toon.actor_roster_asset_requests.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+    plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    exit_code = actor_model.main(
+        [
+            "roster-asset-requests",
+            str(plan_path),
+            "--actor-root",
+            str(actor_root),
+            "--output",
+            str(output_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    manifest = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert manifest["actor_count"] == 1
+    assert manifest["request_count"] == 18
+    assert "actor roster asset requests" in captured.out
