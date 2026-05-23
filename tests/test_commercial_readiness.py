@@ -69,7 +69,7 @@ def test_report_accepts_clean_distribution_basics(tmp_path):
     )
     _write(tmp_path / "installer_setup.iss", 'AppVersion=63.0\nSource: "release\\ReverieStudio.exe"\n')
     _write(tmp_path / "tools" / "build_nuitka.py", 'APP_VERSION = "63.0"\n')
-    _write(tmp_path / "docs" / "ROADMAP_v65.md", "> 현재 버전: v63.0\n상용화 점수 95/100\n")
+    _write(tmp_path / "docs" / "ROADMAP_v65.md", "> Current version: v63.0\nCommercial score 95/100\n")
     _write(
         tmp_path / "src" / "gui" / "mixins" / "production_mixin.py",
         "from utils.commercial_readiness import generate_commercial_readiness_report\n"

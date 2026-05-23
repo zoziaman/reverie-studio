@@ -3,6 +3,7 @@
 v60.1.0 Phase 1: PipelineContext + PipelineStepResult 단위 테스트
 """
 import pytest
+import os
 
 
 class TestPipelineContext:

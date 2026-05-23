@@ -465,6 +465,13 @@ def test_run_production_preflight_starts_missing_required_servers(monkeypatch, t
     ffprobe = tmp_path / "ffprobe.exe"
     ffmpeg.write_text("", encoding="utf-8")
     ffprobe.write_text("", encoding="utf-8")
+    fake_mixin_path = tmp_path / "src" / "gui" / "mixins" / "production_mixin.py"
+    fake_remotion_root = tmp_path / "remotion-poc"
+    fake_mixin_path.parent.mkdir(parents=True, exist_ok=True)
+    fake_mixin_path.write_text("", encoding="utf-8")
+    fake_remotion_root.mkdir(parents=True, exist_ok=True)
+    (fake_remotion_root / "package.json").write_text("{}", encoding="utf-8")
+    (fake_remotion_root / "node_modules").mkdir()
 
     original_provider = getattr(config, "STORY_LLM_PROVIDER", "")
     original_cli_path = getattr(config, "CLAUDE_CLI_PATH", "")
@@ -486,6 +493,7 @@ def test_run_production_preflight_starts_missing_required_servers(monkeypatch, t
     monkeypatch.setattr(production_module, "get_ffprobe_path", lambda: str(ffprobe))
     monkeypatch.setattr(production_module.shutil, "which", fake_which)
     monkeypatch.setattr("utils.server_manager.get_server_manager", lambda: manager)
+    monkeypatch.setattr(production_module, "__file__", str(fake_mixin_path))
 
     try:
         window._run_production_preflight()

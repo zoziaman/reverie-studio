@@ -1290,7 +1290,6 @@ class ProductionMixin:
                     pass
 
                 self._run_production_preflight()
-                from modules_pro.media_factory import MediaFactory
                 import os
                 import json
 

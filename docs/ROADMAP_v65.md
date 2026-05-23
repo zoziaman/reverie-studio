@@ -1,5 +1,6 @@
 # Reverie Studio Roadmap v65
 
+Current version: v63.0
 Last updated: 2026-05-01 KST
 
 ## Direction Change

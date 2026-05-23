@@ -221,13 +221,15 @@ def test_legacy_pack_fallback_still_decrypts_when_runtime_key_is_set(monkeypatch
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
     payload = b"legacy-pack-payload"
+    legacy_password = b"test-legacy-pack-password"
+    monkeypatch.setenv("REVERIE_PACK_LEGACY_PASSWORD", legacy_password.decode("utf-8"))
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
         length=32,
         salt=pc._DEFAULT_PACK_ENCRYPTION_SALT,
         iterations=100000,
     )
-    legacy_key = base64.urlsafe_b64encode(kdf.derive(pc._LEGACY_PACK_ENCRYPTION_PASSWORD))
+    legacy_key = base64.urlsafe_b64encode(kdf.derive(legacy_password))
     encrypted = Fernet(legacy_key).encrypt(payload)
 
     monkeypatch.setenv("REVERIE_PACK_ALLOW_LEGACY_KEY", "1")

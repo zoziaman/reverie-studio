@@ -358,8 +358,8 @@ class SFXIntegrator:
         try:
             from config.pack_config import ACTIVE_PACK, PACK_CONFIG_AVAILABLE
             if PACK_CONFIG_AVAILABLE and ACTIVE_PACK.is_loaded:
-                sfx_category = getattr(ACTIVE_PACK.assets, 'sfx_category', fallback_category) if hasattr(ACTIVE_PACK, 'assets') else fallback_category
-                sfx_intensity = getattr(ACTIVE_PACK.assets, 'sfx_intensity', 'medium') if hasattr(ACTIVE_PACK, 'assets') else 'medium'
+                sfx_category = (getattr(ACTIVE_PACK.assets, 'sfx_category', fallback_category) if hasattr(ACTIVE_PACK, 'assets') else fallback_category) or fallback_category
+                sfx_intensity = (getattr(ACTIVE_PACK.assets, 'sfx_intensity', 'medium') if hasattr(ACTIVE_PACK, 'assets') else 'medium') or 'medium'
                 return sfx_category, sfx_intensity
         except ImportError:
             pass

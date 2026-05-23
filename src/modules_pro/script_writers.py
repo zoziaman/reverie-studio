@@ -1639,6 +1639,12 @@ Output JSON ONLY:
                         f"+{len(script_chunk)} turns (cumulative {len(combined)}/{target_turns})"
                     )
                     success = True
+                    if len(combined) >= target_turns:
+                        logger.info(
+                            f"[{role_label}] chunked write reached target after chunk {ci+1}: "
+                            f"{len(combined)}/{target_turns}"
+                        )
+                        break
                     break
 
                 except Exception as e:
@@ -1653,6 +1659,8 @@ Output JSON ONLY:
                 logger.error(f"[{role_label}] chunk {ci+1} 최종 실패. 분할 생성 중단.")
                 safe_print(f"      [{role_label}] 청크 {ci+1} 실패 → 분할 생성 중단")
                 return None  # 기존 방식으로 폴백
+            if len(combined) >= target_turns:
+                break
 
         # v62.41-fix P1-3: 내부 청크 합산도 70% 기준 적용
         _min_chunked = max(10, int(target_turns * 0.7))

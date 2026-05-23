@@ -622,7 +622,7 @@ class MediaFactory:
             BGM 폴더 경로
         """
         # v57.7.4: 유효한 채널 목록
-        VALID_CHANNELS = ("daily_life_toon", "mystery_toon", "videotoon")
+        VALID_CHANNELS = ("daily_life_toon", "mystery_toon", "videotoon", "horror", "senior")
 
         # v57.7.3: 팩 설정 확인
         if PACK_CONFIG_AVAILABLE and ACTIVE_PACK.is_loaded:

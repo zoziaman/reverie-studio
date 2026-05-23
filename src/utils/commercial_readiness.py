@@ -512,8 +512,11 @@ def _check_docs_version_alignment(root: Path, project_version: str) -> Readiness
             4,
         )
     text = _read_text(roadmap)
-    expected = f"현재 버전: v{project_version}" if project_version else ""
-    if expected and expected not in text:
+    expected_markers = (
+        f"Current version: v{project_version}",
+        f"현재 버전: v{project_version}",
+    ) if project_version else ()
+    if expected_markers and not any(marker in text for marker in expected_markers):
         return _fail(
             "docs_version_alignment",
             "Roadmap version alignment",

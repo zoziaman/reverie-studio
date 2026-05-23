@@ -8,6 +8,11 @@ import sys
 import time
 import pytest
 
+pytestmark = pytest.mark.skipif(
+    os.environ.get("REVERIE_RUN_MEDIA_INTEGRATION_TESTS") != "1",
+    reason="media service integration tests are opt-in",
+)
+
 # 프로젝트 경로 추가
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
