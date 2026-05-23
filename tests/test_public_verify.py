@@ -315,6 +315,9 @@ def test_public_verify_summary_prints_recommendation_when_history_free_export_av
     assert recommendation in summary
     assert "Use the history-free public export" in summary
     assert "Do not publish the existing repository history" in summary
+    assert "Use the history-free public export or create a fresh public repository from it." in summary
+    assert "Do not publish the existing repository history until the history scan passes." in summary
+    assert "fix blocking failures before publishing" not in summary
 
 
 def test_public_verify_summary_explains_history_block_release_options(tmp_path, monkeypatch):

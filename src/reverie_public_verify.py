@@ -655,6 +655,29 @@ def _publish_recommendation(
     )
 
 
+def _summary_next_actions(report: dict[str, Any]) -> list[str]:
+    publish_gate = report.get("publish_gate", {})
+    release_options = publish_gate.get("release_options") or []
+    history_free_status = _release_option_status(release_options, "history_free_export")
+    existing_history_status = _release_option_status(release_options, "existing_repo_history")
+    actions: list[str] = []
+    if history_free_status == "available" and existing_history_status == "blocked":
+        actions.extend([
+            "Use the history-free public export or create a fresh public repository from it.",
+            "Do not publish the existing repository history until the history scan passes.",
+        ])
+    else:
+        if report.get("overall_status") == "fail":
+            actions.append("If `overall_status` is `fail`, fix blocking failures before publishing.")
+        if publish_gate.get("status") == "review_required":
+            actions.append(
+                "If `publish_gate` is `review_required`, complete the manual review items before "
+                "making an existing private repository public."
+            )
+    actions.append("Keep credentials, generated media, voice data, and model weights outside git.")
+    return actions
+
+
 def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
     checks = report.get("checks", {})
     publish_gate = report.get("publish_gate", {})
@@ -783,12 +806,10 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
             "",
             "## Next Actions",
             "",
-            "- If `overall_status` is `fail`, fix blocking failures before publishing.",
-            "- If `publish_gate` is `review_required`, complete the manual review items before making an existing private repository public.",
-            "- Keep credentials, generated media, voice data, and model weights outside git.",
-            "",
         ]
     )
+    lines.extend(f"- {action}" for action in _summary_next_actions(report))
+    lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
