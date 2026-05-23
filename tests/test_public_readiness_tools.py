@@ -123,6 +123,8 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "publish_gate" in public_demo
     assert "workspace_state" in public_demo
     assert "path fingerprints" in public_demo
+    assert "repo-relative `pack_path`" in public_demo
+    assert "`<public_demo_output>`" in public_demo
     assert "python scripts/public_verify.py --out <temp folder>" in backend_profiles
 
 

@@ -47,6 +47,9 @@ audit evidence while keeping the dry-run report-only. It also records
 `workspace_state` from `git status` as counts and path fingerprints so release
 review can distinguish a clean publish branch/export from local work in
 progress without copying raw local path names into the report.
+The nested public demo artifacts use a repo-relative `pack_path` and the
+`<public_demo_output>` placeholder instead of writing the caller's absolute
+workspace or temp directory into `run_manifest.json` or `pipeline_report.md`.
 
 ## What It Shows
 
