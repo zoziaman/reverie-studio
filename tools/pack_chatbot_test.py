@@ -13,9 +13,17 @@ import json
 import io
 from typing import Optional, List, Dict, Any
 
-# Windows 콘솔 UTF-8 설정
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8', errors='replace')
+def _configure_console_encoding() -> None:
+    """Configure UTF-8 streams only when running the CLI directly."""
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    elif hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+
+    if hasattr(sys.stdin, "reconfigure"):
+        sys.stdin.reconfigure(encoding="utf-8", errors="replace")
+    elif hasattr(sys.stdin, "buffer"):
+        sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
 
 # 프로젝트 루트 추가
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -24,6 +32,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, "lib"))
 
 import google.generativeai as genai
 from dotenv import load_dotenv
+from utils.secret_redaction import redact_sensitive_text
 
 # .env 로드
 load_dotenv(os.path.join(PROJECT_ROOT, ".env"))
@@ -137,7 +146,8 @@ class PackChatbot:
             return assistant_response
 
         except Exception as e:
-            return f"❌ 오류 발생: {str(e)}"
+            safe_error = redact_sensitive_text(e)
+            return f"❌ 오류 발생: {safe_error}"
 
     def _extract_settings(self, response: str) -> None:
         """응답에서 JSON 설정 추출"""
@@ -164,6 +174,8 @@ class PackChatbot:
 
 def main():
     """메인 함수 - CLI 대화 인터페이스"""
+    _configure_console_encoding()
+
     print("="*60)
     print("🎬 ReveriePack 생성 도우미 챗봇 테스트")
     print("="*60)
