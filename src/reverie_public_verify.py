@@ -378,6 +378,61 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
     }
 
 
+def _functions_syntax_evidence(functions_syntax_report: dict[str, Any] | None) -> str:
+    if not functions_syntax_report:
+        return "run with --with-functions-syntax after npm --prefix functions ci."
+    status = functions_syntax_report.get("status", "unknown")
+    if status == "pass":
+        return "functions/index.js loaded with node"
+    return "functions syntax status={status}".format(status=status)
+
+
+def _run_functions_syntax_check(timeout_seconds: int) -> dict[str, Any]:
+    if not (FUNCTIONS_DIR / "index.js").exists():
+        return {
+            "status": "not_available",
+            "detail": "functions/index.js is missing",
+        }
+    if not (FUNCTIONS_DIR / "node_modules" / "firebase-functions").exists():
+        return {
+            "status": "not_available",
+            "detail": "run npm --prefix functions ci before --with-functions-syntax",
+        }
+    node_executable = shutil.which("node")
+    if not node_executable:
+        return {
+            "status": "not_available",
+            "detail": "node is not available on PATH",
+        }
+
+    command = [node_executable, "-e", "require('./functions/index.js')"]
+    report_command = ["node", "-e", "require('./functions/index.js')"]
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=REPO_ROOT,
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=timeout_seconds,
+        )
+    except subprocess.TimeoutExpired:
+        return {
+            "status": "timeout",
+            "command": report_command,
+            "returncode": None,
+            "timeout_seconds": timeout_seconds,
+            "detail": "functions module load timed out",
+        }
+
+    return {
+        "status": "pass" if completed.returncode == 0 else "fail",
+        "command": report_command,
+        "returncode": completed.returncode,
+        "detail": "functions module loaded" if completed.returncode == 0 else "functions module did not load",
+    }
+
+
 def _public_export_evidence(public_export_report: dict[str, Any] | None) -> str:
     if not public_export_report:
         return "run with --with-public-export to create and verify a history-free source archive."
@@ -523,6 +578,7 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         lines.extend(f"- {warning}" for warning in warnings)
 
     functions_audit = checks.get("functions_audit", {})
+    functions_syntax = checks.get("functions_syntax", {})
     public_export = checks.get("public_export", {})
     vulnerabilities = functions_audit.get("vulnerabilities") or {}
     lines.extend(
@@ -553,6 +609,17 @@ def _write_public_verify_summary(path: Path, report: dict[str, Any]) -> None:
         )
         if force_fix_targets:
             lines.append(f"- Force-fix targets: `{', '.join(force_fix_targets)}`")
+
+    if functions_syntax.get("status") not in {None, "not_run"}:
+        lines.extend(
+            [
+                "",
+                "## Optional Functions Syntax",
+                "",
+                f"- Status: `{functions_syntax.get('status')}`",
+                f"- Detail: `{functions_syntax.get('detail', 'not_available')}`",
+            ]
+        )
 
     if public_export.get("status") not in {None, "not_run"}:
         manifest = public_export.get("manifest") or {}
@@ -596,6 +663,7 @@ def _build_publish_gate(
     pytest_report: dict[str, Any] | None,
     history_filename_report: dict[str, Any] | None,
     functions_audit_report: dict[str, Any] | None,
+    functions_syntax_report: dict[str, Any] | None,
     public_export_report: dict[str, Any] | None,
 ) -> dict[str, Any]:
     machine_checks = [
@@ -655,6 +723,11 @@ def _build_publish_gate(
             ),
         },
         {
+            "id": "firebase_functions_syntax",
+            "status": functions_syntax_report["status"] if functions_syntax_report else "not_run",
+            "evidence": _functions_syntax_evidence(functions_syntax_report),
+        },
+        {
             "id": "history_free_public_export",
             "status": public_export_report["status"] if public_export_report else "not_run",
             "evidence": _public_export_evidence(public_export_report),
@@ -691,6 +764,8 @@ def run_public_verification(
     with_history_scan: bool = False,
     with_functions_audit: bool = False,
     functions_audit_timeout_seconds: int = 120,
+    with_functions_syntax: bool = False,
+    functions_syntax_timeout_seconds: int = 60,
     with_public_export: bool = False,
     allow_repo_output: bool = False,
 ) -> dict[str, Any]:
@@ -729,6 +804,9 @@ def run_public_verification(
     functions_audit_report = None
     if with_functions_audit:
         functions_audit_report = _run_functions_audit(functions_audit_timeout_seconds)
+    functions_syntax_report = None
+    if with_functions_syntax:
+        functions_syntax_report = _run_functions_syntax_check(functions_syntax_timeout_seconds)
     public_export_report = None
     if with_public_export:
         public_export_report = _run_public_export(out, allow_repo_output=allow_repo_output)
@@ -760,6 +838,10 @@ def run_public_verification(
         failures.append(f"pytest returned {pytest_report['status']}")
     if history_filename_report and history_filename_report["status"] != "pass":
         failures.append("git history filename scan reported release-blocking findings")
+    if functions_syntax_report and functions_syntax_report["status"] in {"error", "fail", "timeout"}:
+        failures.append("Firebase Functions module did not load")
+    if functions_syntax_report and functions_syntax_report["status"] == "not_available":
+        warnings.append("Firebase Functions syntax check could not run; install functions dependencies first")
     if public_export_report and public_export_report["status"] != "pass":
         failures.append("history-free public export did not verify")
 
@@ -789,6 +871,7 @@ def run_public_verification(
             pytest_report=pytest_report,
             history_filename_report=history_filename_report,
             functions_audit_report=functions_audit_report,
+            functions_syntax_report=functions_syntax_report,
             public_export_report=public_export_report,
         ),
         "checks": {
@@ -808,6 +891,7 @@ def run_public_verification(
             "pytest": pytest_report or {"status": "not_run"},
             "git_history_filenames": history_filename_report or {"status": "not_run"},
             "functions_audit": functions_audit_report or {"status": "not_run"},
+            "functions_syntax": functions_syntax_report or {"status": "not_run"},
             "public_export": public_export_report or {"status": "not_run"},
         },
     }
@@ -841,6 +925,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Also run npm audit for the optional Firebase Functions package.",
     )
     parser.add_argument(
+        "--with-functions-syntax",
+        action="store_true",
+        help="Also require the Firebase Functions entrypoint after dependencies are installed.",
+    )
+    parser.add_argument(
         "--with-public-export",
         action="store_true",
         help="Also create and verify a history-free public source export under the output directory.",
@@ -857,6 +946,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=120,
         help="Functions npm audit timeout in seconds.",
+    )
+    parser.add_argument(
+        "--functions-syntax-timeout",
+        type=int,
+        default=60,
+        help="Functions entrypoint load timeout in seconds.",
     )
     parser.add_argument("--allow-repo-output", action="store_true", help="Allow report output inside the repo.")
     parser.add_argument("--json", action="store_true", help="Print the full verification report JSON.")
@@ -876,6 +971,8 @@ def main(argv: list[str] | None = None) -> int:
             with_history_scan=args.with_history_scan,
             with_functions_audit=args.with_functions_audit,
             functions_audit_timeout_seconds=args.functions_audit_timeout,
+            with_functions_syntax=args.with_functions_syntax,
+            functions_syntax_timeout_seconds=args.functions_syntax_timeout,
             with_public_export=args.with_public_export,
             allow_repo_output=args.allow_repo_output,
         )

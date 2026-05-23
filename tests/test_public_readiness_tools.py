@@ -91,6 +91,8 @@ def test_codex_setup_prompt_is_present_for_non_developer_onboarding():
     assert "python -m reverie_doctor" in text
     assert "python -m reverie_demo" in text
     assert "--with-functions-audit" in text
+    assert "--with-functions-syntax" in text
+    assert "npm --prefix functions ci" in text
     assert "do not paste real api keys" in text.lower()
 
 
@@ -105,6 +107,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "--with-history-scan" in security
     assert "python scripts\\public_export.py" in security
     assert "--with-public-export" in security
+    assert "--with-functions-syntax" in security
     assert "publish_gate.manual_review_items" in checklist
     assert "python scripts\\public_snapshot_check.py --json" in security
     assert "python scripts\\public_snapshot_check.py --json" in checklist
@@ -113,6 +116,8 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "git history filenames" in checklist
     assert "public_export_manifest.json" in checklist
     assert "--with-public-export" in checklist
+    assert "--with-functions-syntax" in checklist
+    assert "checks.functions_syntax" in checklist
     assert "git_history_included" in checklist
     assert "archive_integrity" in checklist
     assert "archive_sha256" in checklist
@@ -134,6 +139,8 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "9 moderate" in security
     assert "scripts/public_verify.py --with-functions-audit" in workflow
     assert "--with-public-export" in workflow
+    assert "--with-functions-syntax" in workflow
+    assert "npm --prefix functions ci" in workflow
     assert "scripts/public_export.py" in workflow
     assert "scripts/public_export.py --verify" in workflow
     assert "tests/test_public_verify.py" in workflow
@@ -167,6 +174,8 @@ def test_readme_documents_public_export_workflow():
     assert "python scripts\\public_export.py --out" in readme
     assert "python scripts\\public_export.py --verify" in readme
     assert "--with-public-export" in readme
+    assert "--with-functions-syntax" in readme
+    assert "npm --prefix functions ci" in readme
     assert "public_export_manifest.json" in readme
     assert "archive_sha256" in readme
     assert "git_history_included=false" in readme

@@ -177,7 +177,9 @@ The verifier runs the public snapshot scan, the local setup doctor, and the
 no-credential dry-run demo, then writes `public_verify_report.json` outside the
 repository. Add `--with-pytest` when you want the full public test suite in the
 same command, and add `--with-functions-audit` when you explicitly want npm's
-audit registry check for the optional Firebase Functions package.
+audit registry check for the optional Firebase Functions package. After
+`npm --prefix functions ci`, add `--with-functions-syntax` to confirm the
+optional `functions/index.js` entrypoint still loads under Node.
 
 4. Install and run any local generation services you want to use, such as
    Stable Diffusion WebUI, ComfyUI, GPT-SoVITS, Supertonic 3, or a compatible
@@ -267,7 +269,8 @@ Before publishing, run the public checks against the exact branch or exported
 folder you plan to release:
 
 ```powershell
-python scripts\public_verify.py --with-pytest --with-functions-audit --with-public-export --out "$env:TEMP\reverie-public-verify"
+npm --prefix functions ci
+python scripts\public_verify.py --with-pytest --with-functions-audit --with-functions-syntax --with-public-export --out "$env:TEMP\reverie-public-verify"
 Get-Content SECURITY_PUBLIC_CHECK.md
 Get-Content PUBLIC_RELEASE_CHECKLIST.md
 ```
@@ -286,6 +289,9 @@ The export manifest records `git_history_included=false`, `archive_sha256`,
 archive integrity checks, clean workspace state, and the redacted public
 snapshot summary. `public_verify.py --with-public-export` records the same
 history-free export and verification result in `public_verify_report.json`.
+`--with-functions-syntax` requires `npm --prefix functions ci` first and records
+whether `functions/index.js` loads under Node without embedding stack traces or
+local paths in the public report.
 
 Do not publish if the release contains real credentials, private local state,
 generated channel output, model weights, voice datasets, BGM/SFX libraries, or

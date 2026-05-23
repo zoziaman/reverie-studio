@@ -69,10 +69,12 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
     assert report["checks"]["python_compile"]["status"] == "pass"
     assert report["checks"]["pytest"]["status"] == "not_run"
     assert report["checks"]["public_export"]["status"] == "not_run"
+    assert report["checks"]["functions_syntax"]["status"] == "not_run"
     assert report["publish_gate"]["status"] == "review_required"
     check_ids = {check["id"] for check in report["publish_gate"]["machine_checks"]}
     assert "workspace_state" in check_ids
     assert "history_free_public_export" in check_ids
+    assert "firebase_functions_syntax" in check_ids
     review_ids = {item["id"] for item in report["publish_gate"]["manual_review_items"]}
     assert "existing_git_history" in review_ids
     assert "firebase_functions_dependency_audit" in review_ids
@@ -436,6 +438,67 @@ def test_public_verify_can_include_functions_audit(tmp_path, monkeypatch):
     ][0]
     assert "total=9" in functions_check["evidence"]
     assert "force_fix_required=true" in functions_check["evidence"]
+
+
+def test_public_verify_can_include_functions_syntax(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_functions_syntax_check",
+        lambda timeout_seconds: {
+            "status": "pass",
+            "command": ["node", "-e", "require('./functions/index.js')"],
+            "returncode": 0,
+            "detail": "functions module loaded",
+        },
+    )
+
+    report = public_verify.run_public_verification(tmp_path, with_functions_syntax=True)
+
+    assert report["overall_status"] == "pass"
+    assert report["checks"]["functions_syntax"]["status"] == "pass"
+    syntax_check = [
+        check for check in report["publish_gate"]["machine_checks"]
+        if check["id"] == "firebase_functions_syntax"
+    ][0]
+    assert syntax_check["status"] == "pass"
+    assert "loaded with node" in syntax_check["evidence"]
+    summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
+    assert "Optional Functions Syntax" in summary
+    assert "functions module loaded" in summary
+
+
+def test_public_verify_blocks_when_functions_syntax_fails(tmp_path, monkeypatch):
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+    monkeypatch.setattr(
+        public_verify,
+        "_run_functions_syntax_check",
+        lambda timeout_seconds: {
+            "status": "fail",
+            "command": ["node", "-e", "require('./functions/index.js')"],
+            "returncode": 1,
+            "detail": "functions module did not load",
+        },
+    )
+
+    report = public_verify.run_public_verification(tmp_path, with_functions_syntax=True)
+
+    assert report["overall_status"] == "fail"
+    assert report["publish_gate"]["status"] == "blocked"
+    assert report["checks"]["functions_syntax"]["status"] == "fail"
+    assert "Firebase Functions module did not load" in report["failures"]
 
 
 def test_public_verify_can_include_public_export(tmp_path, monkeypatch):

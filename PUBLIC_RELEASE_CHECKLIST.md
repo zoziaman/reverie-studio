@@ -12,7 +12,8 @@ content, and third-party model/audio assets.
 NEEDS REVIEW
 
 The tracked publish set now has a single public verification bundle. On the
-current branch, `python scripts\public_verify.py --with-pytest --with-functions-audit --with-public-export --out <temp>`
+current branch, after `npm --prefix functions ci`,
+`python scripts\public_verify.py --with-pytest --with-functions-audit --with-functions-syntax --with-public-export --out <temp>`
 passes the tracked-file scanner, public doctor, no-credential dry-run, and
 pytest, while reporting the optional Firebase Functions audit as review-required.
 The remaining release gates are intentionally manual: scan or replace old
@@ -45,6 +46,7 @@ Functions dependency chain before calling that surface production-ready.
 | Public quality gate available | PASS | The dry-run writes `quality_gate.json` with score, threshold, review requirements, and no media inspection. |
 | One-command public verifier available | PASS | `python scripts\public_verify.py --out <temp>` writes `public_verify_report.json` outside the repository, refuses repo-internal output by default, and reports `workspace_state` plus snapshot findings as counts/fingerprints so dirty branches and blocking findings are visible before release without copying raw local path names into the report. Nested public demo artifacts also use a repo-relative `pack_path` and `<public_demo_output>` placeholder. `--with-public-export` also creates and verifies the history-free source archive under the verifier output. `python scripts\public_snapshot_check.py --json` provides the same redacted snapshot summary for automation. |
 | History-free public export available | PASS | From a clean workspace, `python scripts\public_export.py --out <temp>` refuses repo-internal output by default, writes `reverie-public-snapshot.zip`, and records `git_history_included=false`, `tracked_file_count`, `archive_file_count`, `archive_sha256`, `archive_integrity`, clean `workspace_state`, and the redacted snapshot summary in `public_export_manifest.json`. `python scripts\public_export.py --verify --out <temp>` rechecks the zip against the manifest after creation or transfer. |
+| Firebase Functions syntax check | PASS | After `npm --prefix functions ci`, `python scripts\public_verify.py --with-functions-syntax --out <temp>` loads the optional `functions/index.js` entrypoint through Node and records public-safe status in `checks.functions_syntax`. |
 | CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public verifier and focused public tests on `main` and `codex/public-snapshot-clean`. |
 | Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` was applied to the lockfile; `npm audit --omit=dev` still reports 9 moderate production dependency findings that require a breaking force fix path. |
 | Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. `python scripts\public_verify.py --with-history-scan --out <temp>` now checks git history filenames with the public snapshot path rules and reports only counts/fingerprints; this recovered branch still needs a clean release branch/export because historical blocked filenames are present. |
@@ -80,7 +82,7 @@ Functions dependency chain before calling that surface production-ready.
 ## Final Step Before Publishing
 
 Run `SECURITY_PUBLIC_CHECK.md` against the exact release branch/export. Publish
-only when `python scripts\public_verify.py --with-pytest --with-functions-audit --with-history-scan --with-public-export --out <temp>`
+only when `python scripts\public_verify.py --with-pytest --with-functions-audit --with-functions-syntax --with-history-scan --with-public-export --out <temp>`
 passes for the exact branch/export being published, or when
 `python scripts\public_export.py --out <temp>` produces a history-free archive
 whose `public_export_manifest.json` has `git_history_included=false` and a

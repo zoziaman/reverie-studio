@@ -35,8 +35,11 @@ jobs:
         env:
           PYTHONPATH: src
 
+      - name: Install functions dependencies for public verification
+        run: npm --prefix functions ci
+
       - name: Run public verification bundle
-        run: python scripts/public_verify.py --with-functions-audit --with-public-export --out "$RUNNER_TEMP/reverie-public-verify"
+        run: python scripts/public_verify.py --with-functions-audit --with-functions-syntax --with-public-export --out "$RUNNER_TEMP/reverie-public-verify"
         env:
           PYTHONPATH: src
 

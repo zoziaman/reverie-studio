@@ -16,7 +16,7 @@ PUBLIC_RELEASE_CHECKLIST.md.
 Start with the safe public checks only:
 
 1. Run python scripts/public_verify.py --out <a temporary folder outside the repo>.
-2. Run python scripts/public_verify.py --with-pytest --with-functions-audit --with-public-export --out <a temporary folder outside the repo> if pytest, npm, and a clean workspace are available.
+2. Run npm --prefix functions ci, then python scripts/public_verify.py --with-pytest --with-functions-audit --with-functions-syntax --with-public-export --out <a temporary folder outside the repo> if pytest, npm, Node, and a clean workspace are available.
 3. If preparing a public release artifact, create a history-free source archive by running python scripts/public_export.py --out <a temporary folder outside the repo>, then python scripts/public_export.py --verify --out <the same temporary folder>.
 4. Read public_verify_report.json, public_export_manifest.json, and the generated public_demo reports.
 
@@ -50,10 +50,13 @@ git clone https://github.com/zoziaman/reverie-studio.git
 cd reverie-studio
 $env:PYTHONPATH="src"
 python scripts\public_verify.py --out "$env:TEMP\reverie-public-verify"
+npm --prefix functions ci
 python scripts\public_verify.py --with-public-export --out "$env:TEMP\reverie-public-verify-export"
+python scripts\public_verify.py --with-functions-syntax --out "$env:TEMP\reverie-public-verify-functions"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_summary.md"
 Get-Content "$env:TEMP\reverie-public-verify-export\public_verify_report.json"
+Get-Content "$env:TEMP\reverie-public-verify-functions\public_verify_report.json"
 Get-Content "$env:TEMP\reverie-public-verify\public_demo\pipeline_report.md"
 python scripts\public_export.py --out "$env:TEMP\reverie-public-export"
 python scripts\public_export.py --verify --out "$env:TEMP\reverie-public-export"
