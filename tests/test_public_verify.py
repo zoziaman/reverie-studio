@@ -780,6 +780,7 @@ def test_public_verify_can_include_public_export(tmp_path, monkeypatch):
     ][0]
     assert export_check["status"] == "pass"
     assert "verify_status=pass" in export_check["evidence"]
+    assert "distribution_path=history_free_export" in export_check["evidence"]
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")
     assert "Optional Public Export" in summary
     assert "public_export/reverie-public-snapshot.zip" in summary

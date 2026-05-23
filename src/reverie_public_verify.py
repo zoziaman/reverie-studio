@@ -491,12 +491,15 @@ def _public_export_evidence(public_export_report: dict[str, Any] | None) -> str:
         )
     manifest = public_export_report.get("manifest") or {}
     verify_report = public_export_report.get("verify") or {}
+    release_guidance = manifest.get("release_guidance") or {}
     return (
         "public export archive_file_count={archive_file_count}, "
-        "git_history_included={git_history_included}, verify_status={verify_status}"
+        "git_history_included={git_history_included}, "
+        "distribution_path={distribution_path}, verify_status={verify_status}"
     ).format(
         archive_file_count=_safe_int(manifest.get("archive_file_count")),
         git_history_included=str(bool(manifest.get("git_history_included"))).lower(),
+        distribution_path=release_guidance.get("distribution_path", "unknown"),
         verify_status=verify_report.get("status", "unknown"),
     )
 
