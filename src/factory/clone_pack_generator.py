@@ -28,6 +28,7 @@ from dataclasses import dataclass, asdict, field
 from pathlib import Path
 
 from utils.gemini_compat import GEMINI_AVAILABLE, configure_gemini, get_gemini_model
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -90,7 +91,7 @@ class ClonePackGenerator:
                     self.gemini = get_gemini_model("gemini-3-flash-preview")
                 logger.info(f"[ClonePackGenerator] v{self.VERSION} Gemini 3.0 Flash 초기화 완료")
             except Exception as e:
-                logger.warning(f"Gemini 초기화 실패: {e}")
+                logger.warning(f"Gemini 초기화 실패: {redact_sensitive_text(e)}")
 
     # ============================================================
     # 메인 생성 함수
@@ -262,7 +263,7 @@ class ClonePackGenerator:
                 response = self.gemini.generate_content(prompt)
                 return response.text
             except Exception as e:
-                logger.warning(f"PD 프롬프트 AI 생성 실패: {e}")
+                logger.warning(f"PD 프롬프트 AI 생성 실패: {redact_sensitive_text(e)}")
 
         # 폴백: 템플릿 기반 생성
         return self._generate_pd_prompt_template(channel_type, keywords_str, patterns_str, top_titles)
@@ -374,7 +375,7 @@ class ClonePackGenerator:
                 response = self.gemini.generate_content(prompt)
                 return response.text
             except Exception as e:
-                logger.warning(f"Writer 프롬프트 AI 생성 실패: {e}")
+                logger.warning(f"Writer 프롬프트 AI 생성 실패: {redact_sensitive_text(e)}")
 
         # 폴백
         return self._get_writer_template(channel_type)
@@ -501,7 +502,7 @@ JSON 배열로 응답하세요:
                     return topics
 
             except Exception as e:
-                logger.warning(f"토픽 AI 생성 실패: {e}")
+                logger.warning(f"토픽 AI 생성 실패: {redact_sensitive_text(e)}")
 
         # 폴백: 기본 토픽
         return self._get_fallback_topics(channel_type, num_topics)
