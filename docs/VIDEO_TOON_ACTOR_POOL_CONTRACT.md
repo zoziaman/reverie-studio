@@ -149,6 +149,11 @@ Background plates follow the same public-safe asset rule. Pack
 `docs/BACKGROUND_ASSET_TEMPLATE.md` for the background request and coverage
 contract.
 
+Use `reverie-videotoon-preflight episode ...` after actor episode asset
+coverage and background asset coverage are both written. It combines both
+reports into `reverie.pack.videotoon_episode_preflight.v1` and should be the
+final local render gate before assembling a video-toon episode.
+
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 
 `PackValidator(repo_root=...)` validates `actor_model_path` when it is present.

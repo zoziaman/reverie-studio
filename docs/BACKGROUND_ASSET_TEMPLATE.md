@@ -70,6 +70,26 @@ reverie.background_library.asset_coverage.v1
 The report includes `expected_count`, `existing_count`, `missing_count`,
 `coverage_ratio`, `missing_assets`, and `ready_for_render`.
 
+## Episode Preflight
+
+Once actor episode coverage and background coverage are both available, combine
+them into a single render gate:
+
+```bash
+reverie-videotoon-preflight episode --actor-coverage data/actor_asset_requests/daily_life_toon_ep001.episode_asset_coverage.json --background-coverage data/background_asset_requests/daily_life_toon.background_coverage.json --output data/preflight/daily_life_toon_ep001.preflight.json --fail-on-not-ready
+```
+
+The preflight schema is:
+
+```text
+reverie.pack.videotoon_episode_preflight.v1
+```
+
+The report is ready only when both actor assets and background plates are ready.
+This is the first gate that answers the practical question: can this episode be
+rendered without missing fixed actors, mouth or eye layers, or background
+plates?
+
 ## Public Boundary
 
 Background request manifests and coverage reports must not contain:
