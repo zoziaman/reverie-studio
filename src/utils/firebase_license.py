@@ -43,6 +43,16 @@ from typing import Tuple, Optional, Dict, Any, List
 
 logger = logging.getLogger(__name__)
 
+
+def _redact_license_key_for_log(license_key: str | None) -> str:
+    parts = str(license_key or "").split("-")
+    if len(parts) >= 3:
+        return "-".join([parts[0], *["****"] * (len(parts) - 2), parts[-1]])
+    if len(license_key or "") <= 8:
+        return "****"
+    return f"{license_key[:4]}...{license_key[-4:]}"
+
+
 # v62.22: license_cache.json 암호화
 try:
     from utils.crypto_utils import (
@@ -1457,13 +1467,14 @@ if __name__ == "__main__":
         test_key = "TEST-1234-5678-ABCD"
         test_pack = "daily_life_toon_pack"
 
-        print(f"\n패키지 소유권 확인: key={test_key}, pack={test_pack}")
+        display_test_key = _redact_license_key_for_log(test_key)
+        print(f"\n패키지 소유권 확인: key={display_test_key}, pack={test_pack}")
         valid, msg = cf_client.check_package_ownership(test_key, test_pack)
         print(f"  결과: {'✅ 승인' if valid else '❌ 거절'}")
         print(f"  메시지: {msg}")
 
         # 패키지 목록 조회
-        print(f"\n패키지 목록 조회: key={test_key}")
+        print(f"\n패키지 목록 조회: key={display_test_key}")
         success, msg, packs = cf_client.get_owned_packs(test_key)
         print(f"  결과: {'✅ 성공' if success else '❌ 실패'}")
         print(f"  메시지: {msg}")
@@ -1485,7 +1496,8 @@ if __name__ == "__main__":
         test_key = "TEST-12345-ABCDE"
         test_hw = "ABCD1234EFGH5678"
 
-        print(f"\n테스트 라이센스 등록: {test_key}")
+        display_test_key = _redact_license_key_for_log(test_key)
+        print(f"\n테스트 라이센스 등록: {display_test_key}")
         success, msg = validator.register_license(
             license_key=test_key,
             user_id="test_user",
@@ -1497,7 +1509,7 @@ if __name__ == "__main__":
         print(f"  결과: {msg}")
 
         # 검증 테스트
-        print(f"\n라이센스 검증: {test_key}")
+        print(f"\n라이센스 검증: {display_test_key}")
         valid, msg, info = validator.validate(test_key, test_hw)
         print(f"  유효: {valid}")
         print(f"  메시지: {msg}")
