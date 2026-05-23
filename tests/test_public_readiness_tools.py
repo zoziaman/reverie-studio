@@ -108,6 +108,7 @@ def test_security_and_release_docs_use_public_verify_gate():
     assert "public_export_manifest.json" in checklist
     assert "git_history_included" in checklist
     assert "archive_integrity" in checklist
+    assert "archive_sha256" in checklist
     assert "clean workspace" in checklist
     assert "path fingerprints" in security
     assert "raw local path names" in checklist

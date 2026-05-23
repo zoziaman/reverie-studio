@@ -1,5 +1,6 @@
 import json
 import importlib.util
+import hashlib
 import subprocess
 import zipfile
 from pathlib import Path
@@ -185,3 +186,45 @@ def test_public_export_blocks_archive_integrity_failures(tmp_path, monkeypatch):
         public_export.create_public_export(tmp_path)
 
     assert not (tmp_path / "public_export_manifest.json").exists()
+
+
+def test_public_export_manifest_records_archive_sha256(tmp_path, monkeypatch):
+    class SnapshotCheck:
+        def run_check(self, root):
+            return []
+
+        def build_json_report(self, findings):
+            return {
+                "schema": "reverie.public_snapshot_check.v1",
+                "status": "pass",
+                "finding_count": 0,
+                "finding_types": {},
+                "finding_fingerprints": [],
+                "truncated_finding_fingerprints": 0,
+            }
+
+    def fake_git(args):
+        if args == ["rev-parse", "HEAD"]:
+            return "abc123\n"
+        if args == ["rev-parse", "HEAD^{tree}"]:
+            return "def456\n"
+        if args == ["ls-files"]:
+            return "README.md\n"
+        if args == ["status", "--porcelain=v1", "--untracked-files=normal"]:
+            return ""
+        raise AssertionError(args)
+
+    def fake_run(command, **kwargs):
+        archive_path = Path(command[4])
+        with zipfile.ZipFile(archive_path, "w") as archive:
+            archive.writestr("README.md", "# demo\n")
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(public_export, "_load_public_snapshot_check", lambda: SnapshotCheck())
+    monkeypatch.setattr(public_export, "_git_stdout", fake_git)
+    monkeypatch.setattr(public_export.subprocess, "run", fake_run)
+
+    manifest = public_export.create_public_export(tmp_path)
+    archive_bytes = (tmp_path / "reverie-public-snapshot.zip").read_bytes()
+
+    assert manifest["archive_sha256"] == hashlib.sha256(archive_bytes).hexdigest()

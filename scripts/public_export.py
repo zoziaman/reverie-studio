@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import importlib.util
 import json
 import subprocess
@@ -52,6 +53,14 @@ def _git_stdout(args: list[str]) -> str:
 def _archive_file_count(archive_path: Path) -> int:
     with zipfile.ZipFile(archive_path, "r") as archive:
         return len([name for name in archive.namelist() if not name.endswith("/")])
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _archive_integrity_report(archive_path: Path, tracked_file_count: int) -> dict[str, Any]:
@@ -137,6 +146,7 @@ def create_public_export(
         "source_tree": _git_stdout(["rev-parse", "HEAD^{tree}"]).strip(),
         "tracked_file_count": len(tracked_files),
         "archive_file_count": archive_file_count,
+        "archive_sha256": _sha256_file(archive_path),
         "archive_integrity": archive_integrity,
         "git_history_included": False,
         "workspace_state": workspace_state,
