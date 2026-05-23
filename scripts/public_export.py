@@ -241,7 +241,10 @@ def _verified_release_guidance(manifest: dict[str, Any]) -> dict[str, Any] | Non
     return None
 
 
-def _invalid_manifest_report(archive_path: Path) -> dict[str, Any]:
+def _invalid_manifest_report(
+    archive_path: Path,
+    detail: str = "manifest JSON could not be parsed",
+) -> dict[str, Any]:
     return {
         "schema": "reverie.public_export.verify.v1",
         "status": "fail",
@@ -253,7 +256,7 @@ def _invalid_manifest_report(archive_path: Path) -> dict[str, Any]:
             "archive_exists": {"status": "pass" if archive_path.exists() else "fail"},
             "manifest_schema": {
                 "status": "fail",
-                "detail": "manifest JSON could not be parsed",
+                "detail": detail,
             },
         },
     }
@@ -278,6 +281,11 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
         manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig"))
     except json.JSONDecodeError:
         return _invalid_manifest_report(archive_path)
+    if not isinstance(manifest, dict):
+        return _invalid_manifest_report(
+            archive_path,
+            detail="manifest JSON root is not an object",
+        )
     archive_exists = archive_path.exists()
     actual_sha = _sha256_file(archive_path) if archive_exists else ""
     expected_sha = str(manifest.get("archive_sha256") or "")
