@@ -383,3 +383,96 @@ def test_pack_coverage_fail_on_missing_rejects_pack_without_actor_models(tmp_pat
     )
 
     assert fail_code == 1
+
+
+def test_scaffold_actor_model_creates_public_safe_actor_package(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+
+    actor_path = actor_model.scaffold_actor_model(
+        "actor_middle_man_01",
+        actor_root=actor_root,
+        display_name="Middle Man Actor 01",
+        age_band="middle_aged",
+        gender_presentation="man",
+        role_range=["lead", "support", "suspect", "witness"],
+        visual_identity="middle-aged Korean man with a practical jacket and calm expression",
+    )
+
+    actor = json.loads(actor_path.read_text(encoding="utf-8"))
+    result = actor_model.validate_actor_model_package(actor_path)
+    forbidden_media = [
+        path
+        for path in actor_path.parent.rglob("*")
+        if path.is_file() and path.suffix.lower() in actor_model.FORBIDDEN_PUBLIC_SUFFIXES
+    ]
+
+    assert actor_path == actor_root / "actor_middle_man_01" / "actor.json"
+    assert actor["actor_id"] == "actor_middle_man_01"
+    assert actor["display_name"] == "Middle Man Actor 01"
+    assert actor["template_version"] == "actor_model_template_v1"
+    assert actor["readiness_state"] == "template"
+    assert actor["age_band"] == "middle_aged"
+    assert actor["gender_presentation"] == "man"
+    assert actor["role_range"] == ["lead", "support", "suspect", "witness"]
+    assert actor["identity_lock"]["must_not_change"]
+    assert actor["required_variants"]
+    assert actor["mouth_shapes"]
+    assert actor["eye_shapes"]
+    assert actor["public_release_boundary"]["contains_real_actor_media"] is False
+    assert actor["public_release_boundary"]["contains_voice_samples"] is False
+    assert actor["public_release_boundary"]["contains_model_weights"] is False
+    assert actor["public_release_boundary"]["contains_private_paths"] is False
+    assert (actor_path.parent / "prompts" / "identity_prompt.txt").exists()
+    assert (actor_path.parent / "prompts" / "variant_prompt.txt").exists()
+    assert (actor_path.parent / "prompts" / "mouth_prompt.txt").exists()
+    assert (actor_path.parent / "prompts" / "negative_prompt.txt").exists()
+    assert (actor_path.parent / "references" / "README.md").exists()
+    assert (actor_path.parent / "variants" / ".gitkeep").exists()
+    assert (actor_path.parent / "face_parts" / ".gitkeep").exists()
+    assert (actor_path.parent / "qa" / "actor_model_checklist.md").exists()
+    assert result.is_valid is True
+    assert result.errors == []
+    assert forbidden_media == []
+
+
+def test_scaffold_actor_model_refuses_existing_package(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+
+    actor_model.scaffold_actor_model("actor_middle_man_01", actor_root=actor_root)
+
+    with pytest.raises(FileExistsError):
+        actor_model.scaffold_actor_model("actor_middle_man_01", actor_root=actor_root)
+
+
+def test_actor_model_cli_scaffold_creates_package(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+
+    exit_code = actor_model.main(
+        [
+            "scaffold",
+            "actor_middle_woman_01",
+            "--actor-root",
+            str(actor_root),
+            "--display-name",
+            "Middle Woman Actor 01",
+            "--age-band",
+            "middle_aged",
+            "--gender-presentation",
+            "woman",
+            "--role-range",
+            "lead,support,neighbor",
+            "--visual-identity",
+            "middle-aged Korean woman with short hair and a neat cardigan",
+        ]
+    )
+    captured = capsys.readouterr()
+    actor_path = actor_root / "actor_middle_woman_01" / "actor.json"
+    actor = json.loads(actor_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert actor_path.exists()
+    assert actor["role_range"] == ["lead", "support", "neighbor"]
+    assert "actor_middle_woman_01" in captured.out

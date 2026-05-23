@@ -142,6 +142,22 @@ The public `daily_life_toon` and `mystery_toon` packs both expose
 into one lead/observer slot while keeping older named actor aliases available
 for compatibility.
 
+## Scaffolding More Actors
+
+Use `scaffold` to create the same public-safe folder contract for another
+reusable actor. This is the preferred path when adding more fixed video-toon
+models for new packs, genres, ages, and role ranges.
+
+```bash
+reverie-actor-model-requests scaffold actor_middle_man_01 --repo-root . --display-name "Middle Man Actor 01" --age-band middle_aged --gender-presentation man --role-range lead,support,suspect,witness --visual-identity "middle-aged Korean man with a practical jacket and calm expression"
+```
+
+The command creates `actor.json`, prompt templates, empty asset folders,
+`references/README.md`, and `qa/actor_model_checklist.md`. It refuses to
+overwrite an existing actor package unless `--force` is passed. The generated
+package is a template only; it does not create or bundle PNGs, voice samples,
+checkpoints, LoRAs, private paths, or generation logs.
+
 ## Asset Request Manifest
 
 The template can produce a local work order for generating the actual variant,

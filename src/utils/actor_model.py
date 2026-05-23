@@ -45,6 +45,37 @@ PRIVATE_TEXT_PATTERNS = (
     re.compile(re.escape("C:" + "/" + "Users" + "/"), re.IGNORECASE),
     re.compile(r"-----BEGIN (RSA |EC |OPENSSH |PRIVATE )?PRIVATE KEY-----"),
 )
+ACTOR_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]*$")
+DEFAULT_REQUIRED_VARIANTS = (
+    "neutral_standing",
+    "talking_standing",
+    "blink_standing",
+    "happy_standing",
+    "sad_standing",
+    "angry_standing",
+    "worried_standing",
+    "scared_standing",
+    "neutral_seated",
+    "talking_seated",
+)
+DEFAULT_MOUTH_SHAPES = (
+    "mouth_closed",
+    "mouth_small_open",
+    "mouth_wide_open",
+    "mouth_round",
+)
+DEFAULT_EYE_SHAPES = (
+    "eyes_open",
+    "eyes_closed",
+    "eyes_worried",
+    "eyes_angry",
+)
+DEFAULT_ROLE_RANGE = (
+    "lead",
+    "support",
+    "witness",
+    "neighbor",
+)
 
 
 @dataclass
@@ -69,6 +100,14 @@ def _string_list(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item).strip() for item in value if isinstance(item, str) and str(item).strip()]
+
+
+def _coerce_string_list(value: Any, default: tuple[str, ...]) -> list[str]:
+    if value is None:
+        return list(default)
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    return _string_list(value)
 
 
 def _resolve_actor_path(actor_model_path: Path | str, repo_root: Optional[Path | str]) -> tuple[Path, Optional[str]]:
@@ -110,6 +149,140 @@ def _relative_to_root(path: Path, repo_root: Optional[Path | str]) -> str:
 def _variant_parts(variant_key: str) -> tuple[str, str]:
     expression, _, pose = variant_key.partition("_")
     return expression or variant_key, pose or "standing"
+
+
+def _resolve_actor_root(actor_root: Optional[Path | str], repo_root: Optional[Path | str]) -> Path:
+    root = Path(repo_root).resolve() if repo_root is not None else None
+    if actor_root is None:
+        return ((root or Path.cwd()) / "assets" / "actor_models").resolve()
+
+    raw_root = Path(actor_root)
+    resolved = raw_root.resolve() if raw_root.is_absolute() else ((root or Path.cwd()) / raw_root).resolve()
+    if root is not None and not (resolved == root or root in resolved.parents):
+        raise ValueError("actor_root must stay inside repo_root")
+    return resolved
+
+
+def _write_text_file(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text.strip() + "\n", encoding="utf-8")
+
+
+def _default_display_name(actor_id: str) -> str:
+    return " ".join(part.capitalize() for part in actor_id.split("_"))
+
+
+def _identity_prompt_text(
+    *,
+    actor_id: str,
+    age_band: str,
+    gender_presentation: str,
+    visual_identity: str,
+) -> str:
+    return f"""
+Create or maintain {actor_id} as the same reusable {age_band} {gender_presentation}
+video-toon actor in every variant.
+
+Visual identity:
+{visual_identity}
+
+Keep stable:
+- Age band.
+- Same face shape and facial proportions.
+- Same hair silhouette.
+- Same ordinary body proportions.
+- Same primary clothing silhouette unless a pack explicitly overrides wardrobe.
+
+Use clean Korean webtoon video-toon cutout style, readable expression, cel
+shading, and waist-up or half-body framing for layered compositing.
+"""
+
+
+def _variant_prompt_text(actor_id: str, required_variants: list[str]) -> str:
+    variant_lines = "\n".join(f"- {variant}" for variant in required_variants)
+    return f"""
+Generate the requested expression and pose for {actor_id} while preserving the
+actor identity.
+
+Variant key format:
+expression_pose
+
+Required starter variants:
+{variant_lines}
+
+The pose may change, but the actor's face shape, age band, hair silhouette,
+body proportions, and primary clothing silhouette must stay consistent.
+"""
+
+
+def _mouth_prompt_text(actor_id: str, mouth_shapes: list[str]) -> str:
+    mouth_lines = "\n".join(f"- {shape}" for shape in mouth_shapes)
+    return f"""
+Create mouth shapes for early video-toon mouth-flap assembly.
+
+Actor:
+{actor_id}
+
+Required mouth shapes:
+{mouth_lines}
+
+Keep the face, age band, head angle, hair silhouette, and line style consistent
+across all mouth shapes. Mouth shapes should be usable as layered face parts.
+"""
+
+
+def _negative_prompt_text() -> str:
+    return """
+Avoid identity drift:
+- different person
+- younger or older age band
+- changed face shape
+- changed hair silhouette
+- changed body proportions
+- different clothing silhouette
+- extra people
+- cropped head
+- full-body framing when half-body is required
+- unreadable text
+- UI overlays
+- phone screen UI
+- watermark
+- logo
+- realistic photo style
+- 3D render style
+- heavy blur
+"""
+
+
+def _references_readme_text(actor_id: str) -> str:
+    return f"""
+# References
+
+Place private local reference images for `{actor_id}` here.
+
+The public repository must not include real actor reference images, generated
+channel output, model weights, voice samples, or private local paths.
+"""
+
+
+def _actor_checklist_text(actor_id: str) -> str:
+    return f"""
+# Actor Model Checklist
+
+Actor: `{actor_id}`
+
+Use this checklist before moving a local actor package beyond `template`.
+
+- [ ] Identity lock is clear enough for another agent to reproduce.
+- [ ] Required variants are generated or curated locally.
+- [ ] Mouth shapes exist locally and align to the same face.
+- [ ] Eye shapes exist locally and align to the same face.
+- [ ] Voice profile is selected and stable.
+- [ ] Actor can be referenced from `settings.motiontoon.actor_pool`.
+- [ ] No public package files contain generated channel output.
+- [ ] No public package files contain voice datasets, model weights, API keys,
+      local paths, memory DBs, session logs, or OAuth credentials.
+"""
 
 
 def _asset_request(
@@ -350,6 +523,128 @@ def validate_actor_model_package(
     return result
 
 
+def scaffold_actor_model(
+    actor_id: str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+    display_name: str = "",
+    age_band: str = "adult",
+    gender_presentation: str = "unspecified",
+    role_range: Optional[list[str] | str] = None,
+    visual_identity: str = "",
+    voice_profile: str = "neutral_01",
+    required_variants: Optional[list[str] | str] = None,
+    mouth_shapes: Optional[list[str] | str] = None,
+    eye_shapes: Optional[list[str] | str] = None,
+    force: bool = False,
+) -> Path:
+    """Create a public-safe reusable video-toon actor model package."""
+    actor_id = str(actor_id or "").strip()
+    if not actor_id:
+        raise ValueError("actor_id is required")
+    if not ACTOR_ID_PATTERN.fullmatch(actor_id):
+        raise ValueError("actor_id must use lowercase letters, numbers, and underscores")
+
+    resolved_actor_root = _resolve_actor_root(actor_root, repo_root)
+    actor_dir = resolved_actor_root / actor_id
+    if actor_dir.exists() and not force:
+        raise FileExistsError(f"actor model already exists: {actor_dir}")
+
+    roles = _coerce_string_list(role_range, DEFAULT_ROLE_RANGE)
+    variants = _coerce_string_list(required_variants, DEFAULT_REQUIRED_VARIANTS)
+    mouths = _coerce_string_list(mouth_shapes, DEFAULT_MOUTH_SHAPES)
+    eyes = _coerce_string_list(eye_shapes, DEFAULT_EYE_SHAPES)
+    if not roles:
+        raise ValueError("role_range must contain at least one role")
+    if not variants:
+        raise ValueError("required_variants must contain at least one variant")
+    if not mouths:
+        raise ValueError("mouth_shapes must contain at least one mouth shape")
+    if not eyes:
+        raise ValueError("eye_shapes must contain at least one eye shape")
+
+    clean_display_name = str(display_name or "").strip() or _default_display_name(actor_id)
+    clean_age_band = str(age_band or "").strip() or "adult"
+    clean_gender = str(gender_presentation or "").strip() or "unspecified"
+    clean_visual_identity = (
+        str(visual_identity or "").strip()
+        or f"{clean_age_band} {clean_gender} reusable video-toon actor with a clear, stable silhouette"
+    )
+    clean_voice_profile = str(voice_profile or "").strip() or "neutral_01"
+
+    actor_dir.mkdir(parents=True, exist_ok=True)
+    for directory_name in ("prompts", "references", "variants", "face_parts", "qa"):
+        (actor_dir / directory_name).mkdir(parents=True, exist_ok=True)
+
+    actor_data = {
+        "actor_id": actor_id,
+        "display_name": clean_display_name,
+        "template_version": "actor_model_template_v1",
+        "readiness_state": "template",
+        "age_band": clean_age_band,
+        "gender_presentation": clean_gender,
+        "role_range": roles,
+        "identity_lock": {
+            "face_shape": f"consistent {clean_age_band} {clean_gender} face shape",
+            "hair": "fixed hair silhouette chosen during local asset generation",
+            "body_type": "ordinary proportions, half-body video-toon friendly",
+            "signature_clothing": "fixed primary clothing silhouette chosen during local asset generation",
+            "must_not_change": [
+                "age band",
+                "face shape",
+                "hair silhouette",
+                "body proportions",
+                "primary clothing silhouette",
+            ],
+        },
+        "style_contract": {
+            "visual_style": "clean Korean webtoon video-toon cutout",
+            "line_quality": "clean line art",
+            "rendering": "cel-shaded, readable expression",
+            "framing": "waist-up or half-body, centered for layered compositing",
+        },
+        "required_variants": variants,
+        "mouth_shapes": mouths,
+        "eye_shapes": eyes,
+        "voice_profile": {
+            "recommended_slot": clean_voice_profile,
+            "stable_voice_required": True,
+        },
+        "public_release_boundary": {
+            "contains_real_actor_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+
+    actor_path = actor_dir / "actor.json"
+    actor_path.write_text(json.dumps(actor_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    _write_text_file(
+        actor_dir / "prompts" / "identity_prompt.txt",
+        _identity_prompt_text(
+            actor_id=actor_id,
+            age_band=clean_age_band,
+            gender_presentation=clean_gender,
+            visual_identity=clean_visual_identity,
+        ),
+    )
+    _write_text_file(actor_dir / "prompts" / "variant_prompt.txt", _variant_prompt_text(actor_id, variants))
+    _write_text_file(actor_dir / "prompts" / "mouth_prompt.txt", _mouth_prompt_text(actor_id, mouths))
+    _write_text_file(actor_dir / "prompts" / "negative_prompt.txt", _negative_prompt_text())
+    _write_text_file(actor_dir / "references" / "README.md", _references_readme_text(actor_id))
+    _write_text_file(actor_dir / "qa" / "actor_model_checklist.md", _actor_checklist_text(actor_id))
+    (actor_dir / "references" / ".gitkeep").touch()
+    (actor_dir / "variants" / ".gitkeep").touch()
+    (actor_dir / "face_parts" / ".gitkeep").touch()
+
+    validation = validate_actor_model_package(actor_path, repo_root=repo_root)
+    if not validation.is_valid:
+        raise ValueError("scaffolded actor model validation failed: " + "; ".join(validation.errors))
+    return actor_path
+
+
 def build_actor_asset_request_manifest(
     actor_model_path: Path | str,
     *,
@@ -559,8 +854,38 @@ def write_pack_actor_asset_coverage_report(
 
 
 def main(argv: Optional[list[str]] = None) -> int:
-    parser = argparse.ArgumentParser(description="Validate actor models and write local asset request manifests.")
+    parser = argparse.ArgumentParser(
+        description="Scaffold actor models, validate them, and write local asset request manifests."
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    scaffold_parser = subparsers.add_parser("scaffold", help="Create a public-safe actor model template package.")
+    scaffold_parser.add_argument("actor_id", help="Actor model id, for example actor_middle_man_01")
+    scaffold_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    scaffold_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    scaffold_parser.add_argument("--display-name", default="", help="Human-readable actor name.")
+    scaffold_parser.add_argument("--age-band", default="adult", help="Stable age band for the actor identity lock.")
+    scaffold_parser.add_argument(
+        "--gender-presentation",
+        default="unspecified",
+        help="Stable gender presentation for the actor identity lock.",
+    )
+    scaffold_parser.add_argument(
+        "--role-range",
+        default=",".join(DEFAULT_ROLE_RANGE),
+        help="Comma-separated roles this actor can be cast into.",
+    )
+    scaffold_parser.add_argument(
+        "--visual-identity",
+        default="",
+        help="Short reusable visual identity description for the actor.",
+    )
+    scaffold_parser.add_argument(
+        "--voice-profile",
+        default="neutral_01",
+        help="Recommended stable voice slot for this actor.",
+    )
+    scaffold_parser.add_argument("--force", action="store_true", help="Overwrite an existing actor scaffold.")
 
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
@@ -583,6 +908,21 @@ def main(argv: Optional[list[str]] = None) -> int:
     pack_coverage_parser.add_argument("--fail-on-missing", action="store_true", help="Exit 1 when any asset is missing.")
 
     args = parser.parse_args(argv)
+    if args.command == "scaffold":
+        actor_path = scaffold_actor_model(
+            args.actor_id,
+            actor_root=args.actor_root,
+            repo_root=args.repo_root,
+            display_name=args.display_name,
+            age_band=args.age_band,
+            gender_presentation=args.gender_presentation,
+            role_range=args.role_range,
+            visual_identity=args.visual_identity,
+            voice_profile=args.voice_profile,
+            force=args.force,
+        )
+        print(f"Scaffolded actor model {args.actor_id}: {actor_path}")
+        return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)
         if args.output:
