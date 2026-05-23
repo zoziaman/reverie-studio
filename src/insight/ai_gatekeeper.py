@@ -370,7 +370,10 @@ JSON만 응답해주세요. 다른 설명은 필요 없습니다."""
             }
         }
 
-        response = requests.post(url, json=payload, timeout=30)
+        try:
+            response = requests.post(url, json=payload, timeout=30)
+        except requests.RequestException as exc:
+            raise RuntimeError(_redact_gemini_key(str(exc))) from None
         try:
             response.raise_for_status()
         except requests.HTTPError as exc:
