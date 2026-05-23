@@ -74,6 +74,12 @@ def test_public_verify_writes_public_safe_report(tmp_path, monkeypatch):
     review_ids = {item["id"] for item in report["publish_gate"]["manual_review_items"]}
     assert "existing_git_history" in review_ids
     assert "firebase_functions_dependency_audit" in review_ids
+    functions_review = [
+        item for item in report["publish_gate"]["manual_review_items"]
+        if item["id"] == "firebase_functions_dependency_audit"
+    ][0]
+    assert "--with-functions-audit" in functions_review["evidence"]
+    assert "9 moderate" not in functions_review["evidence"]
     written = json.loads((tmp_path / "public_verify_report.json").read_text(encoding="utf-8"))
     assert written["schema"] == "reverie.public_verify.v1"
     summary = (tmp_path / "public_verify_summary.md").read_text(encoding="utf-8")

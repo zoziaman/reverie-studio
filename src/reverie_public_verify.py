@@ -43,8 +43,7 @@ PUBLISH_REVIEW_ITEMS = (
         "id": "firebase_functions_dependency_audit",
         "status": "review_required",
         "evidence": (
-            "functions/npm audit currently reports 9 moderate production dependency findings; "
-            "the remaining npm-suggested fix requires a breaking firebase-admin/firebase-functions change."
+            "run public_verify with --with-functions-audit for current npm audit evidence."
         ),
         "required_before_public_existing_repo": (
             "Keep Firebase Functions optional/non-production, or review and test the breaking dependency path."
