@@ -16,6 +16,8 @@ import threading
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -99,7 +101,7 @@ class ContentTranslator:
             self._model = get_gemini_model()
             logger.info("Gemini 모델 로드 완료")
         except Exception as e:
-            logger.error(f"Gemini 모델 초기화 실패: {e}")
+            logger.error(f"Gemini 모델 초기화 실패: {redact_sensitive_text(e)}")
             self._model = None
 
     def is_available(self) -> bool:
@@ -181,24 +183,26 @@ class ContentTranslator:
             )
 
         except json.JSONDecodeError as e:
-            logger.error(f"번역 결과 JSON 파싱 실패: {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"번역 결과 JSON 파싱 실패: {safe_error}")
             return TranslationResult(
                 success=False,
                 original=scenario,
                 translated=None,
                 source_language=source_language,
                 target_language=target_language,
-                error_message=f"JSON 파싱 실패: {e}"
+                error_message=f"JSON 파싱 실패: {safe_error}"
             )
         except Exception as e:
-            logger.error(f"시나리오 번역 실패: {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"시나리오 번역 실패: {safe_error}")
             return TranslationResult(
                 success=False,
                 original=scenario,
                 translated=None,
                 source_language=source_language,
                 target_language=target_language,
-                error_message=str(e)
+                error_message=safe_error
             )
 
     def translate_metadata(
@@ -278,14 +282,15 @@ class ContentTranslator:
             )
 
         except Exception as e:
-            logger.error(f"메타데이터 번역 실패: {e}")
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"메타데이터 번역 실패: {safe_error}")
             return TranslationResult(
                 success=False,
                 original={"title": title, "description": description, "tags": tags},
                 translated=None,
                 source_language=source_language,
                 target_language=target_language,
-                error_message=str(e)
+                error_message=safe_error
             )
 
     def translate_text(
@@ -319,7 +324,7 @@ Text: {text}"""
                 return response.text.strip()
 
         except Exception as e:
-            logger.error(f"텍스트 번역 실패: {e}")
+            logger.error(f"텍스트 번역 실패: {redact_sensitive_text(e)}")
             return text
 
     def _extract_translatable_fields(self, scenario: Dict[str, Any]) -> Dict[str, Any]:
