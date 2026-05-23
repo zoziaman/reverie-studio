@@ -13,6 +13,17 @@ import sys
 
 # 키 파일 경로
 KEY_FILE_PATH = "config/firebase_credentials.json"
+TEST_LICENSE_KEY = "TEST-1234-5678-ABCD"
+
+
+def _redact_license_key(license_key: str) -> str:
+    parts = str(license_key or "").split("-")
+    if len(parts) >= 4:
+        return "-".join([parts[0], *["****"] * (len(parts) - 2), parts[-1]])
+    if len(license_key or "") <= 8:
+        return "****"
+    return f"{license_key[:4]}...{license_key[-4:]}"
+
 
 def create_test_license():
     """테스트 라이선스 생성"""
@@ -30,7 +41,8 @@ def create_test_license():
     db = firestore.client()
 
     # 2. 테스트 라이선스 데이터
-    license_key = "TEST-1234-5678-ABCD"
+    license_key = TEST_LICENSE_KEY
+    display_license_key = _redact_license_key(license_key)
 
     doc_data = {
         "license_key": license_key,
@@ -46,16 +58,16 @@ def create_test_license():
 
     # 3. Firestore에 저장
     print(f"\n💾 라이선스 생성 중...")
-    print(f"   키: {license_key}")
+    print(f"   키: {display_license_key}")
     print(f"   타입: {doc_data['license_type']}")
     print(f"   보유 패키지: {doc_data['owned_packs']}")
 
     try:
         db.collection("licenses").document(license_key).set(doc_data)
         print("\n✅ 테스트 라이선스 생성 완료!")
-        print(f"\n🔑 라이선스 키: {license_key}")
+        print(f"\n🔑 라이선스 키: {display_license_key}")
         print(f"📦 보유 패키지: horror_pack, romance_pack")
-        print("\n이제 이 키로 패키지 소유권 테스트가 가능합니다.")
+        print("\n실제 키는 Firestore 문서 ID에서 확인하세요.")
         return True
 
     except Exception as e:
@@ -72,13 +84,13 @@ def verify_license():
 
     db = firestore.client()
 
-    license_key = "TEST-1234-5678-ABCD"
+    license_key = TEST_LICENSE_KEY
     doc = db.collection("licenses").document(license_key).get()
 
     if doc.exists:
         data = doc.to_dict()
         print("\n📋 저장된 라이선스 정보:")
-        print(f"   키: {data.get('license_key')}")
+        print(f"   키: {_redact_license_key(data.get('license_key'))}")
         print(f"   타입: {data.get('license_type')}")
         print(f"   활성: {data.get('is_active')}")
         print(f"   보유 패키지: {data.get('owned_packs')}")
