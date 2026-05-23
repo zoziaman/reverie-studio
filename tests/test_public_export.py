@@ -342,3 +342,54 @@ def test_public_export_verify_fails_for_checksum_mismatch(tmp_path):
     assert report["checks"]["archive_sha256"]["status"] == "fail"
     assert report["checks"]["archive_sha256"]["expected"] == "0" * 64
     assert report["checks"]["archive_sha256"]["actual"] != "0" * 64
+
+
+def test_public_export_cli_prints_release_guidance_for_created_export(tmp_path, monkeypatch, capsys):
+    def fake_create_public_export(output_dir, allow_repo_output=False):
+        return {
+            "schema": "reverie.public_export.v1",
+            "archive_path": "reverie-public-snapshot.zip",
+            "manifest_path": "public_export_manifest.json",
+            "archive_file_count": 2,
+            "archive_sha256": "1" * 64,
+            "release_guidance": public_export.RELEASE_GUIDANCE,
+            "git_history_included": False,
+        }
+
+    monkeypatch.setattr(public_export, "create_public_export", fake_create_public_export)
+
+    exit_code = public_export.main(["--out", str(tmp_path)])
+
+    stdout = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Release guidance:" in stdout
+    assert "distribution_path: history_free_export" in stdout
+    assert "existing_repo_history_requires_review: true" in stdout
+    assert "git_history_included: false" in stdout
+
+
+def test_public_export_verify_cli_prints_release_guidance_status(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        public_export,
+        "verify_public_export",
+        lambda output_dir: {
+            "schema": "reverie.public_export.verify.v1",
+            "status": "pass",
+            "archive_path": "reverie-public-snapshot.zip",
+            "manifest_path": "public_export_manifest.json",
+            "release_guidance": public_export.RELEASE_GUIDANCE,
+            "checks": {
+                "release_guidance": {"status": "pass"},
+                "git_history_included": {"status": "pass"},
+            },
+        },
+    )
+
+    exit_code = public_export.main(["--verify", "--out", str(tmp_path)])
+
+    stdout = capsys.readouterr().out
+    assert exit_code == 0
+    assert "Release guidance:" in stdout
+    assert "distribution_path: history_free_export" in stdout
+    assert "release_guidance check: pass" in stdout
+    assert "git_history_included check: pass" in stdout

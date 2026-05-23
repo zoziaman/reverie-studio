@@ -171,6 +171,22 @@ def _check_status(condition: bool) -> str:
     return "pass" if condition else "fail"
 
 
+def _format_bool(value: Any) -> str:
+    return str(bool(value)).lower()
+
+
+def _print_release_guidance(guidance: dict[str, Any] | None) -> None:
+    if not guidance:
+        return
+    print("Release guidance:")
+    print(f"- distribution_path: {guidance.get('distribution_path', 'unknown')}")
+    print(
+        "- existing_repo_history_requires_review: {requires_review}".format(
+            requires_review=_format_bool(guidance.get("existing_repo_history_requires_review")),
+        )
+    )
+
+
 def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[str, Any]:
     out = Path(output_dir).resolve()
     manifest_path = out / MANIFEST_NAME
@@ -239,6 +255,7 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
         "status": status,
         "archive_path": ARCHIVE_NAME,
         "manifest_path": MANIFEST_NAME,
+        "release_guidance": manifest.get("release_guidance"),
         "checks": checks,
     }
 
@@ -265,6 +282,12 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps(report, indent=2, ensure_ascii=False))
         else:
             print(f"Public export verify: {report['status'].upper()}")
+            _print_release_guidance(report.get("release_guidance"))
+            checks = report.get("checks", {})
+            release_guidance_check = checks.get("release_guidance") or {}
+            git_history_check = checks.get("git_history_included") or {}
+            print(f"- release_guidance check: {release_guidance_check.get('status', 'unknown')}")
+            print(f"- git_history_included check: {git_history_check.get('status', 'unknown')}")
         return 0 if report["status"] == "pass" else 1
 
     try:
@@ -280,6 +303,8 @@ def main(argv: list[str] | None = None) -> int:
         print("Public export: PASS")
         print(f"Archive: {output_dir / ARCHIVE_NAME}")
         print(f"Manifest: {output_dir / MANIFEST_NAME}")
+        _print_release_guidance(manifest.get("release_guidance"))
+        print(f"- git_history_included: {_format_bool(manifest.get('git_history_included'))}")
     return 0
 
 
