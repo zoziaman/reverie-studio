@@ -19,9 +19,22 @@ except ModuleNotFoundError:
 
 SMOKE_SCHEMA = "reverie.local.videotoon_smoke_bundle.v1"
 BACKGROUND_SAMPLE_SCHEMA = "reverie.local.background_sample_assets.v1"
+REMOTION_STAGE_SCHEMA = "reverie.local.videotoon_remotion_stage.v1"
 DEFAULT_PACK_ID = "daily_life_toon"
 DEFAULT_EPISODE_ID = "daily_life_toon_ep001"
 DEFAULT_ACTOR_ID = "actor_adult_woman_01"
+BACKGROUND_IMAGE_FIELDS = ("path", "backgroundPath")
+ACTOR_IMAGE_FIELDS = (
+    "foregroundPath",
+    "headPath",
+    "bodyPath",
+    "leftArmPath",
+    "rightArmPath",
+    "eyesOpenPath",
+    "eyesClosedPath",
+    "mouthClosedPath",
+    "mouthOpenPath",
+)
 
 
 def _write_json(path: Path, data: dict[str, Any]) -> Path:
@@ -376,6 +389,153 @@ def write_local_videotoon_smoke_bundle(
     return manifest
 
 
+def _manifest_artifact_path(smoke_root: Path, manifest: dict[str, Any], key: str) -> Path:
+    artifacts = manifest.get("artifacts") if isinstance(manifest.get("artifacts"), dict) else {}
+    relative_path = str(artifacts.get(key) or "").strip()
+    if not relative_path:
+        raise ValueError(f"smoke manifest missing artifacts.{key}")
+    return smoke_root / relative_path
+
+
+def _copy_remotion_asset(
+    *,
+    source: Path,
+    public_root: Path,
+    public_relative_path: str,
+    copied: set[str],
+) -> bool:
+    if not source.is_file():
+        return False
+    target = public_root / public_relative_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if public_relative_path not in copied:
+        shutil.copy2(source, target)
+        copied.add(public_relative_path)
+    return True
+
+
+def stage_smoke_bundle_for_remotion(
+    smoke_manifest_path: Path | str,
+    remotion_project: Path | str,
+    *,
+    asset_prefix: str = "videotoon_smoke",
+) -> dict[str, Any]:
+    """Copy smoke PNG assets into Remotion public/ and rewrite props paths."""
+    manifest_path = Path(smoke_manifest_path).resolve()
+    smoke_root = manifest_path.parent
+    manifest = _load_json(manifest_path)
+    if manifest.get("schema") != SMOKE_SCHEMA:
+        raise ValueError(f"smoke manifest schema must be {SMOKE_SCHEMA}")
+
+    remotion_root = Path(remotion_project).resolve()
+    public_root = remotion_root / "public"
+    pack_id = str(manifest.get("pack_id") or DEFAULT_PACK_ID)
+    episode_id = str(manifest.get("episode_id") or DEFAULT_EPISODE_ID)
+    actor_id = str(manifest.get("actor_id") or DEFAULT_ACTOR_ID)
+    clean_prefix = str(asset_prefix or "videotoon_smoke").replace("\\", "/").strip("/")
+    public_prefix = f"{clean_prefix}/{episode_id}"
+    props_path = _manifest_artifact_path(smoke_root, manifest, "remotion_props")
+    props = _load_json(props_path)
+    staged_props = copy.deepcopy(props)
+
+    copied: set[str] = set()
+    copied_assets: list[dict[str, Any]] = []
+    missing_assets: list[dict[str, str]] = []
+
+    def stage_field(image: dict[str, Any], field_name: str, source_base: Path, public_base: str) -> None:
+        original = str(image.get(field_name) or "").strip()
+        if not original:
+            return
+        normalized = original.replace("\\", "/").lstrip("/")
+        source_path = source_base / normalized
+        public_relative = f"{public_prefix}/{public_base}/{normalized}"
+        copied_ok = _copy_remotion_asset(
+            source=source_path,
+            public_root=public_root,
+            public_relative_path=public_relative,
+            copied=copied,
+        )
+        if copied_ok:
+            image[field_name] = public_relative
+            if not any(asset["public_relative_path"] == public_relative for asset in copied_assets):
+                copied_assets.append(
+                    {
+                        "field": field_name,
+                        "source_relative_path": normalized,
+                        "public_relative_path": public_relative,
+                    }
+                )
+        else:
+            missing_assets.append(
+                {
+                    "field": field_name,
+                    "source_relative_path": normalized,
+                    "expected_source": f"{public_base}/{normalized}",
+                }
+            )
+
+    for image in staged_props.get("images", []) or []:
+        if not isinstance(image, dict):
+            continue
+        for field_name in BACKGROUND_IMAGE_FIELDS:
+            stage_field(
+                image,
+                field_name,
+                smoke_root / "backgrounds" / pack_id,
+                "backgrounds",
+            )
+        for field_name in ACTOR_IMAGE_FIELDS:
+            stage_field(
+                image,
+                field_name,
+                smoke_root / "actor_models" / actor_id,
+                f"actor_models/{actor_id}",
+            )
+
+    staged_props_path = smoke_root / "prepare" / f"{episode_id}.remotion_staged_props.json"
+    stage_report_path = smoke_root / "prepare" / f"{episode_id}.remotion_stage.json"
+    _write_json(staged_props_path, staged_props)
+
+    report = {
+        "schema": REMOTION_STAGE_SCHEMA,
+        "pack_id": pack_id,
+        "episode_id": episode_id,
+        "actor_id": actor_id,
+        "ready_for_remotion": len(missing_assets) == 0 and bool(copied),
+        "creates_media": True,
+        "calls_external_services": False,
+        "remotion_public_prefix": public_prefix,
+        "staged_props": _relative_to_root(staged_props_path, smoke_root),
+        "stage_report": _relative_to_root(stage_report_path, smoke_root),
+        "copied_asset_count": len(copied),
+        "missing_asset_count": len(missing_assets),
+        "copied_assets": copied_assets,
+        "missing_assets": missing_assets,
+        "command_preview": {
+            "composition_id": "RadioDrama",
+            "props": _relative_to_root(staged_props_path, smoke_root),
+            "render": (
+                "npx remotion render RadioDrama "
+                f"out/{episode_id}.mp4 --props={_relative_to_root(staged_props_path, smoke_root)}"
+            ),
+            "still": (
+                "npx remotion still RadioDrama "
+                f"out/{episode_id}.png --frame=30 --props={_relative_to_root(staged_props_path, smoke_root)}"
+            ),
+        },
+        "public_release_boundary": {
+            "contains_real_actor_media": False,
+            "contains_real_background_media": False,
+            "contains_placeholder_media": True,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+    }
+    _write_json(stage_report_path, report)
+    return report
+
+
 def main(argv: Optional[list[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Create local video-toon smoke bundles.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -391,6 +551,18 @@ def main(argv: Optional[list[str]] = None) -> int:
     local_parser.add_argument("--width", type=int, default=1080, help="Remotion composition width.")
     local_parser.add_argument("--height", type=int, default=1920, help="Remotion composition height.")
 
+    stage_parser = subparsers.add_parser(
+        "stage-remotion",
+        help="Copy smoke PNGs into a Remotion public folder and rewrite props paths.",
+    )
+    stage_parser.add_argument("smoke_manifest_path", help="Path to smoke_manifest.json.")
+    stage_parser.add_argument("--remotion-project", required=True, help="Path to remotion-poc or another Remotion project.")
+    stage_parser.add_argument(
+        "--asset-prefix",
+        default="videotoon_smoke",
+        help="Public folder prefix for staged smoke assets.",
+    )
+
     args = parser.parse_args(argv)
     if args.command == "local":
         manifest = write_local_videotoon_smoke_bundle(
@@ -405,6 +577,19 @@ def main(argv: Optional[list[str]] = None) -> int:
             f"Wrote video-toon smoke bundle for {manifest['episode_id']}: "
             f"{Path(args.output_dir) / 'smoke_manifest.json'}"
         )
+        return 0
+    if args.command == "stage-remotion":
+        report = stage_smoke_bundle_for_remotion(
+            args.smoke_manifest_path,
+            args.remotion_project,
+            asset_prefix=args.asset_prefix,
+        )
+        print(
+            f"Staged Remotion smoke assets for {report['episode_id']}: "
+            f"{Path(args.smoke_manifest_path).resolve().parent / report['stage_report']}"
+        )
+        if not report["ready_for_remotion"]:
+            return 1
         return 0
 
     parser.error(f"unknown command: {args.command}")

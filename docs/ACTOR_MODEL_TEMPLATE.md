@@ -487,3 +487,17 @@ The expected local result is `ready_for_render: true`, `missing_count: 0`, and
 This is intentionally local-only and creates media under the chosen output
 directory. It does not call external services, does not create voice samples,
 does not write model weights, and does not change the public template files.
+
+Before running Remotion, stage those local PNGs into the Remotion project's
+`public/` folder and rewrite the props paths for `staticFile()`:
+
+```bash
+reverie-videotoon-smoke stage-remotion %TEMP%\reverie-videotoon-smoke\smoke_manifest.json --remotion-project remotion-poc
+```
+
+This writes `daily_life_toon_ep001.remotion_staged_props.json` and
+`daily_life_toon_ep001.remotion_stage.json` in the smoke `prepare/` folder,
+then copies the placeholder assets under
+`remotion-poc/public/videotoon_smoke/daily_life_toon_ep001/`. The stage report
+includes a Remotion command preview for `RadioDrama`; it still does not render
+the video by itself.

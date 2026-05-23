@@ -96,6 +96,18 @@ This writes placeholder PNGs only under the chosen output directory, then runs
 prepare, render-plan export, asset work-order export, and Remotion props export.
 It does not call AI services, TTS, Remotion rendering, upload, or credentials.
 
+To make those props usable by `remotion-poc/src/RadioDrama.tsx`, stage the smoke
+assets into the Remotion public folder:
+
+```powershell
+python -m utils.videotoon_smoke stage-remotion "$env:TEMP\reverie-videotoon-smoke\smoke_manifest.json" --remotion-project remotion-poc
+```
+
+The stage command copies placeholder PNGs under
+`remotion-poc/public/videotoon_smoke/...` and writes a staged props file whose
+image paths match Remotion `staticFile()` expectations. It prints a command
+preview for the actual Remotion render step, but does not run Remotion itself.
+
 ## What It Does Not Prove
 
 The demo does not prove that Stable Diffusion, ComfyUI, GPT-SoVITS,

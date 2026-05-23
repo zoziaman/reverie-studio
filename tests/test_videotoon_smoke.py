@@ -89,6 +89,82 @@ def test_videotoon_smoke_cli_writes_manifest(tmp_path, capsys):
     assert "video-toon smoke bundle" in captured.out
 
 
+def test_stage_smoke_bundle_for_remotion_copies_public_assets_and_rewrites_props(tmp_path):
+    smoke = _smoke_module()
+    output_dir = tmp_path / "smoke"
+    remotion_project = tmp_path / "remotion-poc"
+    smoke.write_local_videotoon_smoke_bundle(
+        output_dir,
+        source_repo_root=ROOT,
+        fps=30,
+        duration_seconds=10,
+    )
+
+    report = smoke.stage_smoke_bundle_for_remotion(
+        output_dir / "smoke_manifest.json",
+        remotion_project,
+    )
+
+    staged_props_path = output_dir / "prepare" / "daily_life_toon_ep001.remotion_staged_props.json"
+    staged_props = json.loads(staged_props_path.read_text(encoding="utf-8"))
+    image = staged_props["images"][0]
+
+    assert report["schema"] == "reverie.local.videotoon_remotion_stage.v1"
+    assert report["ready_for_remotion"] is True
+    assert report["copied_asset_count"] == 6
+    assert len(report["copied_assets"]) == report["copied_asset_count"]
+    assert report["missing_asset_count"] == 0
+    assert report["staged_props"] == "prepare/daily_life_toon_ep001.remotion_staged_props.json"
+    assert image["backgroundPath"] == "videotoon_smoke/daily_life_toon_ep001/backgrounds/street_day_00.png"
+    assert image["foregroundPath"] == (
+        "videotoon_smoke/daily_life_toon_ep001/"
+        "actor_models/actor_adult_woman_01/variants/happy_standing.png"
+    )
+    assert image["eyesClosedPath"].endswith("actor_models/actor_adult_woman_01/face_parts/eyes_closed.png")
+    assert (
+        remotion_project
+        / "public"
+        / "videotoon_smoke"
+        / "daily_life_toon_ep001"
+        / "backgrounds"
+        / "street_day_00.png"
+    ).exists()
+    assert (
+        remotion_project
+        / "public"
+        / "videotoon_smoke"
+        / "daily_life_toon_ep001"
+        / "actor_models"
+        / "actor_adult_woman_01"
+        / "face_parts"
+        / "mouth_small_open.png"
+    ).exists()
+    assert report["command_preview"]["composition_id"] == "RadioDrama"
+    assert "remotion render RadioDrama" in report["command_preview"]["render"]
+
+
+def test_videotoon_smoke_cli_stage_remotion_writes_report(tmp_path, capsys):
+    smoke = _smoke_module()
+    output_dir = tmp_path / "smoke"
+    remotion_project = tmp_path / "remotion-poc"
+    smoke.write_local_videotoon_smoke_bundle(output_dir, source_repo_root=ROOT)
+
+    exit_code = smoke.main(
+        [
+            "stage-remotion",
+            str(output_dir / "smoke_manifest.json"),
+            "--remotion-project",
+            str(remotion_project),
+        ]
+    )
+    captured = capsys.readouterr()
+    report = json.loads((output_dir / "prepare" / "daily_life_toon_ep001.remotion_stage.json").read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert report["ready_for_remotion"] is True
+    assert "Remotion smoke assets" in captured.out
+
+
 def test_pyproject_exposes_videotoon_smoke_cli():
     pyproject = tomllib.loads(PYPROJECT_PATH.read_text(encoding="utf-8"))
 
