@@ -462,6 +462,41 @@ def test_public_export_verify_reports_invalid_numeric_manifest_field_without_tra
     assert str(tmp_path.resolve()) not in json.dumps(report)
 
 
+def test_public_export_verify_rejects_boolean_numeric_manifest_field(tmp_path):
+    archive_path = tmp_path / "reverie-public-snapshot.zip"
+    with zipfile.ZipFile(archive_path, "w") as archive:
+        archive.writestr("README.md", "# demo\n")
+    manifest = {
+        "schema": "reverie.public_export.v1",
+        "archive_path": "reverie-public-snapshot.zip",
+        "manifest_path": "public_export_manifest.json",
+        "tracked_file_count": 1,
+        "archive_file_count": True,
+        "archive_sha256": hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+        "archive_integrity": {
+            "status": "pass",
+            "contains_git_metadata": False,
+            "contains_unsafe_paths": False,
+            "count_matches_tracked_files": True,
+        },
+        "release_guidance": public_export.RELEASE_GUIDANCE,
+        "git_history_included": False,
+        "workspace_state": {"status": "pass", "dirty_count": 0},
+        "public_snapshot": {"status": "pass", "finding_count": 0},
+    }
+    (tmp_path / "public_export_manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+
+    report = public_export.verify_public_export(tmp_path)
+
+    assert report["status"] == "fail"
+    assert report["checks"]["manifest_schema"]["status"] == "fail"
+    assert (
+        report["checks"]["manifest_schema"]["detail"]
+        == "manifest numeric field is invalid: archive_file_count"
+    )
+    assert str(tmp_path.resolve()) not in json.dumps(report)
+
+
 def test_public_export_verify_reports_invalid_public_snapshot_field_without_traceback(tmp_path):
     archive_path = tmp_path / "reverie-public-snapshot.zip"
     with zipfile.ZipFile(archive_path, "w") as archive:
