@@ -27,6 +27,7 @@ from reverie_doctor import build_environment_report
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT_CHECK_PATH = REPO_ROOT / "scripts" / "public_snapshot_check.py"
 SNAPSHOT_CHECK_SCHEMA = "reverie.public_snapshot_check.v1"
+HISTORY_FILENAME_CHECK_SCHEMA = "reverie.public_history_filename_check.v1"
 DEFAULT_VERIFY_OUT = Path(tempfile.gettempdir()) / "reverie-public-verify"
 FUNCTIONS_DIR = REPO_ROOT / "functions"
 
@@ -34,7 +35,7 @@ PUBLISH_REVIEW_ITEMS = (
     {
         "id": "existing_git_history",
         "status": "review_required",
-        "evidence": "public_verify scans the tracked publish set only, not old commits.",
+        "evidence": "run public_verify with --with-history-scan for historical filename evidence.",
         "required_before_public_existing_repo": (
             "Scan or replace private history before converting an existing private repository to public."
         ),
@@ -221,6 +222,12 @@ def _build_snapshot_report(snapshot_check: Any, findings: list[str]) -> dict[str
     return _summarize_snapshot_findings(findings)
 
 
+def _build_history_filename_report(snapshot_check: Any, findings: list[str]) -> dict[str, Any]:
+    report = _build_snapshot_report(snapshot_check, findings)
+    report["schema"] = HISTORY_FILENAME_CHECK_SCHEMA
+    return report
+
+
 def _safe_int(value: Any) -> int:
     try:
         return int(value or 0)
@@ -361,14 +368,31 @@ def _run_functions_audit(timeout_seconds: int) -> dict[str, Any]:
     }
 
 
-def _review_items(functions_audit_report: dict[str, Any] | None) -> list[dict[str, Any]]:
+def _history_filename_evidence(history_filename_report: dict[str, Any] | None) -> str:
+    if not history_filename_report:
+        return "run public_verify with --with-history-scan for historical filename evidence."
+    return "history filename scan finding_count={finding_count}".format(
+        finding_count=_safe_int(history_filename_report.get("finding_count")),
+    )
+
+
+def _review_items(
+    functions_audit_report: dict[str, Any] | None,
+    history_filename_report: dict[str, Any] | None,
+) -> list[dict[str, Any]]:
     items = [dict(item) for item in PUBLISH_REVIEW_ITEMS]
-    if not functions_audit_report:
-        return items
     for item in items:
+        if item["id"] == "existing_git_history":
+            item["status"] = (
+                "blocked"
+                if history_filename_report and history_filename_report.get("status") != "pass"
+                else "review_required"
+            )
+            item["evidence"] = _history_filename_evidence(history_filename_report)
         if item["id"] == "firebase_functions_dependency_audit":
-            item["status"] = functions_audit_report.get("status", "review_required")
-            item["evidence"] = _functions_audit_evidence(functions_audit_report)
+            if functions_audit_report:
+                item["status"] = functions_audit_report.get("status", "review_required")
+                item["evidence"] = _functions_audit_evidence(functions_audit_report)
     return items
 
 
@@ -467,6 +491,7 @@ def _build_publish_gate(
     environment_status: str | None,
     python_compile_report: dict[str, Any],
     pytest_report: dict[str, Any] | None,
+    history_filename_report: dict[str, Any] | None,
     functions_audit_report: dict[str, Any] | None,
 ) -> dict[str, Any]:
     machine_checks = [
@@ -512,6 +537,11 @@ def _build_publish_gate(
             "evidence": "run with --with-pytest for full test evidence.",
         },
         {
+            "id": "git_history_filenames",
+            "status": history_filename_report["status"] if history_filename_report else "not_run",
+            "evidence": _history_filename_evidence(history_filename_report),
+        },
+        {
             "id": "firebase_functions_dependency_audit",
             "status": functions_audit_report["status"] if functions_audit_report else "not_run",
             "evidence": (
@@ -522,7 +552,7 @@ def _build_publish_gate(
         },
     ]
     publish_status = "blocked" if failures or any(
-        check["status"] in {"blocked", "error", "timeout"} for check in machine_checks
+        check["status"] in {"blocked", "error", "fail", "timeout"} for check in machine_checks
     ) else "review_required"
     recommendation = (
         "Do not publish until blocking failures are fixed."
@@ -537,7 +567,7 @@ def _build_publish_gate(
         "status": publish_status,
         "recommendation": recommendation,
         "machine_checks": machine_checks,
-        "manual_review_items": _review_items(functions_audit_report),
+        "manual_review_items": _review_items(functions_audit_report, history_filename_report),
     }
 
 
@@ -549,6 +579,7 @@ def run_public_verification(
     with_pytest: bool = False,
     pytest_args: list[str] | None = None,
     pytest_timeout_seconds: int = 300,
+    with_history_scan: bool = False,
     with_functions_audit: bool = False,
     functions_audit_timeout_seconds: int = 120,
     allow_repo_output: bool = False,
@@ -581,6 +612,10 @@ def run_public_verification(
     pytest_report = None
     if with_pytest:
         pytest_report = _run_pytest(pytest_args or ["-q"], pytest_timeout_seconds)
+    history_filename_report = None
+    if with_history_scan:
+        history_findings = snapshot_check.run_history_filename_check(repo_root)
+        history_filename_report = _build_history_filename_report(snapshot_check, history_findings)
     functions_audit_report = None
     if with_functions_audit:
         functions_audit_report = _run_functions_audit(functions_audit_timeout_seconds)
@@ -610,6 +645,8 @@ def run_public_verification(
 
     if pytest_report and pytest_report["status"] != "pass":
         failures.append(f"pytest returned {pytest_report['status']}")
+    if history_filename_report and history_filename_report["status"] != "pass":
+        failures.append("git history filename scan reported release-blocking findings")
 
     if failures:
         overall_status = "fail"
@@ -635,6 +672,7 @@ def run_public_verification(
             environment_status=environment_report.get("overall_status"),
             python_compile_report=python_compile_report,
             pytest_report=pytest_report,
+            history_filename_report=history_filename_report,
             functions_audit_report=functions_audit_report,
         ),
         "checks": {
@@ -652,6 +690,7 @@ def run_public_verification(
                 "safety": demo_safety,
             },
             "pytest": pytest_report or {"status": "not_run"},
+            "git_history_filenames": history_filename_report or {"status": "not_run"},
             "functions_audit": functions_audit_report or {"status": "not_run"},
         },
     }
@@ -674,6 +713,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--backend-profile", default="local_dry_run", help="Dry-run backend profile.")
     parser.add_argument("--quality-threshold", type=float, default=0.75, help="Dry-run quality threshold.")
     parser.add_argument("--with-pytest", action="store_true", help="Also run pytest after public safety checks.")
+    parser.add_argument(
+        "--with-history-scan",
+        action="store_true",
+        help="Also scan git history filenames using the public snapshot path rules.",
+    )
     parser.add_argument(
         "--with-functions-audit",
         action="store_true",
@@ -707,6 +751,7 @@ def main(argv: list[str] | None = None) -> int:
             with_pytest=args.with_pytest,
             pytest_args=args.pytest_args,
             pytest_timeout_seconds=args.pytest_timeout,
+            with_history_scan=args.with_history_scan,
             with_functions_audit=args.with_functions_audit,
             functions_audit_timeout_seconds=args.functions_audit_timeout,
             allow_repo_output=args.allow_repo_output,

@@ -160,6 +160,26 @@ def run_check(repo_root: Path) -> list[str]:
     return findings
 
 
+def run_history_filename_check(repo_root: Path) -> list[str]:
+    repo_root = repo_root.resolve()
+    history_paths = _git_lines(
+        ["log", "--all", "--full-history", "--name-only", "--pretty=format:"],
+        cwd=repo_root,
+    )
+    findings: list[str] = []
+    seen: set[str] = set()
+    for raw_path in history_paths:
+        display_path = raw_path.replace("\\", "/")
+        rel_path = Path(display_path)
+        if display_path in seen:
+            continue
+        seen.add(display_path)
+        reason = _is_blocked_path(rel_path)
+        if reason:
+            findings.append(f"{display_path}: historical {reason}")
+    return findings
+
+
 def _finding_reason(finding: str) -> str:
     _, separator, detail = finding.partition(": ")
     if not separator:

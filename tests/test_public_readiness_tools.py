@@ -97,11 +97,13 @@ def test_security_and_release_docs_use_public_verify_gate():
     backend_profiles = Path("docs/BACKEND_PROFILES.md").read_text(encoding="utf-8")
 
     assert "python scripts\\public_verify.py --with-pytest --with-functions-audit" in security
+    assert "--with-history-scan" in security
     assert "publish_gate.manual_review_items" in checklist
     assert "python scripts\\public_snapshot_check.py --json" in security
     assert "python scripts\\public_snapshot_check.py --json" in checklist
     assert "workspace_state" in security
     assert "workspace_state" in checklist
+    assert "git history filenames" in checklist
     assert "path fingerprints" in security
     assert "raw local path names" in checklist
     assert "structured counts, vulnerability names, and fix advice" in security

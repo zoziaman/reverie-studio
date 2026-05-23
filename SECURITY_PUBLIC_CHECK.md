@@ -13,11 +13,12 @@ NEEDS REVIEW
 The current tracked publish set has a one-command public verifier that scans
 tracked files, runs the local setup doctor, executes the no-credential dry-run,
 checks the current workspace state, and can include pytest evidence. Remaining
-review items are git history and the Firebase Functions dependency audit: do not
-convert an existing private repository to public until old commits have also
-been scanned or replaced by a clean release branch/export, and do not treat the
-optional functions surface as production-ready until the residual moderate audit
-chain is reviewed.
+review items are git history and the Firebase Functions dependency audit:
+`--with-history-scan` now adds redacted historical filename evidence and blocks
+this recovered branch for direct public conversion, so publish from a clean
+release branch/export unless the old commits are intentionally reviewed or
+rewritten. Do not treat the optional functions surface as production-ready until
+the residual moderate audit chain is reviewed.
 
 ## Checklist
 
@@ -33,6 +34,7 @@ chain is reviewed.
 | Public pack files reviewed | PASS | `assets/packs/` scan found no live API keys, local machine paths, or private key material. Packs are prompts/templates only unless users add their own assets locally. |
 | Public verifier artifacts safe | PASS | `public_verify.py`, `reverie_doctor`, and `reverie_demo` write JSON/JSONL/Markdown reports outside the repository and do not read credentials, call cloud services, start local services, upload, or generate media. Snapshot findings in `public_verify_report.json` are summarized as counts and fingerprints rather than raw paths; public demo artifacts use repo-relative `pack_path` and `<public_demo_output>` placeholders instead of raw workspace/temp paths; run `scripts/public_snapshot_check.py` directly for local raw file locations. |
 | Workspace state reported | PASS | `public_verify.py` records `workspace_state` from `git status --porcelain` as counts and path fingerprints, not raw local path names; release review should use a clean branch/export before publishing. |
+| Git history filename scan | NEEDS REVIEW | `python scripts\public_verify.py --with-history-scan --out <temp>` reuses the public snapshot path rules against historical filenames and reports only counts/fingerprints. On this recovered branch it blocks direct public conversion because historical blocked roots, media/model extensions, and credential-like filenames still exist in old commits. |
 | Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` reduced audit output to 9 moderate production dependency findings; the remaining suggested fix requires a breaking `firebase-admin` / `firebase-functions` path. The public verifier records structured counts, vulnerability names, and fix advice instead of embedding raw parsed `npm audit` output. |
 | License boundary explicit | PASS | README and LICENSE state MIT for repository code/docs, while excluding rights to third-party local assets. |
 
@@ -41,7 +43,7 @@ chain is reviewed.
 Run these against the exact release directory or branch:
 
 ```powershell
-python scripts\public_verify.py --with-pytest --with-functions-audit --out "$env:TEMP\reverie-public-verify"
+python scripts\public_verify.py --with-pytest --with-functions-audit --with-history-scan --out "$env:TEMP\reverie-public-verify"
 Get-Content "$env:TEMP\reverie-public-verify\public_verify_report.json"
 python scripts\public_snapshot_check.py --json
 rg -n "AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|(AKIA|ASIA)[0-9A-Z]{16}|(sk|rk)_live_[A-Za-z0-9]{16,}|hf_[A-Za-z0-9]{20,}|npm_[A-Za-z0-9]{20,}|ya29\.[A-Za-z0-9_-]+|xox[baprs]-[A-Za-z0-9-]{20,}|https://discord(app)?\.com/api/webhooks/[0-9]+/[A-Za-z0-9_-]{40,}|bot[0-9]{6,}:[A-Za-z0-9_-]{30,}|BEGIN (RSA |EC |OPENSSH |)PRIVATE KEY|private_key|client_secret|firebase-adminsdk"

@@ -118,6 +118,82 @@ def test_public_verify_fails_on_snapshot_findings(tmp_path, monkeypatch):
     assert "client_secret_alice.json" not in serialized
 
 
+def test_public_verify_can_include_history_filename_scan(tmp_path, monkeypatch):
+    class SnapshotCheck:
+        def run_check(self, root):
+            return []
+
+        def run_history_filename_check(self, root):
+            return []
+
+        def build_json_report(self, findings):
+            return {
+                "schema": "reverie.public_snapshot_check.v1",
+                "status": "fail" if findings else "pass",
+                "finding_count": len(findings),
+                "finding_types": {},
+                "finding_fingerprints": [],
+                "truncated_finding_fingerprints": 0,
+            }
+
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: SnapshotCheck())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+
+    report = public_verify.run_public_verification(tmp_path, with_history_scan=True)
+
+    assert report["overall_status"] == "pass"
+    assert report["checks"]["git_history_filenames"]["schema"] == "reverie.public_history_filename_check.v1"
+    assert report["checks"]["git_history_filenames"]["status"] == "pass"
+    history_check = [
+        check for check in report["publish_gate"]["machine_checks"]
+        if check["id"] == "git_history_filenames"
+    ][0]
+    assert history_check["status"] == "pass"
+    assert "finding_count=0" in history_check["evidence"]
+
+
+def test_public_verify_blocks_on_history_filename_findings(tmp_path, monkeypatch):
+    class SnapshotCheck:
+        def run_check(self, root):
+            return []
+
+        def run_history_filename_check(self, root):
+            return ["config/client_secret_alice.json: historical blocked filename pattern: client_secret_alice.json"]
+
+        def build_json_report(self, findings):
+            return {
+                "schema": "reverie.public_snapshot_check.v1",
+                "status": "fail" if findings else "pass",
+                "finding_count": len(findings),
+                "finding_types": {"historical blocked filename pattern": len(findings)},
+                "finding_fingerprints": [{"reason": "historical blocked filename pattern", "fingerprint": "abc123"}],
+                "truncated_finding_fingerprints": 0,
+            }
+
+    monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: SnapshotCheck())
+    monkeypatch.setattr(
+        public_verify,
+        "build_environment_report",
+        lambda root: {"overall_status": "pass", "checks": [], "safety": {}},
+    )
+    monkeypatch.setattr(public_verify, "run_demo", lambda *args, **kwargs: _safe_demo_manifest())
+
+    report = public_verify.run_public_verification(tmp_path, with_history_scan=True)
+
+    assert report["overall_status"] == "fail"
+    assert report["publish_gate"]["status"] == "blocked"
+    assert report["checks"]["git_history_filenames"]["status"] == "fail"
+    assert report["checks"]["git_history_filenames"]["finding_count"] == 1
+    assert "git history filename scan" in report["failures"][0]
+    serialized = json.dumps(report)
+    assert "client_secret_alice.json" not in serialized
+
+
 def test_public_verify_fails_on_python_compile_error(tmp_path, monkeypatch):
     monkeypatch.setattr(public_verify, "_load_public_snapshot_check", lambda: type("S", (), {"run_check": lambda self, root: []})())
     monkeypatch.setattr(

@@ -16,9 +16,11 @@ current branch, `python scripts\public_verify.py --with-pytest --with-functions-
 passes the tracked-file scanner, public doctor, no-credential dry-run, and
 pytest, while reporting the optional Firebase Functions audit as review-required.
 The remaining release gates are intentionally manual: scan or replace old
-private git history before turning an existing repository public, and review the
-optional Firebase Functions dependency chain before calling that surface
-production-ready.
+private git history before turning an existing repository public, or publish
+from a clean release branch/export. `--with-history-scan` now gives redacted git
+history filenames evidence and blocks this recovered branch for direct public
+conversion. Review the optional Firebase Functions dependency chain before
+calling that surface production-ready.
 
 ## Release Checklist
 
@@ -41,7 +43,7 @@ production-ready.
 | One-command public verifier available | PASS | `python scripts\public_verify.py --out <temp>` writes `public_verify_report.json` outside the repository, refuses repo-internal output by default, and reports `workspace_state` plus snapshot findings as counts/fingerprints so dirty branches and blocking findings are visible before release without copying raw local path names into the report. Nested public demo artifacts also use a repo-relative `pack_path` and `<public_demo_output>` placeholder. `python scripts\public_snapshot_check.py --json` provides the same redacted snapshot summary for automation. |
 | CI covers public snapshot checks | PASS | `.github/workflows/test.yml` runs the public verifier and focused public tests on `main` and `codex/public-snapshot-clean`. |
 | Firebase Functions dependency audit | NEEDS REVIEW | Non-breaking `npm audit fix --package-lock-only --omit=dev` was applied to the lockfile; `npm audit --omit=dev` still reports 9 moderate production dependency findings that require a breaking force fix path. |
-| Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. |
+| Existing git history reviewed | NEEDS REVIEW | If making an existing repo public, scan or rewrite history before public conversion. `python scripts\public_verify.py --with-history-scan --out <temp>` now checks git history filenames with the public snapshot path rules and reports only counts/fingerprints; this recovered branch still needs a clean release branch/export because historical blocked filenames are present. |
 
 ## Include
 
@@ -74,8 +76,9 @@ production-ready.
 ## Final Step Before Publishing
 
 Run `SECURITY_PUBLIC_CHECK.md` against the exact release branch/export. Publish
-only when `python scripts\public_verify.py --with-pytest --with-functions-audit --out <temp>` passes,
-the publish set has no real secrets, no personal data, no local runtime state,
-and no generated or third-party assets that should remain user-provided. Treat
+only when `python scripts\public_verify.py --with-pytest --with-functions-audit --with-history-scan --out <temp>`
+passes for the exact branch/export being published, the publish set has no real
+secrets, no personal data, no local runtime state, and no generated or
+third-party assets that should remain user-provided. Treat
 `publish_gate.manual_review_items` in `public_verify_report.json` as mandatory
 before converting an existing private repository to public.

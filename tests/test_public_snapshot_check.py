@@ -137,3 +137,25 @@ def test_build_json_report_redacts_raw_findings():
     assert report["finding_fingerprints"][0]["fingerprint"]
     assert "findings" not in report
     assert "client_secret_alice.json" not in str(report)
+
+
+def test_history_filename_scan_reuses_blocked_path_rules(monkeypatch):
+    snapshot_check = _load_snapshot_check()
+
+    def fake_git_lines(args, cwd=None):
+        assert args == ["log", "--all", "--full-history", "--name-only", "--pretty=format:"]
+        return [
+            "docs/PUBLIC_DEMO.md",
+            ".env",
+            "config/client_secret_alice.json",
+            ".env",
+        ]
+
+    monkeypatch.setattr(snapshot_check, "_git_lines", fake_git_lines)
+
+    findings = snapshot_check.run_history_filename_check(ROOT)
+
+    assert findings == [
+        ".env: historical blocked filename: .env",
+        "config/client_secret_alice.json: historical blocked filename pattern: client_secret_alice.json",
+    ]
