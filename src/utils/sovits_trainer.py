@@ -27,6 +27,8 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum, auto
 from datetime import datetime
 
+from utils.secret_redaction import redact_sensitive_text
+
 # 로깅
 try:
     from utils.logger import get_logger
@@ -489,10 +491,11 @@ class SoVITSTrainer:
             logger.info("[SoVITSTrainer] 학습 완료")
 
         except Exception as e:
-            self.progress.error = str(e)
-            self._update_progress(TrainingStage.FAILED, 0, f"오류: {str(e)}")
+            safe_error = redact_sensitive_text(e)
+            self.progress.error = safe_error
+            self._update_progress(TrainingStage.FAILED, 0, f"오류: {safe_error}")
             self._is_running = False
-            logger.error(f"[SoVITSTrainer] 학습 실패: {e}")
+            logger.error(f"[SoVITSTrainer] 학습 실패: {safe_error}")
 
     def _build_subprocess_env(self) -> Dict[str, str]:
         """
