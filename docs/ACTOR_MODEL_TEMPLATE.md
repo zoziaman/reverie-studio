@@ -141,3 +141,24 @@ The public `daily_life_toon` and `mystery_toon` packs both expose
 `actor_adult_woman_01` in `settings.motiontoon.actor_pool` and cast that actor
 into one lead/observer slot while keeping older named actor aliases available
 for compatibility.
+
+## Asset Request Manifest
+
+The template can produce a local work order for generating the actual variant,
+mouth, and eye assets. This command writes prompts and target paths only; it
+does not call ComfyUI, SD WebUI, TTS, or any external model.
+
+```bash
+reverie-actor-model-requests asset-requests assets/actor_models/actor_adult_woman_01/actor.json --repo-root . --output data/actor_asset_requests/actor_adult_woman_01.asset_requests.json
+```
+
+From an uninstalled checkout, run the same command through the module with
+`PYTHONPATH=src`.
+
+The generated manifest uses schema `reverie.actor_model.asset_requests.v1` and
+contains one request for every `required_variants`, `mouth_shapes`, and
+`eye_shapes` entry in `actor.json`. Each request points at a local target such
+as `variants/neutral_standing.png` or `face_parts/mouth_closed.png`.
+
+Keep generated manifests and output images local unless they have passed the
+public release boundary in this document.

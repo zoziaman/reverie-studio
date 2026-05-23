@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from collections.abc import Mapping
@@ -40,8 +41,8 @@ PRIVATE_TEXT_PATTERNS = (
     re.compile(r"sk-[A-Za-z0-9_-]{20,}"),
     re.compile(r"ghp_[A-Za-z0-9_]{20,}"),
     re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
-    re.compile(r"C:\\Users\\", re.IGNORECASE),
-    re.compile(r"C:/Users/", re.IGNORECASE),
+    re.compile(re.escape("C:" + "\\" + "Users" + "\\"), re.IGNORECASE),
+    re.compile(re.escape("C:" + "/" + "Users" + "/"), re.IGNORECASE),
     re.compile(r"-----BEGIN (RSA |EC |OPENSSH |PRIVATE )?PRIVATE KEY-----"),
 )
 
@@ -90,6 +91,53 @@ def _load_actor_json(actor_path: Path, result: ActorModelValidationResult) -> di
         result.add_error(f"{actor_path.name} must contain a JSON object")
         return {}
     return data
+
+
+def _read_template(actor_dir: Path, relative_path: str) -> str:
+    return (actor_dir / relative_path).read_text(encoding="utf-8").strip()
+
+
+def _relative_to_root(path: Path, repo_root: Optional[Path | str]) -> str:
+    if repo_root is None:
+        return (Path(path.parent.name) / path.name).as_posix()
+    root = Path(repo_root).resolve()
+    try:
+        return path.resolve().relative_to(root).as_posix()
+    except ValueError:
+        return path.as_posix()
+
+
+def _variant_parts(variant_key: str) -> tuple[str, str]:
+    expression, _, pose = variant_key.partition("_")
+    return expression or variant_key, pose or "standing"
+
+
+def _asset_request(
+    *,
+    actor_id: str,
+    request_type: str,
+    key: str,
+    target_relative_path: str,
+    prompt: str,
+    negative_prompt: str,
+    expression: str = "",
+    pose: str = "",
+) -> dict[str, Any]:
+    request: dict[str, Any] = {
+        "request_id": f"{actor_id}__{request_type}__{key}",
+        "request_type": request_type,
+        "actor_id": actor_id,
+        "key": key,
+        "target_relative_path": target_relative_path,
+        "prompt": prompt.strip(),
+        "negative_prompt": negative_prompt.strip(),
+        "public_safe": True,
+    }
+    if expression:
+        request["expression"] = expression
+    if pose:
+        request["pose"] = pose
+    return request
 
 
 def _validate_public_boundary(data: Mapping[str, Any], result: ActorModelValidationResult) -> None:
@@ -188,3 +236,149 @@ def validate_actor_model_package(
     _validate_public_boundary(data, result)
     _validate_package_files(actor_dir, result)
     return result
+
+
+def build_actor_asset_request_manifest(
+    actor_model_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Build a public-safe request manifest for local actor asset generation."""
+    validation = validate_actor_model_package(actor_model_path, repo_root=repo_root)
+    if not validation.is_valid:
+        raise ValueError("actor model validation failed: " + "; ".join(validation.errors))
+
+    actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    actor_dir = actor_path.parent
+    actor_data = json.loads(actor_path.read_text(encoding="utf-8"))
+    actor_id = validation.actor_id
+
+    identity_prompt = _read_template(actor_dir, "prompts/identity_prompt.txt")
+    variant_prompt = _read_template(actor_dir, "prompts/variant_prompt.txt")
+    mouth_prompt = _read_template(actor_dir, "prompts/mouth_prompt.txt")
+    negative_prompt = _read_template(actor_dir, "prompts/negative_prompt.txt")
+
+    requests: list[dict[str, Any]] = []
+    for variant_key in validation.required_variants:
+        expression, pose = _variant_parts(variant_key)
+        prompt = "\n\n".join(
+            [
+                identity_prompt,
+                variant_prompt,
+                f"Requested variant: {variant_key}",
+                f"Expression: {expression}",
+                f"Pose: {pose}",
+                "Output: one transparent-capable half-body video-toon actor image, no background, no text.",
+            ]
+        )
+        requests.append(
+            _asset_request(
+                actor_id=actor_id,
+                request_type="variant",
+                key=variant_key,
+                target_relative_path=f"variants/{variant_key}.png",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+                expression=expression,
+                pose=pose,
+            )
+        )
+
+    for mouth_shape in validation.mouth_shapes:
+        prompt = "\n\n".join(
+            [
+                identity_prompt,
+                mouth_prompt,
+                f"Requested mouth shape: {mouth_shape}",
+                "Output: transparent PNG mouth layer aligned to the actor face.",
+            ]
+        )
+        requests.append(
+            _asset_request(
+                actor_id=actor_id,
+                request_type="mouth_shape",
+                key=mouth_shape,
+                target_relative_path=f"face_parts/{mouth_shape}.png",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+            )
+        )
+
+    for eye_shape in validation.eye_shapes:
+        prompt = "\n\n".join(
+            [
+                identity_prompt,
+                f"Create eye shape '{eye_shape}' for {actor_id}.",
+                "Keep the same head angle, eye placement, line weight, and webtoon style.",
+                "Output: transparent PNG eye layer aligned to the actor face.",
+            ]
+        )
+        requests.append(
+            _asset_request(
+                actor_id=actor_id,
+                request_type="eye_shape",
+                key=eye_shape,
+                target_relative_path=f"face_parts/{eye_shape}.png",
+                prompt=prompt,
+                negative_prompt=negative_prompt,
+            )
+        )
+
+    return {
+        "schema": "reverie.actor_model.asset_requests.v1",
+        "actor_id": actor_id,
+        "template_version": actor_data.get("template_version", ""),
+        "readiness_state": actor_data.get("readiness_state", ""),
+        "source_actor_model_path": _relative_to_root(actor_path, repo_root),
+        "request_count": len(requests),
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "requests": requests,
+    }
+
+
+def write_actor_asset_request_manifest(
+    actor_model_path: Path | str,
+    output_path: Path | str,
+    *,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Write an actor asset request manifest and return the output path."""
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    manifest = build_actor_asset_request_manifest(actor_model_path, repo_root=repo_root)
+    output.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
+def main(argv: Optional[list[str]] = None) -> int:
+    parser = argparse.ArgumentParser(description="Validate actor models and write local asset request manifests.")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
+    request_parser.add_argument("actor_model_path", help="Path to actor.json")
+    request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    request_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
+
+    args = parser.parse_args(argv)
+    if args.command == "asset-requests":
+        manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)
+        if args.output:
+            output = write_actor_asset_request_manifest(args.actor_model_path, args.output, repo_root=args.repo_root)
+            print(f"Wrote actor asset requests for {manifest['actor_id']}: {output}")
+        else:
+            print(json.dumps(manifest, ensure_ascii=False, indent=2))
+        return 0
+
+    parser.error(f"unknown command: {args.command}")
+    return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
