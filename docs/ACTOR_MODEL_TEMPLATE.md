@@ -263,6 +263,16 @@ each actor package. It does not mutate `actor.json`; apply the plan only after
 reviewing whether the variant belongs in the durable actor model instead of
 remaining episode-specific.
 
+To commit reviewed promotions into the local actor template, run:
+
+```bash
+reverie-actor-model-requests apply-episode-variant-promotions data/actor_asset_requests/daily_life_toon_ep001.episode_variant_promotions.json --repo-root . --output data/actor_asset_requests/daily_life_toon_ep001.episode_variant_promotion_apply.json
+```
+
+This command updates each actor package's `actor.json` `required_variants` list
+and writes an apply report. It still does not copy generated PNGs or any voice
+or model files into the public repository.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash

@@ -1877,6 +1877,129 @@ def write_actor_episode_variant_promotion_plan(
     return output
 
 
+def _validate_episode_variant_promotion_plan(plan: Mapping[str, Any]) -> None:
+    if not isinstance(plan, Mapping):
+        raise ValueError("episode variant promotion plan must be an object")
+    if plan.get("schema") != "reverie.pack.actor_episode.variant_promotions.v1":
+        raise ValueError("episode variant promotion plan schema must be reverie.pack.actor_episode.variant_promotions.v1")
+    boundary = plan.get("public_release_boundary")
+    if isinstance(boundary, Mapping):
+        for field_name in ("contains_generated_media", "contains_voice_samples", "contains_model_weights", "contains_private_paths"):
+            if boundary.get(field_name) is not False:
+                raise ValueError(f"episode variant promotion plan public_release_boundary.{field_name} must be false")
+    if not isinstance(plan.get("actors", {}), Mapping):
+        raise ValueError("episode variant promotion plan actors must be an object")
+
+
+def _actor_path_from_promotion_actor(
+    actor_id: str,
+    actor_plan: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str],
+    repo_root: Optional[Path | str],
+) -> Path:
+    if actor_root is not None:
+        return _resolve_actor_root(actor_root, repo_root) / actor_id / "actor.json"
+    actor_model_path = str(actor_plan.get("actor_model_path") or "").strip()
+    if not actor_model_path:
+        raise ValueError(f"episode variant promotion actor {actor_id} actor_model_path is required without actor_root")
+    actor_path, path_error = _resolve_actor_path(actor_model_path, repo_root)
+    if path_error:
+        raise ValueError(path_error)
+    return actor_path
+
+
+def apply_actor_episode_variant_promotion_plan(
+    promotion_plan: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> dict[str, Any]:
+    """Apply a ready promotion plan to actor.json required_variants."""
+    _validate_episode_variant_promotion_plan(promotion_plan)
+    if promotion_plan.get("ready_for_promotion") is not True:
+        raise ValueError("episode variant promotion plan is not ready")
+
+    actors: dict[str, Any] = {}
+    applied_count = 0
+    skipped_existing_count = 0
+    for actor_id, actor_plan in promotion_plan.get("actors", {}).items():
+        actor_key = str(actor_id or "").strip()
+        if not actor_key:
+            raise ValueError("episode variant promotion plan contains an empty actor id")
+        if not isinstance(actor_plan, Mapping):
+            raise ValueError(f"episode variant promotion plan actors.{actor_key} must be an object")
+
+        actor_path = _actor_path_from_promotion_actor(
+            actor_key,
+            actor_plan,
+            actor_root=actor_root,
+            repo_root=repo_root,
+        )
+        actor_data = _load_actor_json(actor_path, ActorModelValidationResult())
+        if not actor_data:
+            raise ValueError(f"actor.json could not be loaded for {actor_key}: {actor_path}")
+
+        required_before = _string_list(actor_data.get("required_variants"))
+        required_after = list(required_before)
+        added_variants: list[str] = []
+        skipped_existing: list[str] = []
+        for variant_key in _string_list(actor_plan.get("promoted_variants")):
+            if variant_key in required_after:
+                skipped_existing.append(variant_key)
+                skipped_existing_count += 1
+                continue
+            required_after.append(variant_key)
+            added_variants.append(variant_key)
+            applied_count += 1
+
+        actor_data["required_variants"] = required_after
+        actor_path.write_text(json.dumps(actor_data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        actors[actor_key] = {
+            "actor_id": actor_key,
+            "actor_model_path": _relative_to_root(actor_path, repo_root),
+            "added_variants": added_variants,
+            "skipped_existing_variants": skipped_existing,
+            "required_variants_before": required_before,
+            "required_variants_after": required_after,
+        }
+
+    return {
+        "schema": "reverie.pack.actor_episode.variant_promotion_apply.v1",
+        "pack_id": str(promotion_plan.get("pack_id") or ""),
+        "episode_id": str(promotion_plan.get("episode_id") or ""),
+        "applied_count": applied_count,
+        "skipped_existing_count": skipped_existing_count,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "actors": actors,
+    }
+
+
+def write_applied_actor_episode_variant_promotion_plan(
+    promotion_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+) -> Path:
+    """Apply a promotion plan and write an apply report."""
+    promotion_plan = _load_json_object(promotion_plan_path, "episode variant promotion plan")
+    report = apply_actor_episode_variant_promotion_plan(
+        promotion_plan,
+        actor_root=actor_root,
+        repo_root=repo_root,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_coverage_report(
     actor_model_path: Path | str,
     *,
@@ -2173,6 +2296,15 @@ def main(argv: Optional[list[str]] = None) -> int:
     episode_variant_promotions_parser.add_argument("--output", default=None, help="Output JSON path. Prints JSON when omitted.")
     episode_variant_promotions_parser.add_argument("--fail-on-not-ready", action="store_true", help="Exit 1 when promotions are not ready.")
 
+    apply_episode_variant_promotions_parser = subparsers.add_parser(
+        "apply-episode-variant-promotions",
+        help="Apply ready episode variant promotions to actor.json required_variants.",
+    )
+    apply_episode_variant_promotions_parser.add_argument("promotion_plan_path", help="Input episode variant promotion plan JSON path.")
+    apply_episode_variant_promotions_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    apply_episode_variant_promotions_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    apply_episode_variant_promotions_parser.add_argument("--output", default=None, help="Output apply report JSON path. Prints JSON when omitted.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -2391,6 +2523,29 @@ def main(argv: Optional[list[str]] = None) -> int:
             print(f"episode variant promotions: {promotion_plan['promotion_count']}")
         if args.fail_on_not_ready and not promotion_plan["ready_for_promotion"]:
             return 1
+        return 0
+    if args.command == "apply-episode-variant-promotions":
+        if args.output:
+            output = write_applied_actor_episode_variant_promotion_plan(
+                args.promotion_plan_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            apply_report = json.loads(Path(output).read_text(encoding="utf-8"))
+            print(
+                f"Wrote applied episode variant promotions: {output} "
+                f"(applied {apply_report['applied_count']})"
+            )
+        else:
+            promotion_plan = _load_json_object(args.promotion_plan_path, "episode variant promotion plan")
+            apply_report = apply_actor_episode_variant_promotion_plan(
+                promotion_plan,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+            )
+            print(json.dumps(apply_report, ensure_ascii=False, indent=2))
+            print(f"applied episode variant promotions: {apply_report['applied_count']}")
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

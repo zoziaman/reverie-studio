@@ -135,6 +135,9 @@ supplemental `variants/*.png` files exist before rendering the episode.
 Use `episode-variant-promotions` only when a generated supplemental variant
 should become a durable actor-model requirement; it writes a reviewable plan
 instead of mutating `actor.json` automatically.
+Use `apply-episode-variant-promotions` only after that review to update the
+local actor package's `required_variants`; generated media still remains a
+local asset and should not be committed by default.
 
 The production orchestrator derives role casting from `motiontoon.cast_slots`, including slot aliases, and passes the active pack's `actor_pool` into the VideoToon bundle writer. Public `daily_life_toon` and `mystery_toon` settings include actor pools and role-casting contracts.
 
