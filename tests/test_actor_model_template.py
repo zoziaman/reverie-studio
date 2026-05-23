@@ -125,6 +125,7 @@ def test_actor_model_template_doc_matches_actor_pool_direction():
     assert "gold_reusable_video_toon_actor_v1" in text
     assert "reverie-videotoon-prepare" in text
     assert "reverie-videotoon-render-plan" in text
+    assert "reverie-videotoon-smoke" in text
     assert "to-remotion-props" in text
     assert "to-asset-work-order" in text
     assert "mouthCues" in text

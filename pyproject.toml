@@ -51,6 +51,7 @@ reverie-background-library-requests = "modules_pro.background_library:main"
 reverie-videotoon-preflight = "utils.videotoon_preflight:main"
 reverie-videotoon-prepare = "utils.videotoon_episode_prepare:main"
 reverie-videotoon-render-plan = "utils.videotoon_render_plan:main"
+reverie-videotoon-smoke = "utils.videotoon_smoke:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

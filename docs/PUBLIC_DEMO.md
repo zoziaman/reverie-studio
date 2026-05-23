@@ -81,6 +81,21 @@ python -m reverie_demo --backend-profile local_comfyui_supertonic --out "$env:TE
 The public demo still stays report-only. Choosing a real backend profile does
 not start ComfyUI, TTS, Remotion, or upload.
 
+## Local Smoke Bundle
+
+The public demo proves the report-only workflow. To prove that the fixed actor
+and background placeholders can pass the local render gate, use the local smoke
+bundle instead:
+
+```powershell
+$env:PYTHONPATH="src"
+python -m utils.videotoon_smoke local --source-repo-root . --output-dir "$env:TEMP\reverie-videotoon-smoke" --duration-seconds 10
+```
+
+This writes placeholder PNGs only under the chosen output directory, then runs
+prepare, render-plan export, asset work-order export, and Remotion props export.
+It does not call AI services, TTS, Remotion rendering, upload, or credentials.
+
 ## What It Does Not Prove
 
 The demo does not prove that Stable Diffusion, ComfyUI, GPT-SoVITS,

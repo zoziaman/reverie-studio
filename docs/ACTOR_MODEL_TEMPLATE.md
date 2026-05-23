@@ -467,3 +467,23 @@ checked render plan. It also keeps the original render plan under
 graph. This is the first reusable face-rig handoff: the actor identity is still
 one fixed model, while the renderer can blink and alternate mouth layers during
 dialogue.
+
+## Local Smoke Bundle
+
+To test the gold actor loop without ComfyUI, TTS, Remotion rendering, or upload,
+write a local-only smoke bundle:
+
+```bash
+reverie-videotoon-smoke local --source-repo-root . --output-dir %TEMP%\reverie-videotoon-smoke --duration-seconds 10
+```
+
+The smoke command copies the public actor template into the output directory,
+creates placeholder actor PNGs and one placeholder background PNG there, runs
+episode prepare, writes a render plan, exports Remotion props, and writes
+`smoke_manifest.json` with schema `reverie.local.videotoon_smoke_bundle.v1`.
+The expected local result is `ready_for_render: true`, `missing_count: 0`, and
+`total_frames: 300` at 30 fps for a 10 second single-scene smoke pass.
+
+This is intentionally local-only and creates media under the chosen output
+directory. It does not call external services, does not create voice samples,
+does not write model weights, and does not change the public template files.
