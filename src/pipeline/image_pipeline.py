@@ -617,7 +617,7 @@ class ImagePipeline:
             return self._create_black_placeholder(output_path)
 
         except (requests.RequestException, ConnectionError, OSError, ValueError) as e:
-            logger.error(f"[v59] 안전 폴백 실패: {e}")
+            logger.error(f"[v59] 안전 폴백 실패: {redact_sensitive_text(e)}")
             # v61.1: 최종 폴백 — 검정 플레이스홀더로 위치 보존
             try:
                 return self._create_black_placeholder(output_path)

@@ -1,5 +1,7 @@
 import logging
 
+import requests
+
 from modules_pro import scene_analyzer
 from pipeline.image_pipeline import ImagePipeline
 
@@ -34,3 +36,23 @@ def test_pre_analyze_scenes_failure_redacts_api_key_in_log(monkeypatch, caplog):
     assert result is None
     assert api_key not in caplog.text
     assert "key=<redacted>" in caplog.text
+
+
+def test_safe_fallback_image_failure_redacts_api_key_and_keeps_placeholder(monkeypatch, tmp_path, caplog):
+    api_key = "AIza" + ("f" * 32)
+    output_path = tmp_path / "fallback.png"
+
+    def fail_post(*args, **kwargs):
+        raise requests.RequestException(f"fallback request failed for GEMINI_API_KEY={api_key}")
+
+    monkeypatch.setattr("pipeline.image_pipeline.requests.post", fail_post)
+
+    pipeline = _make_pipeline()
+    caplog.set_level(logging.ERROR)
+
+    result = pipeline.get_safe_fallback_image(str(output_path), mode="horror")
+
+    assert result == str(output_path)
+    assert output_path.exists()
+    assert api_key not in caplog.text
+    assert "GEMINI_API_KEY=<redacted>" in caplog.text
