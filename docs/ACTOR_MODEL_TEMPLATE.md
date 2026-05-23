@@ -189,6 +189,17 @@ The roster plan writes a public-safe JSON patch shape with
 the bridge between reusable actor presets and pack-level casting: the actor id
 stays fixed, while episode role casting can change per omnibus story.
 
+Create every actor model package referenced by that roster plan with
+`scaffold-roster`:
+
+```bash
+reverie-actor-model-requests scaffold-roster data/actor_asset_requests/daily_life_toon.actor_roster_plan.json --repo-root . --output data/actor_asset_requests/daily_life_toon.actor_roster_scaffold.json
+```
+
+The scaffold report lists which actor folders were created and whether each
+generated `actor.json` validates. Existing actor folders are not overwritten
+unless `--force` is passed.
+
 Apply the roster plan to a pack settings file by writing a new output file:
 
 ```bash

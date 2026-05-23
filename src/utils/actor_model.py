@@ -999,6 +999,101 @@ def write_applied_pack_actor_roster_plan(
     return output
 
 
+def scaffold_actor_models_from_roster_plan(
+    roster_plan: Mapping[str, Any],
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+    catalog_path: Optional[Path | str] = None,
+    force: bool = False,
+) -> dict[str, Any]:
+    """Scaffold every actor model referenced by a public-safe roster plan."""
+    patch = _validate_roster_plan(roster_plan)
+    pack_id = str(roster_plan.get("pack_id") or "").strip()
+    actor_pool = patch["actor_pool"]
+    if not actor_pool:
+        raise ValueError("actor roster plan motiontoon_patch.actor_pool must not be empty")
+
+    actors: dict[str, Any] = {}
+    created_count = 0
+    existing_count = 0
+    for actor_id, actor_data in actor_pool.items():
+        actor_key = str(actor_id or "").strip()
+        if not actor_key:
+            raise ValueError("actor roster plan actor_pool contains an empty actor id")
+        if not isinstance(actor_data, Mapping):
+            raise ValueError(f"actor roster plan actor_pool.{actor_key} must be an object")
+        preset_id = str(actor_data.get("preset_id") or "").strip()
+        if not preset_id:
+            raise ValueError(f"actor roster plan actor_pool.{actor_key}.preset_id is required")
+
+        target_root = _resolve_actor_root(actor_root, repo_root)
+        actor_dir = target_root / actor_key
+        already_exists = actor_dir.exists()
+        actor_path = scaffold_actor_model_from_preset(
+            preset_id,
+            actor_key,
+            actor_root=actor_root,
+            repo_root=repo_root,
+            catalog_path=catalog_path,
+            force=force,
+        )
+        created = not already_exists or force
+        if created:
+            created_count += 1
+        else:
+            existing_count += 1
+        validation = validate_actor_model_package(actor_path, repo_root=repo_root)
+        actors[actor_key] = {
+            "actor_id": actor_key,
+            "preset_id": preset_id,
+            "actor_model_path": _relative_to_root(actor_path, repo_root),
+            "created": created,
+            "is_valid": validation.is_valid,
+            "errors": validation.errors,
+            "warnings": validation.warnings,
+        }
+
+    return {
+        "schema": "reverie.pack.actor_roster_scaffold.v1",
+        "pack_id": pack_id,
+        "actor_count": len(actors),
+        "created_count": created_count,
+        "existing_count": existing_count,
+        "public_release_boundary": {
+            "contains_generated_media": False,
+            "contains_voice_samples": False,
+            "contains_model_weights": False,
+            "contains_private_paths": False,
+        },
+        "actors": actors,
+    }
+
+
+def write_actor_roster_scaffold_report(
+    roster_plan_path: Path | str,
+    output_path: Path | str,
+    *,
+    actor_root: Optional[Path | str] = None,
+    repo_root: Optional[Path | str] = None,
+    catalog_path: Optional[Path | str] = None,
+    force: bool = False,
+) -> Path:
+    """Scaffold roster actors and write a public-safe scaffold report."""
+    roster_plan = _load_json_object(roster_plan_path, "actor roster plan")
+    report = scaffold_actor_models_from_roster_plan(
+        roster_plan,
+        actor_root=actor_root,
+        repo_root=repo_root,
+        catalog_path=catalog_path,
+        force=force,
+    )
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return output
+
+
 def build_actor_asset_request_manifest(
     actor_model_path: Path | str,
     *,
@@ -1281,6 +1376,17 @@ def main(argv: Optional[list[str]] = None) -> int:
     apply_roster_parser.add_argument("--output", default=None, help="Output settings JSON path. Prints JSON when omitted.")
     apply_roster_parser.add_argument("--force", action="store_true", help="Overwrite existing actor_pool or cast_slots entries.")
 
+    scaffold_roster_parser = subparsers.add_parser(
+        "scaffold-roster",
+        help="Scaffold every actor model package referenced by a roster plan.",
+    )
+    scaffold_roster_parser.add_argument("roster_plan_path", help="Input actor roster plan JSON path.")
+    scaffold_roster_parser.add_argument("--actor-root", default=None, help="Directory that contains actor model folders.")
+    scaffold_roster_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
+    scaffold_roster_parser.add_argument("--catalog", default=None, help="Preset catalog JSON path.")
+    scaffold_roster_parser.add_argument("--output", default=None, help="Output scaffold report path. Prints JSON when omitted.")
+    scaffold_roster_parser.add_argument("--force", action="store_true", help="Overwrite existing actor scaffolds.")
+
     request_parser = subparsers.add_parser("asset-requests", help="Build a JSON manifest of actor asset requests.")
     request_parser.add_argument("actor_model_path", help="Path to actor.json")
     request_parser.add_argument("--repo-root", default=None, help="Repository root for relative path validation")
@@ -1364,6 +1470,28 @@ def main(argv: Optional[list[str]] = None) -> int:
             roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
             applied = apply_pack_actor_roster_plan(settings, roster_plan, force=args.force)
             print(json.dumps(applied, ensure_ascii=False, indent=2))
+        return 0
+    if args.command == "scaffold-roster":
+        if args.output:
+            output = write_actor_roster_scaffold_report(
+                args.roster_plan_path,
+                args.output,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+                catalog_path=args.catalog,
+                force=args.force,
+            )
+            print(f"Wrote actor roster scaffold report: {output}")
+        else:
+            roster_plan = _load_json_object(args.roster_plan_path, "actor roster plan")
+            report = scaffold_actor_models_from_roster_plan(
+                roster_plan,
+                actor_root=args.actor_root,
+                repo_root=args.repo_root,
+                catalog_path=args.catalog,
+                force=args.force,
+            )
+            print(json.dumps(report, ensure_ascii=False, indent=2))
         return 0
     if args.command == "asset-requests":
         manifest = build_actor_asset_request_manifest(args.actor_model_path, repo_root=args.repo_root)

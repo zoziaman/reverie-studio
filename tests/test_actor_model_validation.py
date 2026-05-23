@@ -737,3 +737,109 @@ def test_actor_model_cli_applies_roster_plan_to_settings_output(tmp_path, capsys
     assert applied["motiontoon"]["cast_slots"]["protagonist"]["actor_id"] == "actor_daily_adult_man_01"
     assert applied["motiontoon"]["actor_pool"]["actor_daily_adult_man_01"]["preset_id"] == "daily_adult_man"
     assert "settings.with_roster.json" in captured.out
+
+
+def test_scaffold_actor_models_from_roster_plan_creates_all_actor_packages(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            },
+            {
+                "role_id": "witness",
+                "preset_id": "daily_middle_woman",
+                "actor_id": "actor_daily_middle_woman_01",
+            },
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    report = actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    assert report["schema"] == "reverie.pack.actor_roster_scaffold.v1"
+    assert report["pack_id"] == "daily_life_toon"
+    assert report["created_count"] == 2
+    assert report["existing_count"] == 0
+    for actor_id in ("actor_daily_adult_man_01", "actor_daily_middle_woman_01"):
+        actor_path = actor_root / actor_id / "actor.json"
+        result = actor_model.validate_actor_model_package(actor_path)
+        assert actor_path.exists()
+        assert report["actors"][actor_id]["created"] is True
+        assert result.is_valid is True
+
+
+def test_scaffold_actor_models_from_roster_plan_refuses_existing_actor_by_default(tmp_path):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan = actor_model.build_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    actor_model.scaffold_actor_models_from_roster_plan(
+        plan,
+        actor_root=actor_root,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    with pytest.raises(FileExistsError):
+        actor_model.scaffold_actor_models_from_roster_plan(
+            plan,
+            actor_root=actor_root,
+            catalog_path=ACTOR_PRESET_CATALOG_PATH,
+        )
+
+
+def test_actor_model_cli_scaffold_roster_creates_actor_packages(tmp_path, capsys):
+    actor_model = _actor_model_module()
+    actor_root = tmp_path / "actor_models"
+    plan_path = tmp_path / "daily_life_toon.actor_roster_plan.json"
+    report_path = tmp_path / "daily_life_toon.actor_roster_scaffold.json"
+    actor_model.write_pack_actor_roster_plan(
+        "daily_life_toon",
+        [
+            {
+                "role_id": "protagonist",
+                "preset_id": "daily_adult_man",
+                "actor_id": "actor_daily_adult_man_01",
+            }
+        ],
+        plan_path,
+        catalog_path=ACTOR_PRESET_CATALOG_PATH,
+    )
+
+    exit_code = actor_model.main(
+        [
+            "scaffold-roster",
+            str(plan_path),
+            "--actor-root",
+            str(actor_root),
+            "--catalog",
+            str(ACTOR_PRESET_CATALOG_PATH),
+            "--output",
+            str(report_path),
+        ]
+    )
+    captured = capsys.readouterr()
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+
+    assert exit_code == 0
+    assert (actor_root / "actor_daily_adult_man_01" / "actor.json").exists()
+    assert report["created_count"] == 1
+    assert "actor_roster_scaffold" in captured.out
