@@ -253,7 +253,7 @@ class UtopiaEngine:
                     # 딥 머지
                     self._deep_merge(default_config, loaded)
             except Exception as e:
-                logger.warning(f"설정 로드 실패: {e}")
+                logger.warning(f"설정 로드 실패: {redact_sensitive_text(e)}")
 
         return default_config
 
@@ -272,7 +272,7 @@ class UtopiaEngine:
                 with open(self.config_path, 'w', encoding='utf-8') as f:
                     json.dump(self.config, f, ensure_ascii=False, indent=2)
             except Exception as e:
-                logger.error(f"설정 저장 실패: {e}")
+                logger.error(f"설정 저장 실패: {redact_sensitive_text(e)}")
 
     def _load_state(self) -> Dict[str, Any]:
         """상태 로드"""
@@ -293,7 +293,7 @@ class UtopiaEngine:
                     loaded = json.load(f)
                     default_state.update(loaded)
             except Exception as e:
-                logger.warning(f"상태 로드 실패: {e}")
+                logger.warning(f"상태 로드 실패: {redact_sensitive_text(e)}")
 
         # 날짜가 바뀌면 카운터 초기화
         if default_state.get("last_generation"):
@@ -303,7 +303,7 @@ class UtopiaEngine:
                     default_state["today_generated"] = 0
                     default_state["today_uploaded"] = 0
             except (ValueError, TypeError) as e:
-                logger.debug(f"날짜 비교 실패: {e}")
+                logger.debug(f"날짜 비교 실패: {redact_sensitive_text(e)}")
 
         return default_state
 
@@ -315,7 +315,7 @@ class UtopiaEngine:
                 with open(self.state_path, 'w', encoding='utf-8') as f:
                     json.dump(self.state, f, ensure_ascii=False, indent=2)
             except Exception as e:
-                logger.error(f"상태 저장 실패: {e}")
+                logger.error(f"상태 저장 실패: {redact_sensitive_text(e)}")
 
     def _load_log(self) -> List[Dict[str, Any]]:
         """로그 로드"""
@@ -324,7 +324,7 @@ class UtopiaEngine:
                 with open(self.log_path, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
-                logger.warning(f"로그 로드 실패: {e}")
+                logger.warning(f"로그 로드 실패: {redact_sensitive_text(e)}")
         return []
 
     def _save_log(self):
@@ -334,7 +334,7 @@ class UtopiaEngine:
                 with open(self.log_path, 'w', encoding='utf-8') as f:
                     json.dump(self.log[-500:], f, ensure_ascii=False, indent=2)
             except Exception as e:
-                logger.error(f"로그 저장 실패: {e}")
+                logger.error(f"로그 저장 실패: {redact_sensitive_text(e)}")
 
     def _add_log(self, message: str, level: str = "info", details: Dict = None):
         """로그 추가 (v54.7.3: Thread Safe)"""
@@ -378,7 +378,7 @@ class UtopiaEngine:
                 try:
                     self._media_factory = self._media_factory_getter()
                 except Exception as e:
-                    logger.error(f"MediaFactory getter 실패: {e}")
+                    logger.error(f"MediaFactory getter 실패: {redact_sensitive_text(e)}")
 
             # 하위호환: 직접 import (deprecated)
             if self._media_factory is None:
@@ -386,7 +386,7 @@ class UtopiaEngine:
                     from modules_pro.media_factory import MediaFactory
                     self._media_factory = MediaFactory(channel=self.channel_type)
                 except Exception as e:
-                    logger.error(f"MediaFactory 로드 실패: {e}")
+                    logger.error(f"MediaFactory 로드 실패: {redact_sensitive_text(e)}")
         return self._media_factory
 
     @property
@@ -397,7 +397,7 @@ class UtopiaEngine:
                 from utils.prompt_optimizer import get_prompt_optimizer
                 self._prompt_optimizer = get_prompt_optimizer(self.data_dir, self.channel_type)
             except Exception as e:
-                logger.error(f"PromptOptimizer 로드 실패: {e}")
+                logger.error(f"PromptOptimizer 로드 실패: {redact_sensitive_text(e)}")
         return self._prompt_optimizer
 
     @property
@@ -408,7 +408,7 @@ class UtopiaEngine:
                 from utils.upload_scheduler import get_upload_scheduler
                 self._upload_scheduler = get_upload_scheduler(self.data_dir, self.channel_type)
             except Exception as e:
-                logger.error(f"UploadScheduler 로드 실패: {e}")
+                logger.error(f"UploadScheduler 로드 실패: {redact_sensitive_text(e)}")
         return self._upload_scheduler
 
     @property
@@ -424,7 +424,7 @@ class UtopiaEngine:
                 else:
                     self._feedback_loop = instance
             except Exception as e:
-                logger.error(f"FeedbackLoop 로드 실패: {e}")
+                logger.error(f"FeedbackLoop 로드 실패: {redact_sensitive_text(e)}")
         return self._feedback_loop
 
     @property
@@ -440,7 +440,7 @@ class UtopiaEngine:
                 else:
                     self._auto_optimizer = instance
             except Exception as e:
-                logger.error(f"AutoOptimizer 로드 실패: {e}")
+                logger.error(f"AutoOptimizer 로드 실패: {redact_sensitive_text(e)}")
         return self._auto_optimizer
 
     # =========================================================

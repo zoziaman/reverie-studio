@@ -33,3 +33,25 @@ def test_generate_video_now_redacts_secret_in_error_state_and_logs(monkeypatch, 
     assert state_changes[-1][0] is UtopiaState.ERROR
     assert secret not in state_changes[-1][1]
     assert secret not in "\n".join(log_messages)
+
+
+def test_lazy_prompt_optimizer_load_redacts_secret_in_logs(monkeypatch, tmp_path, caplog):
+    import utils.prompt_optimizer as prompt_optimizer
+
+    secret = "sk-" + ("l" * 32)
+
+    def failing_prompt_optimizer(*args, **kwargs):
+        raise RuntimeError(f"optimizer load failed for OPENAI_API_KEY={secret}")
+
+    monkeypatch.setattr(prompt_optimizer, "get_prompt_optimizer", failing_prompt_optimizer)
+    caplog.set_level("ERROR")
+    engine = UtopiaEngine(
+        str(tmp_path),
+        channel_type="senior",
+        media_factory_getter=lambda: object(),
+    )
+
+    assert engine.prompt_optimizer is None
+
+    assert secret not in caplog.text
+    assert "OPENAI_API_KEY=<redacted>" in caplog.text
