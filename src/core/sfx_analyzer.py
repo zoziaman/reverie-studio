@@ -18,6 +18,7 @@ from dataclasses import dataclass, asdict
 import threading
 
 from core.sfx_manager import SFXCue, SFXTag
+from utils.secret_redaction import redact_sensitive_text
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,7 @@ class SFXAnalyzer:
                 logger.warning("SFX Analyzer: Gemini 모델 없음, 키워드 폴백 사용")
 
         except Exception as e:
-            logger.error(f"Gemini 초기화 실패: {e}")
+            logger.error(f"Gemini 초기화 실패: {redact_sensitive_text(e)}")
             self.model = None
             self.available = False
 
@@ -310,7 +311,7 @@ Analyze the script and respond with ONLY the JSON format above.
             return cues
 
         except Exception as e:
-            logger.error(f"AI 분석 실패: {e}")
+            logger.error(f"AI 분석 실패: {redact_sensitive_text(e)}")
             return self._keyword_based_analysis(segments, category)
 
     def _format_script_with_timing(self, segments: List[ScriptSegment]) -> str:
