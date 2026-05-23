@@ -15,6 +15,8 @@ from typing import Optional, Dict, Any, Callable, List
 from dataclasses import dataclass
 from enum import Enum
 
+from utils.secret_redaction import redact_sensitive_text
+
 logger = logging.getLogger(__name__)
 
 
@@ -121,8 +123,9 @@ class PipelineFacade:
             )
             return {"success": True, "data": result}
         except Exception as e:
-            logger.error(f"[PipelineFacade] 시나리오 생성 실패: {e}")
-            return {"success": False, "error": str(e)}
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PipelineFacade] 시나리오 생성 실패: {safe_error}")
+            return {"success": False, "error": safe_error}
 
     def generate_video(
         self,
@@ -178,8 +181,9 @@ class PipelineFacade:
                 )
 
         except Exception as e:
-            logger.error(f"[PipelineFacade] 영상 생성 실패: {e}")
-            return ProductionResult(success=False, error=str(e))
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PipelineFacade] 영상 생성 실패: {safe_error}")
+            return ProductionResult(success=False, error=safe_error)
 
     def generate_thumbnail_only(
         self,
@@ -229,8 +233,9 @@ class PipelineFacade:
                 stats=result if isinstance(result, dict) else None,
             )
         except Exception as e:
-            logger.error(f"[PipelineFacade] produce_video_with_gui 실패: {e}")
-            return ProductionResult(success=False, error=str(e))
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PipelineFacade] produce_video_with_gui 실패: {safe_error}")
+            return ProductionResult(success=False, error=safe_error)
 
     def produce_batch(
         self,
@@ -248,8 +253,9 @@ class PipelineFacade:
                 for r in (results or [])
             ]
         except Exception as e:
-            logger.error(f"[PipelineFacade] produce_batch 실패: {e}")
-            return [ProductionResult(success=False, error=str(e))]
+            safe_error = redact_sensitive_text(e)
+            logger.error(f"[PipelineFacade] produce_batch 실패: {safe_error}")
+            return [ProductionResult(success=False, error=safe_error)]
 
     def cancel(self):
         """생산 중단"""
