@@ -187,6 +187,40 @@ def _print_release_guidance(guidance: dict[str, Any] | None) -> None:
     )
 
 
+def _actual_guidance_scalar(actual: Any, expected: Any) -> Any:
+    if actual is None:
+        return "missing"
+    if actual == expected:
+        return actual
+    return "unexpected"
+
+
+def _release_guidance_check(manifest: dict[str, Any]) -> dict[str, Any]:
+    guidance = manifest.get("release_guidance")
+    guidance = guidance if isinstance(guidance, dict) else {}
+    expected_distribution_path = RELEASE_GUIDANCE["distribution_path"]
+    expected_history_review = RELEASE_GUIDANCE["existing_repo_history_requires_review"]
+    return {
+        "status": _check_status(manifest.get("release_guidance") == RELEASE_GUIDANCE),
+        "expected_distribution_path": expected_distribution_path,
+        "actual_distribution_path": _actual_guidance_scalar(
+            guidance.get("distribution_path"),
+            expected_distribution_path,
+        ),
+        "expected_existing_repo_history_requires_review": expected_history_review,
+        "actual_existing_repo_history_requires_review": _actual_guidance_scalar(
+            guidance.get("existing_repo_history_requires_review"),
+            expected_history_review,
+        ),
+    }
+
+
+def _verified_release_guidance(manifest: dict[str, Any]) -> dict[str, Any] | None:
+    if manifest.get("release_guidance") == RELEASE_GUIDANCE:
+        return RELEASE_GUIDANCE
+    return None
+
+
 def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[str, Any]:
     out = Path(output_dir).resolve()
     manifest_path = out / MANIFEST_NAME
@@ -239,9 +273,7 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             "actual": actual_archive_count,
         },
         "archive_integrity": actual_integrity,
-        "release_guidance": {
-            "status": _check_status(manifest.get("release_guidance") == RELEASE_GUIDANCE),
-        },
+        "release_guidance": _release_guidance_check(manifest),
         "git_history_included": {
             "status": _check_status(manifest.get("git_history_included") is False),
         },
@@ -255,7 +287,7 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
         "status": status,
         "archive_path": ARCHIVE_NAME,
         "manifest_path": MANIFEST_NAME,
-        "release_guidance": manifest.get("release_guidance"),
+        "release_guidance": _verified_release_guidance(manifest),
         "checks": checks,
     }
 
