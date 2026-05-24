@@ -1,5 +1,5 @@
 @echo off
-REM Reverie Automation (창 없이 실행)
+REM Reverie Studio silent launcher
 cd /d "%~dp0"
-cd src\gui
-start "" pythonw main_window.py
+set PYTHONIOENCODING=utf-8
+start "" pythonw "%~dp0src\main_gui.py"
