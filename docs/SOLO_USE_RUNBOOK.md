@@ -9,10 +9,16 @@ run a dry workflow, and keep private credentials or generated media out of git.
 Run commands from the repository root.
 
 ```bat
+run_reverie_daily_check.bat
 python src\reverie_solo_status.py --json
 python src\reverie_doctor.py --json
 run_reverie.bat
 ```
+
+The daily check runs the safe local status report, setup doctor, and
+no-credential dry-run together. It writes JSON/Markdown reports under
+`%TEMP%\reverie-solo-preflight` and does not start AI services, create media,
+or upload anything.
 
 Use the silent launcher when you want the GUI without a console window:
 
@@ -45,6 +51,7 @@ run_reverie_setup_env.bat
 Manual equivalent:
 
 ```bat
+python src\reverie_solo_preflight.py --json
 python src\reverie_env_bootstrap.py --json
 python src\reverie_solo_status.py --json
 ```
@@ -146,6 +153,7 @@ python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py
   overview of the local checkout.
 - Prefer `run_reverie_setup_env.bat` to create `.env`; it leaves an existing
   `.env` untouched.
+- Prefer `run_reverie_daily_check.bat` at the start of a work session.
 - Prefer `python src\reverie_doctor.py --json` before blaming the GUI.
 - Prefer `local_dry_run` before touching real AI services or upload flows.
 - Prefer `run_reverie_videotoon_smoke.bat` before debugging real video-toon

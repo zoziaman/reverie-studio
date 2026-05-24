@@ -48,6 +48,17 @@ def test_setup_env_launcher_runs_direct_script():
     assert "pause" in launcher
 
 
+def test_daily_check_launcher_runs_solo_preflight():
+    launcher = _launcher_text("run_reverie_daily_check.bat")
+
+    assert 'cd /d "%~dp0"' in launcher
+    assert (
+        'python "%~dp0src\\reverie_solo_preflight.py" --json '
+        '--out "%temp%\\reverie-solo-preflight"'
+    ) in launcher
+    assert "pause" in launcher
+
+
 def test_dry_run_launcher_writes_temp_report():
     launcher = _launcher_text("run_reverie_demo_dry_run.bat")
 
