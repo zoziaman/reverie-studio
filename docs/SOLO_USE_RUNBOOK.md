@@ -35,9 +35,17 @@ personal launchers, and the Remotion project without printing secret values:
 run_reverie_solo_status.bat
 ```
 
+If the solo status report says `.env` is missing, create the local file from
+the template with this launcher. It will not overwrite an existing `.env`:
+
+```bat
+run_reverie_setup_env.bat
+```
+
 Manual equivalent:
 
 ```bat
+python src\reverie_env_bootstrap.py --json
 python src\reverie_solo_status.py --json
 ```
 
@@ -136,6 +144,8 @@ python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py
 - Prefer `run_reverie.bat` or `python src\main_gui.py` for GUI work.
 - Prefer `run_reverie_solo_status.bat` when you need a private readiness
   overview of the local checkout.
+- Prefer `run_reverie_setup_env.bat` to create `.env`; it leaves an existing
+  `.env` untouched.
 - Prefer `python src\reverie_doctor.py --json` before blaming the GUI.
 - Prefer `local_dry_run` before touching real AI services or upload flows.
 - Prefer `run_reverie_videotoon_smoke.bat` before debugging real video-toon

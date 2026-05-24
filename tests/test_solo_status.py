@@ -39,6 +39,7 @@ def _minimal_repo(root: Path, *, include_env: bool = True) -> Path:
         "run_reverie_silent.bat",
         "run_reverie_doctor.bat",
         "run_reverie_solo_status.bat",
+        "run_reverie_setup_env.bat",
         "run_reverie_demo_dry_run.bat",
         "run_reverie_videotoon_smoke.bat",
     ]:
@@ -70,8 +71,8 @@ def test_solo_status_warns_when_env_file_is_missing(tmp_path):
     assert report["overall_status"] == "warnings"
     checks = {check["id"]: check for check in report["checks"]}
     assert checks["local_env_file"]["status"] == "warning"
-    assert "copy .env.example to .env" in checks["local_env_file"]["next_action"].lower()
-    assert "Copy .env.example to .env" in report["next_actions"]
+    assert "run_reverie_setup_env.bat" in checks["local_env_file"]["next_action"]
+    assert "Run run_reverie_setup_env.bat to create .env from .env.example" in report["next_actions"]
 
 
 def test_solo_status_cli_writes_json_report(tmp_path, capsys):

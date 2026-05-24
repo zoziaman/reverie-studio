@@ -26,6 +26,7 @@ GUI_LAUNCHERS = ("run_reverie.bat", "run_reverie_silent.bat")
 PERSONAL_LAUNCHERS = (
     "run_reverie_doctor.bat",
     "run_reverie_solo_status.bat",
+    "run_reverie_setup_env.bat",
     "run_reverie_demo_dry_run.bat",
     "run_reverie_videotoon_smoke.bat",
 )
@@ -123,7 +124,7 @@ def build_solo_status_report(repo_root: Path | str | None = None) -> dict:
             "Local .env file",
             "pass" if env_file.exists() else "warning",
             ".env exists; values were not read" if env_file.exists() else ".env is missing",
-            next_action="Copy .env.example to .env" if not env_file.exists() else "",
+            next_action="Run run_reverie_setup_env.bat to create .env from .env.example" if not env_file.exists() else "",
         ),
         _check(
             "expected_env_keys",
