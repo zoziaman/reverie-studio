@@ -38,6 +38,22 @@ The same dry check is available as a launcher:
 run_reverie_demo_dry_run.bat
 ```
 
+For a video-toon local smoke check, use the dedicated launcher. It writes a
+temporary placeholder actor/background bundle and stages those placeholders into
+the ignored Remotion public smoke folder:
+
+```bat
+run_reverie_videotoon_smoke.bat
+```
+
+Manual equivalent:
+
+```bat
+set PYTHONPATH=src
+python -m utils.videotoon_smoke local --source-repo-root . --output-dir "%TEMP%\reverie-videotoon-smoke" --duration-seconds 10
+python -m utils.videotoon_smoke stage-remotion "%TEMP%\reverie-videotoon-smoke\smoke_manifest.json" --remotion-project remotion-poc
+```
+
 Before trusting a larger edit or after a tool-assisted session:
 
 ```bat
@@ -103,4 +119,6 @@ python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py
 - Prefer `run_reverie.bat` or `python src\main_gui.py` for GUI work.
 - Prefer `python src\reverie_doctor.py --json` before blaming the GUI.
 - Prefer `local_dry_run` before touching real AI services or upload flows.
+- Prefer `run_reverie_videotoon_smoke.bat` before debugging real video-toon
+  generated media.
 - Commit small verified fixes instead of leaving a half-dirty worktree.

@@ -89,6 +89,7 @@ The demo proves that a fresh public clone can:
 Use `--backend-profile` to choose the setup shape that the dry-run describes:
 
 ```powershell
+$env:PYTHONPATH="src"
 python -m reverie_demo --backend-profile local_dry_run --out "$env:TEMP\reverie-public-demo"
 python -m reverie_demo --backend-profile local_comfyui_sovits --out "$env:TEMP\reverie-sovits-plan"
 python -m reverie_demo --backend-profile local_comfyui_supertonic --out "$env:TEMP\reverie-supertonic-plan"
@@ -116,6 +117,7 @@ To make those props usable by `remotion-poc/src/RadioDrama.tsx`, stage the smoke
 assets into the Remotion public folder:
 
 ```powershell
+$env:PYTHONPATH="src"
 python -m utils.videotoon_smoke stage-remotion "$env:TEMP\reverie-videotoon-smoke\smoke_manifest.json" --remotion-project remotion-poc
 ```
 

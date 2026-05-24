@@ -41,3 +41,20 @@ def test_dry_run_launcher_writes_temp_report():
         '--out "%temp%\\reverie-solo-demo"'
     ) in launcher
     assert "pause" in launcher
+
+
+def test_videotoon_smoke_launcher_runs_local_bundle_and_remotion_stage():
+    launcher = _launcher_text("run_reverie_videotoon_smoke.bat")
+
+    assert 'cd /d "%~dp0"' in launcher
+    assert 'set "pythonpath=%~dp0src"' in launcher
+    assert 'set "smoke_out=%temp%\\reverie-videotoon-smoke"' in launcher
+    assert (
+        'python -m utils.videotoon_smoke local --source-repo-root "%~dp0." '
+        '--output-dir "%smoke_out%" --duration-seconds 10'
+    ) in launcher
+    assert (
+        'python -m utils.videotoon_smoke stage-remotion '
+        '"%smoke_out%\\smoke_manifest.json" --remotion-project "%~dp0remotion-poc"'
+    ) in launcher
+    assert "pause" in launcher

@@ -96,6 +96,16 @@ def test_codex_setup_prompt_is_present_for_non_developer_onboarding():
     assert "do not paste real api keys" in text.lower()
 
 
+def test_public_demo_module_command_blocks_set_pythonpath():
+    text = Path("docs/PUBLIC_DEMO.md").read_text(encoding="utf-8")
+
+    backend_profiles = text.split("## Backend Profiles", 1)[1].split("## Local Smoke Bundle", 1)[0]
+    local_smoke = text.split("## Local Smoke Bundle", 1)[1]
+
+    assert '$env:PYTHONPATH="src"' in backend_profiles
+    assert '$env:PYTHONPATH="src"' in local_smoke
+
+
 def test_security_and_release_docs_use_public_verify_gate():
     security = Path("SECURITY_PUBLIC_CHECK.md").read_text(encoding="utf-8")
     checklist = Path("PUBLIC_RELEASE_CHECKLIST.md").read_text(encoding="utf-8")
