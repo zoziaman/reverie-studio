@@ -164,6 +164,11 @@ scam-prevention disclaimers where relevant, and personal-data blocking.
 The repository expects users to provide their own local tools, credentials, and
 assets. A typical setup looks like this:
 
+For personal day-to-day use in the owner's local checkout, start with
+`docs/SOLO_USE_RUNBOOK.md`. It lists the practical GUI launchers, setup doctor,
+dry-run command, test command, and local config/data flow without treating the
+checkout as a public release artifact.
+
 1. Install Python 3.11+.
 2. Install project dependencies from `pyproject.toml` or `requirements.txt`.
 3. Run the public verification bundle before adding real credentials:
