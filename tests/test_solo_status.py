@@ -42,6 +42,7 @@ def _minimal_repo(root: Path, *, include_env: bool = True) -> Path:
         "run_reverie_setup_env.bat",
         "run_reverie_demo_dry_run.bat",
         "run_reverie_videotoon_smoke.bat",
+        "run_reverie_gui_check.bat",
     ]:
         _write(root / name, "@echo off\n")
     return root

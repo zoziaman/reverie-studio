@@ -70,6 +70,17 @@ def test_handoff_launcher_runs_solo_handoff():
     assert "pause" in launcher
 
 
+def test_gui_check_launcher_runs_gui_check():
+    launcher = _launcher_text("run_reverie_gui_check.bat")
+
+    assert 'cd /d "%~dp0"' in launcher
+    assert (
+        'python "%~dp0src\\reverie_gui_check.py" --json '
+        '--out "%temp%\\reverie-gui-check"'
+    ) in launcher
+    assert "pause" in launcher
+
+
 def test_dry_run_launcher_writes_temp_report():
     launcher = _launcher_text("run_reverie_demo_dry_run.bat")
 

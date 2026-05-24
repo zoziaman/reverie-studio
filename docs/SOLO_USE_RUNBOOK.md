@@ -12,6 +12,7 @@ Run commands from the repository root.
 run_reverie_daily_check.bat
 python src\reverie_solo_status.py --json
 python src\reverie_doctor.py --json
+run_reverie_gui_check.bat
 run_reverie_handoff.bat
 run_reverie.bat
 ```
@@ -32,6 +33,17 @@ It writes `solo_handoff_report.json` and `solo_handoff.md` under
 `%TEMP%\reverie-solo-handoff`. The report includes local readiness, safe
 preflight status, branch, recent commits, and `git status --short` file names
 without reading `.env` values or bundling generated media.
+
+If the GUI does not open, check the import path before debugging the full app:
+
+```bat
+run_reverie_gui_check.bat
+```
+
+It writes `%TEMP%\reverie-gui-check\gui_check_report.json` and checks the GUI
+entrypoint, main window module, and launchers without opening a window,
+starting the GUI event loop, calling external services, creating media, or
+uploading anything.
 
 Use the silent launcher when you want the GUI without a console window:
 
@@ -66,6 +78,7 @@ Manual equivalent:
 ```bat
 python src\reverie_solo_preflight.py --json
 python src\reverie_solo_handoff.py --json
+python src\reverie_gui_check.py --json
 python src\reverie_env_bootstrap.py --json
 python src\reverie_solo_status.py --json
 ```
@@ -170,6 +183,8 @@ python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py
 - Prefer `run_reverie_daily_check.bat` at the start of a work session.
 - Prefer `run_reverie_handoff.bat` before handing the checkout to another
   agent session.
+- Prefer `run_reverie_gui_check.bat` when the GUI does not open or exits
+  immediately.
 - Prefer `python src\reverie_doctor.py --json` before blaming the GUI.
 - Prefer `local_dry_run` before touching real AI services or upload flows.
 - Prefer `run_reverie_videotoon_smoke.bat` before debugging real video-toon

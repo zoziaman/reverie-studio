@@ -29,6 +29,7 @@ PERSONAL_LAUNCHERS = (
     "run_reverie_setup_env.bat",
     "run_reverie_demo_dry_run.bat",
     "run_reverie_videotoon_smoke.bat",
+    "run_reverie_gui_check.bat",
 )
 
 
