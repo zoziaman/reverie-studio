@@ -12,6 +12,7 @@ Run commands from the repository root.
 run_reverie_daily_check.bat
 python src\reverie_solo_status.py --json
 python src\reverie_doctor.py --json
+run_reverie_handoff.bat
 run_reverie.bat
 ```
 
@@ -19,6 +20,18 @@ The daily check runs the safe local status report, setup doctor, and
 no-credential dry-run together. It writes JSON/Markdown reports under
 `%TEMP%\reverie-solo-preflight` and does not start AI services, create media,
 or upload anything.
+
+When another agent session needs to continue from the current checkout, create
+a safe handoff bundle:
+
+```bat
+run_reverie_handoff.bat
+```
+
+It writes `solo_handoff_report.json` and `solo_handoff.md` under
+`%TEMP%\reverie-solo-handoff`. The report includes local readiness, safe
+preflight status, branch, recent commits, and `git status --short` file names
+without reading `.env` values or bundling generated media.
 
 Use the silent launcher when you want the GUI without a console window:
 
@@ -52,6 +65,7 @@ Manual equivalent:
 
 ```bat
 python src\reverie_solo_preflight.py --json
+python src\reverie_solo_handoff.py --json
 python src\reverie_env_bootstrap.py --json
 python src\reverie_solo_status.py --json
 ```
@@ -154,6 +168,8 @@ python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py
 - Prefer `run_reverie_setup_env.bat` to create `.env`; it leaves an existing
   `.env` untouched.
 - Prefer `run_reverie_daily_check.bat` at the start of a work session.
+- Prefer `run_reverie_handoff.bat` before handing the checkout to another
+  agent session.
 - Prefer `python src\reverie_doctor.py --json` before blaming the GUI.
 - Prefer `local_dry_run` before touching real AI services or upload flows.
 - Prefer `run_reverie_videotoon_smoke.bat` before debugging real video-toon

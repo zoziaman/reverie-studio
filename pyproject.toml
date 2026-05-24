@@ -47,6 +47,7 @@ reverie-commercial-readiness = "utils.commercial_readiness:main"
 reverie-demo = "reverie_demo:main"
 reverie-doctor = "reverie_doctor:main"
 reverie-env-bootstrap = "reverie_env_bootstrap:main"
+reverie-solo-handoff = "reverie_solo_handoff:main"
 reverie-solo-preflight = "reverie_solo_preflight:main"
 reverie-solo-status = "reverie_solo_status:main"
 reverie-public-verify = "reverie_public_verify:main"
@@ -61,7 +62,7 @@ reverie-videotoon-smoke = "utils.videotoon_smoke:main"
 where = ["src"]
 
 [tool.setuptools]
-py-modules = ["reverie_backends", "reverie_demo", "reverie_doctor", "reverie_env_bootstrap", "reverie_public_verify", "reverie_quality", "reverie_solo_preflight", "reverie_solo_status"]
+py-modules = ["reverie_backends", "reverie_demo", "reverie_doctor", "reverie_env_bootstrap", "reverie_public_verify", "reverie_quality", "reverie_solo_handoff", "reverie_solo_preflight", "reverie_solo_status"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
