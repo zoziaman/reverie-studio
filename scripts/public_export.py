@@ -305,7 +305,6 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             detail="manifest JSON root is not an object",
         )
     archive_exists = archive_path.exists()
-    actual_sha = _sha256_file(archive_path) if archive_exists else ""
     expected_sha = str(manifest.get("archive_sha256") or "")
     tracked_file_count = _manifest_int(manifest, "tracked_file_count")
     if tracked_file_count is None:
@@ -314,6 +313,7 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
             detail="manifest numeric field is invalid: tracked_file_count",
         )
     archive_read_error = False
+    actual_sha = ""
     actual_archive_count: int | str = 0
     actual_integrity = {
         "status": "fail",
@@ -322,13 +322,26 @@ def verify_public_export(output_dir: Path | str = DEFAULT_EXPORT_OUT) -> dict[st
         "count_matches_tracked_files": False,
     }
     if archive_exists:
-        try:
-            actual_archive_count = _archive_file_count(archive_path)
-            actual_integrity = _archive_integrity_report(archive_path, tracked_file_count)
-        except zipfile.BadZipFile:
+        if not archive_path.is_file():
             archive_read_error = True
+            actual_sha = "unreadable"
             actual_archive_count = "unreadable"
-            actual_integrity["detail"] = "archive ZIP could not be read"
+            actual_integrity["detail"] = "archive path is not a file"
+        else:
+            try:
+                actual_sha = _sha256_file(archive_path)
+                actual_archive_count = _archive_file_count(archive_path)
+                actual_integrity = _archive_integrity_report(archive_path, tracked_file_count)
+            except zipfile.BadZipFile:
+                archive_read_error = True
+                actual_sha = "unreadable"
+                actual_archive_count = "unreadable"
+                actual_integrity["detail"] = "archive ZIP could not be read"
+            except OSError:
+                archive_read_error = True
+                actual_sha = "unreadable"
+                actual_archive_count = "unreadable"
+                actual_integrity["detail"] = "archive file could not be read"
     expected_archive_count = _manifest_int(manifest, "archive_file_count")
     if expected_archive_count is None:
         return _invalid_manifest_report(
