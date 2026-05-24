@@ -41,6 +41,7 @@ from gui.settings_manager import SettingsManager
 from gui.tab_subtitle import SubtitleSettingsTab
 from gui.tab_thumbnail import ThumbnailSettingsTab
 from gui.setup_wizard import SetupWizard, should_show_wizard
+from reverie_solo_status import build_solo_status_report, summarize_solo_status
 
 # 새로운 유틸리티
 from utils.production_stats import ProductionStats
@@ -437,6 +438,12 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
             text_color="#666666"
         )
         self.story_llm_dot.pack(side="left", padx=(0, 12))
+
+        self.solo_status_dot = ctk.CTkLabel(
+            status_bar, text="Local: ...", font=get_font("small"),
+            text_color="#666666"
+        )
+        self.solo_status_dot.pack(side="left", padx=(0, 12))
 
         # 상태 새로고침 버튼 (우측)
         ctk.CTkButton(
@@ -1759,6 +1766,15 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
             else:
                 results["story_llm_ready"] = bool(getattr(config, 'GEMINI_API_KEY', ''))
                 results["story_llm_label"] = "Gemini API"
+            try:
+                results["solo_status"] = summarize_solo_status(build_solo_status_report())
+            except Exception as e:
+                results["solo_status"] = {
+                    "text": "Local: check error",
+                    "color": "#FF9800",
+                    "status": "warnings",
+                    "next_action": str(e)[:120],
+                }
             # UI 업데이트 (메인 스레드에서)
             try:
                 if getattr(self, "_is_shutting_down", False) or not self.winfo_exists():
@@ -1785,6 +1801,12 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
                 self.story_llm_dot.configure(
                     text=f"● {label}",
                     text_color=green if ready else yellow
+                )
+            if hasattr(self, 'solo_status_dot'):
+                solo_status = results.get("solo_status") or {}
+                self.solo_status_dot.configure(
+                    text=solo_status.get("text", "Local: unknown"),
+                    text_color=solo_status.get("color", yellow),
                 )
         except Exception:
             pass  # 창 닫힌 경우 무시

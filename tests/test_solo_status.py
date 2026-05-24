@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from reverie_solo_status import build_solo_status_report, main
+from reverie_solo_status import build_solo_status_report, main, summarize_solo_status
 
 
 def _write(path: Path, text: str = "") -> None:
@@ -86,3 +86,34 @@ def test_solo_status_cli_writes_json_report(tmp_path, capsys):
     assert payload["schema"] == "reverie.local.solo_status.v1"
     printed = capsys.readouterr().out
     assert "reverie.local.solo_status.v1" in printed
+
+
+def test_solo_status_summary_is_gui_friendly_and_action_oriented(tmp_path):
+    ready = summarize_solo_status(build_solo_status_report(_minimal_repo(tmp_path / "ready")))
+    warning = summarize_solo_status(build_solo_status_report(_minimal_repo(tmp_path / "warning", include_env=False)))
+    needs_setup = summarize_solo_status(
+        {
+            "overall_status": "needs_setup",
+            "next_actions": ["Restore .env.example from git"],
+        }
+    )
+
+    assert ready == {
+        "text": "Local: ready",
+        "color": "#4CAF50",
+        "status": "ready",
+        "next_action": "",
+    }
+    assert warning["text"] == "Local: warnings"
+    assert warning["color"] == "#FF9800"
+    assert warning["next_action"] == "Run run_reverie_setup_env.bat to create .env from .env.example"
+    assert needs_setup["text"] == "Local: needs setup"
+    assert needs_setup["color"] == "#F44336"
+
+
+def test_main_gui_status_bar_is_wired_to_solo_status():
+    source = (Path(__file__).resolve().parents[1] / "src" / "gui" / "main_window.py").read_text(encoding="utf-8")
+
+    assert "build_solo_status_report" in source
+    assert "summarize_solo_status" in source
+    assert "self.solo_status_dot" in source

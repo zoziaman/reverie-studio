@@ -98,6 +98,34 @@ def _next_actions(checks: list[dict]) -> list[str]:
     return actions
 
 
+def summarize_solo_status(report: dict) -> dict:
+    """Return a short GUI-friendly status payload."""
+
+    status = str(report.get("overall_status") or "needs_setup")
+    next_actions = report.get("next_actions") or []
+    next_action = str(next_actions[0]) if next_actions else ""
+    if status == "ready":
+        return {
+            "text": "Local: ready",
+            "color": "#4CAF50",
+            "status": status,
+            "next_action": "",
+        }
+    if status == "warnings":
+        return {
+            "text": "Local: warnings",
+            "color": "#FF9800",
+            "status": status,
+            "next_action": next_action,
+        }
+    return {
+        "text": "Local: needs setup",
+        "color": "#F44336",
+        "status": "needs_setup",
+        "next_action": next_action,
+    }
+
+
 def build_solo_status_report(repo_root: Path | str | None = None) -> dict:
     """Build a local-only personal readiness report without secret values."""
 
