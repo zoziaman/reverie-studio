@@ -9,6 +9,7 @@ run a dry workflow, and keep private credentials or generated media out of git.
 Run commands from the repository root.
 
 ```bat
+python src\reverie_solo_status.py --json
 python src\reverie_doctor.py --json
 run_reverie.bat
 ```
@@ -24,6 +25,20 @@ check:
 
 ```bat
 run_reverie_doctor.bat
+```
+
+Use the solo status launcher when you want a local readiness report for your
+own checkout. It checks `.env`, `config`, `data`, pack folders, GUI launchers,
+personal launchers, and the Remotion project without printing secret values:
+
+```bat
+run_reverie_solo_status.bat
+```
+
+Manual equivalent:
+
+```bat
+python src\reverie_solo_status.py --json
 ```
 
 For a no-credential workflow check that writes only temporary reports:
@@ -66,6 +81,7 @@ python -m pytest -q
 - `src\gui\`: window, tabs, settings, and user-facing controls.
 - `src\pipeline\`: end-to-end production pipeline helpers.
 - `src\modules_pro\`: video, image, TTS, script, quality, and video-toon modules.
+- `src\reverie_solo_status.py`: personal local checkout readiness report.
 - `src\reverie_doctor.py`: local setup and prerequisite report.
 - `src\reverie_demo.py`: dry workflow runner for checking the pipeline shape.
 - `config\`: project configuration templates and validators.
@@ -108,6 +124,7 @@ If a command fails after another agent session, start with these checks:
 
 ```bat
 git status --short
+python src\reverie_solo_status.py --json
 python src\reverie_doctor.py --json
 python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py tests\test_gui_runtime.py -q
 ```
@@ -117,6 +134,8 @@ python -m pytest tests\test_windows_launchers.py tests\test_gui_wiring_guards.py
 - Keep `.env`, Firebase credentials, OAuth tokens, generated media, voice data,
   model weights, and local service paths out of commits.
 - Prefer `run_reverie.bat` or `python src\main_gui.py` for GUI work.
+- Prefer `run_reverie_solo_status.bat` when you need a private readiness
+  overview of the local checkout.
 - Prefer `python src\reverie_doctor.py --json` before blaming the GUI.
 - Prefer `local_dry_run` before touching real AI services or upload flows.
 - Prefer `run_reverie_videotoon_smoke.bat` before debugging real video-toon
