@@ -245,7 +245,7 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
 
         self.version_label = ctk.CTkLabel(
             title_frame,
-            text="v60.1.0",
+            text="v63.0",
             font=get_font("small"),
             text_color="#666666"
         )
@@ -984,12 +984,6 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
             font=get_font("title", bold=True)
         )
         title_label.pack(pady=(0, 20))
-
-        # v63: 라이선스 정보 카드 제거됨 (개인용)
-
-        # 구분선
-        separator = ctk.CTkFrame(system_frame, height=2, fg_color="gray")
-        separator.pack(fill="x", padx=20, pady=20)
 
         # ==================== 서버 상태 ====================
         status_frame = ctk.CTkFrame(system_frame)
