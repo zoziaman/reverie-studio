@@ -41,7 +41,6 @@ class InfraFacade:
         self._upload_scheduler = None
         self._template_manager = None
         self._batch_queue = None
-        self._license_validator = None
         self._model_manager = None
         self._server_manager = None
         self._production_stats = None
@@ -183,16 +182,8 @@ class InfraFacade:
         return self.batch_queue.get_status()
 
     # =========================================================
-    # 라이센스/하드웨어
+    # 하드웨어
     # =========================================================
-
-    @property
-    def license_validator(self):
-        """LicenseValidator 인스턴스"""
-        if self._license_validator is None:
-            from utils.license_validator import get_license_validator
-            self._license_validator = get_license_validator()
-        return self._license_validator
 
     def get_hardware_id(self) -> str:
         """하드웨어 ID 반환"""

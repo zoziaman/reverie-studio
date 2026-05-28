@@ -1110,13 +1110,8 @@ class InsightTab:
 
         output_path = Path(output_dir)
 
-        # 암호화 여부 확인
-        encrypt = messagebox.askyesno(
-            "패키지 암호화",
-            "패키지를 암호화하시겠습니까?\n\n"
-            "암호화하면 Studio에서만 열 수 있습니다.\n"
-            "유료 배포용이면 '예'를 선택하세요."
-        )
+        # v63: 팩 암호화 제거 (개인용) — 항상 평문 생성
+        encrypt = False
 
         # .revpack 생성 시작
         self.is_collecting = True

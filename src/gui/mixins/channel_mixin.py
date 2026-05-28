@@ -30,8 +30,8 @@ class ChannelMixin:
         """
         채널 옵션 목록 로드
 
-        - 개발 모드(DEV_MODE): 기본 채널 + 설치된 패키지 모두 표시
-        - 일반 사용자: Firebase에서 owned_packs 확인 후 해당 패키지만 표시
+        v63: 라이선스/owned_packs 제거 (개인용).
+        기본 채널 + 설치된 모든 패키지를 항상 표시.
 
         Returns:
             list of (channel_id, display_name, package_data or None)
@@ -44,80 +44,24 @@ class ChannelMixin:
             ("mystery_toon", "🔎 미스터리 영상툰", None),
         ]
 
-        # 1. 라이센스에서 owned_packs 가져오기
-        owned_packs = []
-        license_type = 'A'  # 기본값
+        # 기본 내장 채널 추가
+        options.extend(DEFAULT_CHANNELS)
 
-        # 개발 모드 체크
-        if config.DEV_MODE:
-            owned_packs = ['*']  # 전체 접근
-            license_type = 'A'
-        else:
-            try:
-                from utils.firebase_license import HybridLicenseValidator
-                validator = HybridLicenseValidator(config.DATA_DIR)
-                owned_packs = validator.get_owned_packs()
+        # 설치된 커스텀 패키지도 모두 추가
+        try:
+            from utils.package_manager import get_package_manager
+            pm = get_package_manager()
+            installed = pm.list_installed_packages()
 
-                # 라이센스 정보에서 타입 가져오기
-                if self.license_info:
-                    license_type = self.license_info.get('license_type', 'A')
-            except Exception as e:
-                logger.warning(f"[main_window] owned_packs 로드 실패: {e}")
+            for pkg_id, pkg_info in installed.items():
+                # 기본 채널과 중복 방지
+                if pkg_id not in ['daily_life_toon', 'mystery_toon']:
+                    pkg_name = pkg_info.get('package_name', pkg_id)
+                    display = f"📦 {pkg_name}"
+                    options.append((pkg_id, display, pkg_info))
 
-        # 2. 개발 모드 또는 전체 이용권(A): 기본 채널 + 모든 패키지 표시
-        if config.DEV_MODE or license_type == 'A' or '*' in owned_packs:
-            # 기본 내장 채널 추가
-            options.extend(DEFAULT_CHANNELS)
-
-            # 설치된 커스텀 패키지도 추가
-            try:
-                from utils.package_manager import get_package_manager
-                pm = get_package_manager()
-                installed = pm.list_installed_packages()
-
-                for pkg_id, pkg_info in installed.items():
-                    # 기본 채널과 중복 방지
-                    if pkg_id not in ['daily_life_toon', 'mystery_toon']:
-                        pkg_name = pkg_info.get('package_name', pkg_id)
-                        display = f"📦 {pkg_name}"
-                        options.append((pkg_id, display, pkg_info))
-
-            except Exception as e:
-                logger.warning(f"[main_window] 패키지 목록 로드 실패: {e}")
-
-        else:
-            # 3. 일반 사용자: owned_packs에 있는 것만 표시
-
-            # 기본 채널 중 owned_packs에 있는 것만 추가
-            default_pack_map = {
-                'daily_life_toon': ("daily_life_toon", "🎬 일상 영상툰", None),
-                'mystery_toon': ("mystery_toon", "🔎 미스터리 영상툰", None),
-            }
-
-            for pack_id in owned_packs:
-                if pack_id in default_pack_map:
-                    options.append(default_pack_map[pack_id])
-
-            # 커스텀 패키지 중 owned_packs에 있는 것 추가
-            try:
-                from utils.package_manager import get_package_manager
-                pm = get_package_manager()
-                installed = pm.list_installed_packages()
-
-                for pkg_id, pkg_info in installed.items():
-                    pack_id = pkg_info.get('package_id', pkg_id)
-
-                    if pack_id in owned_packs and pack_id not in default_pack_map:
-                        pkg_name = pkg_info.get('package_name', pkg_id)
-                        display = f"📦 {pkg_name}"
-                        options.append((pkg_id, display, pkg_info))
-
-            except Exception as e:
-                logger.warning(f"[main_window] 패키지 목록 로드 실패: {e}")
-
-            # 보유 패키지가 없으면 안내
-            if not options:
-                options.append(("_no_owned", "🔒 보유한 패키지 없음 - 구매 필요", None))
+        except Exception as e:
+            logger.warning(f"[main_window] 패키지 목록 로드 실패: {e}")
 
         return options
 

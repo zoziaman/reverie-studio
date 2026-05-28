@@ -797,48 +797,12 @@ ElevenLabs 힌트:
 
     def _check_license_for_export(self) -> tuple:
         """
-        라이센스 검증 (내보내기용)
+        v63: 라이선스/암호화 제거 (개인용) — 항상 평문 내보내기 허용.
 
         Returns:
             (can_export, can_encrypt, license_type, message, owned_packs)
         """
-        try:
-            from utils.firebase_license import HybridLicenseValidator, CloudFunctionsClient
-
-            validator = HybridLicenseValidator()
-            is_valid, license_info = validator.validate()
-
-            if not is_valid:
-                return (False, False, None, "유효한 라이센스가 없습니다.", [])
-
-            license_type = license_info.get("license_type", "T")
-            license_key = license_info.get("license_key", "")
-
-            # 라이센스 타입별 권한
-            # A: Admin - 모든 기능
-            # H: Heavy - 암호화 가능
-            # M: Mid - 기본 내보내기만
-            # T: Trial - 기본 내보내기만
-            can_encrypt = license_type in ("A", "H")
-
-            # Firebase에서 보유 팩 목록 조회
-            owned_packs = []
-            try:
-                cf_client = CloudFunctionsClient()
-                if cf_client.is_available and license_key:
-                    success, msg, packs = cf_client.get_owned_packs(license_key)
-                    if success:
-                        owned_packs = packs
-            except Exception:
-                pass  # 팩 목록 조회 실패해도 계속 진행
-
-            return (True, can_encrypt, license_type, "라이센스 확인됨", owned_packs)
-
-        except ImportError:
-            # 라이센스 모듈 없으면 기본 내보내기만 허용
-            return (True, False, "DEMO", "라이센스 모듈 없음 (데모 모드)", [])
-        except Exception as e:
-            return (False, False, None, f"라이센스 확인 오류: {e}", [])
+        return (True, False, "A", "개인용", [])
 
     def _export_revpack(self):
         """설계 결과를 .revpack으로 내보내기 (라이센스 검증 포함)"""

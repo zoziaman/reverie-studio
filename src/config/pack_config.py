@@ -74,30 +74,20 @@ from config.pack_models import (
 )
 
 # ============================================================
-# pack_crypto.py에서 보안 기능 import + re-export
+# v63: 팩 암호화/서명/라이선스 제거 — 평문 팩만 지원 (개인용)
+# pack_crypto.py 의존 제거. 호환을 위한 최소 no-op 스텁만 유지.
 # ============================================================
-from config.pack_crypto import (
-    CRYPTO_AVAILABLE,
-    _is_dev_pack_mode,
-    _is_encrypted_pack_required,
-    _allow_legacy_pack_key,
-    configure_pack_crypto,
-    _resolve_pack_crypto_params,
-    _get_pack_sign_key,
-    calc_pack_signature,
-    _verify_pack_signature,
-    _is_pack_strict_access,
-    _check_pack_access,
-    _server_pack_keys,
-    fetch_pack_key_from_server,
-    _decrypt_content_with_password,
-    _get_decryption_key,
-    _decrypt_content,
-    # 하위호환: 내부 상수도 re-export (테스트에서 참조)
-    _DEFAULT_PACK_ENCRYPTION_SALT,
-    _LEGACY_PACK_ENCRYPTION_PASSWORD_ENV,
-    _PACK_SIGN_SUFFIX,
-)
+CRYPTO_AVAILABLE = False
+
+
+def _is_dev_pack_mode() -> bool:
+    """개인용 빌드: 항상 개발 모드로 취급 (.json/loose 팩 허용)."""
+    return True
+
+
+def configure_pack_crypto(*args, **kwargs) -> bool:
+    """no-op (팩 암호화 제거됨)."""
+    return False
 
 # v59.1.0: 팩 검증기
 try:
@@ -708,23 +698,10 @@ def _read_pack_file(zf: zipfile.ZipFile, file_list: List[str], file_name: str, i
     Returns:
         복호화된 바이트 데이터
     """
-    # v57.7.1: 암호화된 파일은 .enc 확장자
-    enc_file_name = file_name + ".enc"
-
-    if is_encrypted and enc_file_name in file_list:
-        # 암호화된 파일 로드
-        encrypted_data = zf.read(enc_file_name)
-        decrypted = _decrypt_content(encrypted_data)
-        if decrypted:
-            return decrypted
-        else:
-            logger.error(f"[PackConfig] 복호화 실패: {enc_file_name}")
-            return None
-    elif file_name in file_list:
-        # 일반 파일 로드
+    # v63: 평문 팩만 지원 (암호화 .enc 제거됨)
+    if file_name in file_list:
         return zf.read(file_name)
-    else:
-        return None
+    return None
 
 
 @_with_pack_lock
@@ -1143,60 +1120,10 @@ def load_pack(pack_path: str) -> bool:
         return False
 
     try:
-        # v62: Fernet wrapper 감지 — 전체 ZIP을 Fernet으로 감싼 경우
-        zip_source = None
-        with open(pack_path, 'rb') as f:
-            header = f.read(6)
-        wrapper_encrypted = False
-        if header == b'gAAAAA' and CRYPTO_AVAILABLE:
-            wrapper_encrypted = True
-            logger.info(f"[PackConfig] Fernet wrapper 감지: {pack_path.name}")
-            with open(pack_path, 'rb') as f:
-                encrypted_data = f.read()
-
-            # v62.27: Phase B — 서버 키 우선 시도 (실패 시 Phase A 폴백)
-            pack_stem = pack_path.stem  # e.g., "horror_v59"
-            server_key = fetch_pack_key_from_server(pack_stem)
-            decrypted_zip = None
-            if server_key:
-                decrypted_zip = _decrypt_content_with_password(
-                    encrypted_data, server_key.encode("utf-8")
-                )
-                if decrypted_zip:
-                    logger.info(f"[PackConfig] Phase B 서버 키 복호화 성공: {pack_path.name}")
-                else:
-                    logger.warning(f"[PackConfig] Phase B 서버 키 복호화 실패 — Phase A 폴백")
-
-            if not decrypted_zip:
-                decrypted_zip = _decrypt_content(encrypted_data)
-
-            if decrypted_zip:
-                zip_source = io.BytesIO(decrypted_zip)
-                logger.info(f"[PackConfig] Fernet 복호화 성공 ({len(decrypted_zip):,} bytes)")
-            else:
-                logger.error(f"[PackConfig] Fernet 복호화 실패: {pack_path.name}")
-                return False
-
-        with zipfile.ZipFile(zip_source or pack_path, 'r') as zf:
+        # v63: 평문 .revpack(ZIP)만 지원 — 암호화/서명/접근제어 제거됨
+        with zipfile.ZipFile(pack_path, 'r') as zf:
             file_list = zf.namelist()
-
-            # v57.7.1: 암호화 여부 확인 (manifest.json.enc 존재 여부)
-            is_encrypted = "manifest.json.enc" in file_list
-            encrypted_pack = wrapper_encrypted or is_encrypted
-
-            # 운영 보안 모드: 평문 ZIP .revpack 거부
-            if _is_encrypted_pack_required() and not encrypted_pack:
-                logger.error(
-                    f"[PackConfig] 암호화되지 않은 팩 거부: {pack_path.name} "
-                    "(REVERIE_PACK_REQUIRE_ENCRYPTED=1)"
-                )
-                return False
-
-            if is_encrypted:
-                logger.info(f"[PackConfig] 암호화된 팩 감지: {pack_path.name}")
-                if not CRYPTO_AVAILABLE:
-                    logger.error("[PackConfig] 암호화된 팩이지만 cryptography 미설치")
-                    return False
+            is_encrypted = False
 
             # manifest.json 로드
             manifest = {}
@@ -1227,20 +1154,9 @@ def load_pack(pack_path: str) -> bool:
                         logger.error(f"  - {err}")
                     return False
 
-            # v62.25: 팩 무결성 서명 검증
-            if not _verify_pack_signature(zf, manifest):
-                return False
+            # v63: 팩 서명 검증 / 라이선스 접근 제어 제거됨 (개인용)
 
-            # v62.26: 라이선스 접근 제어
-            plan_required = manifest.get("plan_required")
-            if plan_required and not _check_pack_access(plan_required):
-                logger.error(
-                    f"[PackConfig] ❌ 팩 접근 거부: {pack_path.name} "
-                    f"(plan_required={plan_required!r})"
-                )
-                return False
-
-            # topics.json 로드 (암호화 안 함)
+            # topics.json 로드
             topics = {}
             if "topics.json" in file_list:
                 topics = json.loads(zf.read("topics.json").decode('utf-8', errors='replace'))

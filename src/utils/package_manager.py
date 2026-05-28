@@ -418,21 +418,9 @@ class PackageManager:
         from config.settings import config
         self.config = config
 
-        # 보안 매니저
-        try:
-            from utils.package_security import get_security_manager
-            self.security = get_security_manager()
-        except ImportError:
-            self.security = None
-            logger.warning("[PackageManager] 보안 모듈 로드 실패")
-
-        # 라이선스 매니저 (패키지 소유권 확인용)
-        try:
-            from utils.firebase_license import HybridLicenseValidator
-            self.license_validator = HybridLicenseValidator(config.DATA_DIR)
-        except ImportError:
-            self.license_validator = None
-            logger.warning("[PackageManager] 라이선스 모듈 로드 실패")
+        # v63: 팩 암호화/서명/라이선스 제거 (개인용) — 평문 팩만 사용
+        self.security = None
+        self.license_validator = None
 
         # 패키지 저장 경로
         self.packages_dir = Path(config.DATA_DIR) / "packages"

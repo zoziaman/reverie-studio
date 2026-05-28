@@ -45,7 +45,7 @@ try:
         LicenseInfo,
         ModelType,
     )
-    from utils.package_security import get_security_manager
+    # v63: 팩 암호화/서명 제거 (개인용) — package_security 의존 삭제
     PACKAGE_SYSTEM_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"[RevpackGenerator] 패키지 시스템 Import 실패: {e}")
@@ -233,13 +233,8 @@ class RevpackGenerator:
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        # 보안 매니저
+        # v63: 팩 암호화/서명 제거 (개인용) — 평문 팩만 생성
         self.security = None
-        if PACKAGE_SYSTEM_AVAILABLE:
-            try:
-                self.security = get_security_manager()
-            except Exception as e:
-                logger.warning(f"[RevpackGenerator] 보안 매니저 로드 실패: {e}")
 
     # ============================================================
     # CloneRecipe → ChannelPackage 변환
@@ -1175,22 +1170,12 @@ class RevpackGenerator:
         - prompts/sd_prompts.json(.enc)
         """
         try:
-            # 암호화 복호화 함수 (pack_config.py와 동일)
-            from config.pack_config import _decrypt_content, CRYPTO_AVAILABLE
-
-            # 암호화 여부 감지
-            is_encrypted = "manifest.json.enc" in file_list
+            # v63: 평문 팩만 지원 (암호화 .enc 제거됨)
+            is_encrypted = False
 
             def read_file(filename: str) -> Optional[bytes]:
-                """파일 읽기 (암호화 자동 처리)"""
-                enc_name = filename + ".enc"
-                if is_encrypted and enc_name in file_list:
-                    if not CRYPTO_AVAILABLE:
-                        logger.error("[RevpackLoader] 암호화 라이브러리 없음")
-                        return None
-                    encrypted = zf.read(enc_name)
-                    return _decrypt_content(encrypted)
-                elif filename in file_list:
+                """파일 읽기 (평문)"""
+                if filename in file_list:
                     return zf.read(filename)
                 return None
 

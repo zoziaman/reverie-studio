@@ -1,16 +1,16 @@
 # src/gui/mixins/auth_mixin.py
 """
-v60.1.0: 인증/라이센스 Mixin — YouTube OAuth + 라이센스 관리
+v60.1.0: 인증 Mixin — YouTube OAuth
+v63: 라이선스 관련 기능 제거 (개인용). YouTube 인증만 유지.
 
-ReverieGUI에서 추출된 5개 메서드:
-- _show_license_dialog: 라이센스 입력 다이얼로그
+ReverieGUI에서 추출된 메서드:
 - _upload_youtube_credentials: credentials.json 업로드
 - _authenticate_youtube: YouTube OAuth 인증
 - _reset_youtube_auth: YouTube 인증 초기화
-- _apply_license_restrictions: 라이센스 기반 채널 제한
+- _apply_license_restrictions: 채널 목록 새로고침 (이름 유지, 라이선스 제한 없음)
 
 의존하는 self 변수:
-- self.license_validator, self.youtube_cred_path, self.youtube_token_path
+- self.youtube_cred_path, self.youtube_token_path
 - self.cred_status_label, self.token_status_label
 - self.channel_options, self.channel_dropdown
 """
@@ -27,213 +27,7 @@ logger = get_logger("auth_mixin")
 
 
 class AuthMixin:
-    """인증/라이센스 횡단 관심사"""
-
-    def _show_license_dialog(self, error_msg: str) -> bool:
-        """
-        라이센스 입력 다이얼로그
-
-        Args:
-            error_msg: 에러 메시지
-
-        Returns:
-            bool: 라이센스 등록 성공 여부
-        """
-        from utils.hardware_id import get_hardware_id
-        from gui.main_window import get_font
-
-        # 다이얼로그 생성
-        dialog = ctk.CTkToplevel(self)
-        dialog.title("🔐 라이센스 인증")
-        dialog.geometry("600x500")
-
-        # 중앙 배치
-        dialog.update_idletasks()
-        x = (dialog.winfo_screenwidth() - 600) // 2
-        y = (dialog.winfo_screenheight() - 500) // 2
-        dialog.geometry(f"600x500+{x}+{y}")
-
-        dialog.transient(self)
-        dialog.grab_set()
-        dialog.resizable(False, False)
-
-        # 결과 저장용
-        result = [False]
-
-        # 타이틀
-        title = ctk.CTkLabel(
-            dialog,
-            text="🔐 라이센스 인증",
-            font=ctk.CTkFont(size=24, weight="bold")
-        )
-        title.pack(pady=20)
-
-        # 에러 메시지
-        if error_msg:
-            error_label = ctk.CTkLabel(
-                dialog,
-                text=f"⚠️ {error_msg}",
-                font=ctk.CTkFont(size=12),
-                text_color="orange"
-            )
-            error_label.pack(pady=10)
-
-        # 구분선
-        separator1 = ctk.CTkFrame(dialog, height=2, fg_color="gray")
-        separator1.pack(fill="x", padx=40, pady=20)
-
-        # 하드웨어 ID 섹션
-        hw_frame = ctk.CTkFrame(dialog)
-        hw_frame.pack(pady=10, padx=40, fill="x")
-
-        ctk.CTkLabel(
-            hw_frame,
-            text="💻 하드웨어 ID:",
-            font=get_font("medium", bold=True)
-        ).pack(anchor="w", pady=(10, 5))
-
-        # 하드웨어 ID 가져오기
-        hw_id = get_hardware_id()
-
-        hw_entry_frame = ctk.CTkFrame(hw_frame, fg_color="transparent")
-        hw_entry_frame.pack(fill="x", pady=5)
-
-        hw_entry = ctk.CTkEntry(
-            hw_entry_frame,
-            width=400,
-            font=ctk.CTkFont(size=13, family="Consolas")
-        )
-        hw_entry.insert(0, hw_id)
-        hw_entry.configure(state="readonly")
-        hw_entry.pack(side="left", fill="x", expand=True, padx=(10, 5))
-
-        def copy_hw_id():
-            try:
-                import pyperclip
-                pyperclip.copy(hw_id)
-                messagebox.showinfo("복사 완료", "하드웨어 ID가 클립보드에 복사되었습니다.")
-            except Exception:
-                dialog.clipboard_clear()
-                dialog.clipboard_append(hw_id)
-                messagebox.showinfo("복사 완료", "하드웨어 ID가 클립보드에 복사되었습니다.")
-
-        copy_btn = ctk.CTkButton(
-            hw_entry_frame,
-            text="📋",
-            width=40,
-            command=copy_hw_id
-        )
-        copy_btn.pack(side="left", padx=(0, 10))
-
-        ctk.CTkLabel(
-            hw_frame,
-            text="※ 이 ID를 개발자에게 전달하여 라이센스를 받으세요.",
-            font=ctk.CTkFont(size=10),
-            text_color="gray"
-        ).pack(anchor="w", pady=(5, 10), padx=10)
-
-        # 구분선
-        separator2 = ctk.CTkFrame(dialog, height=2, fg_color="gray")
-        separator2.pack(fill="x", padx=40, pady=20)
-
-        # 라이센스 입력 섹션
-        license_frame = ctk.CTkFrame(dialog)
-        license_frame.pack(pady=10, padx=40, fill="x")
-
-        ctk.CTkLabel(
-            license_frame,
-            text="🔑 라이센스 키:",
-            font=get_font("medium", bold=True)
-        ).pack(anchor="w", pady=(10, 5))
-
-        license_entry = ctk.CTkEntry(
-            license_frame,
-            placeholder_text="XXXXX-XXXXX-XXXXX-XXXXX",
-            font=ctk.CTkFont(size=13, family="Consolas")
-        )
-        license_entry.pack(fill="x", pady=5, padx=10)
-
-        # 상태 메시지
-        status_label = ctk.CTkLabel(
-            license_frame,
-            text="",
-            font=ctk.CTkFont(size=10)
-        )
-        status_label.pack(pady=5)
-
-        # 버튼
-        button_frame = ctk.CTkFrame(dialog, fg_color="transparent")
-        button_frame.pack(pady=20)
-
-        def on_submit():
-            key = license_entry.get().strip().upper()
-
-            if not key:
-                status_label.configure(text="❌ 라이센스 키를 입력하세요.", text_color="red")
-                return
-
-            # 검증
-            success, msg = self.license_validator.set_license(key)
-
-            if success:
-                status_label.configure(text=f"✅ {msg}", text_color="green")
-                # v62.24: 라이선스 등록 직후 런타임 팩 복호화 키 동기화
-                try:
-                    from config.pack_config import configure_pack_crypto
-                    info = self.license_validator.get_license_info() if hasattr(self, "license_validator") else {}
-                    lk = key
-                    hw = ""
-                    if isinstance(info, dict):
-                        lk = info.get("license_key", lk)
-                        hw = info.get("hardware_id", "")
-                    if not hw:
-                        hw = get_hardware_id()
-                    configure_pack_crypto(lk, hw)
-                except Exception as e:
-                    logger.debug(f"[auth_mixin] pack crypto runtime key 동기화 스킵: {e}")
-                result[0] = True
-                dialog.after(1000, dialog.destroy)
-            else:
-                status_label.configure(text=f"❌ {msg}", text_color="red")
-
-        def on_cancel():
-            dialog.destroy()
-
-        submit_btn = ctk.CTkButton(
-            button_frame,
-            text="✅ 등록",
-            width=150,
-            height=40,
-            font=get_font("medium", bold=True),
-            fg_color="green",
-            hover_color="darkgreen",
-            command=on_submit
-        )
-        submit_btn.pack(side="left", padx=10)
-
-        cancel_btn = ctk.CTkButton(
-            button_frame,
-            text="❌ 취소",
-            width=150,
-            height=40,
-            font=ctk.CTkFont(size=14),
-            fg_color="gray",
-            hover_color="darkgray",
-            command=on_cancel
-        )
-        cancel_btn.pack(side="left", padx=10)
-
-        # Enter 키 바인딩
-        license_entry.bind("<Return>", lambda e: on_submit())
-        license_entry.focus()
-
-        # X 버튼 클릭 시
-        dialog.protocol("WM_DELETE_WINDOW", on_cancel)
-
-        # 다이얼로그 대기
-        dialog.wait_window()
-
-        return result[0]
+    """인증 횡단 관심사 (YouTube OAuth)"""
 
     def _upload_youtube_credentials(self):
         """YouTube credentials.json 파일 업로드"""
@@ -377,12 +171,10 @@ class AuthMixin:
 
     def _apply_license_restrictions(self):
         """
-        v37: 라이센스 기반 채널 제한 적용
-
-        이제 _load_channel_options에서 owned_packs 기반으로 필터링하므로
-        이 메서드는 UI 업데이트만 담당
+        v63: 라이선스 제한 없음 (개인용). 채널 목록만 새로고침.
+        (메서드명은 호출부 호환을 위해 유지)
         """
-        # 채널 목록 새로고침 (owned_packs 기반 필터링 적용됨)
+        # 채널 목록 새로고침 (전체 채널 표시)
         self.channel_options = self._load_channel_options()
         display_names = [opt[1] for opt in self.channel_options]
         self.channel_dropdown.configure(values=display_names)

@@ -107,39 +107,13 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
         super().__init__()
         apply_server_runtime_patch()
 
-        # 라이센스 검증 (최우선) - 온라인 우선, 오프라인 폴백
-        self.license_info = None
-
-        # 개발 모드 확인 (dev_mode.txt 파일 또는 환경변수)
-        if config.DEV_MODE:
-            # 개발 모드: 전체 기능 라이센스로 설정
-            valid = True
-            self.license_info = {
-                'license_type': 'A',
-                'license_type_name': '전체 이용 (개발모드)',
-                'expire_date': '2099-12-31',
-                'hardware_id': 'DEV_MODE'
-            }
-            print("[DEV] Development mode - License bypassed")
-        else:
-            try:
-                from utils.firebase_license import HybridLicenseValidator
-                self.license_validator = HybridLicenseValidator(config.DATA_DIR)
-                valid, msg, self.license_info = self.license_validator.validate()
-            except ImportError:
-                # Firebase 모듈 없으면 기존 오프라인 검증 사용
-                from utils.license_validator import LicenseValidator
-                self.license_validator = LicenseValidator(config.DATA_DIR)
-                valid, msg = self.license_validator.validate()
-                if valid:
-                    self.license_info = self.license_validator.get_license_info()
-
-            if not valid:
-                # 라이센스 입력 다이얼로그 표시
-                if not self._show_license_dialog(msg):
-                    # 라이센스 입력 취소 시 프로그램 종료
-                    self.destroy()
-                    os._exit(0)
+        # v63: 라이선스/Firebase 제거 — 개인용. 항상 전체 이용 권한.
+        self.license_info = {
+            'license_type': 'A',
+            'license_type_name': '전체 이용',
+            'expire_date': '2099-12-31',
+            'hardware_id': 'LOCAL',
+        }
 
         # 설정 관리자
         self.settings_manager = SettingsManager(config.DATA_DIR)
@@ -168,23 +142,7 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
             # 설정이 변경되었을 수 있으므로 API 설정 다시 로드
             self._load_api_settings()
         
-        # 라이센스 정보 저장 (UI 제어용)
-        # 개발 모드에서는 이미 license_info가 설정되어 있음
-        if not config.DEV_MODE and hasattr(self, 'license_validator'):
-            self.license_info = self.license_validator.get_license_info()
-
-        # v62.24: 팩 암호화 런타임 키 설정 (라이선스+HWID 기반)
-        # 목적: 암호화된 .revpack은 앱에서만 읽고, 외부 복호화 난이도 상승
-        try:
-            from config.pack_config import configure_pack_crypto
-            if isinstance(self.license_info, dict):
-                _lk = self.license_info.get("license_key", "")
-                _hw = self.license_info.get("hardware_id", "")
-                if not _hw and hasattr(self, 'license_validator'):
-                    _hw = getattr(self.license_validator, 'current_hw_id', "")
-                configure_pack_crypto(_lk, _hw)
-        except Exception as e:
-            logger.debug(f"[main_window] pack crypto runtime key 설정 스킵: {e}")
+        # v63: 라이선스 검증/팩 암호화 런타임 키 설정 제거됨 (개인용)
 
         # 창 설정
         self.title("Reverie Automation")
@@ -1027,70 +985,8 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
         )
         title_label.pack(pady=(0, 20))
 
-        # 라이센스 정보
-        license_info_frame = ctk.CTkFrame(system_frame)
-        license_info_frame.pack(fill="x", pady=(0, 20), padx=20)
+        # v63: 라이선스 정보 카드 제거됨 (개인용)
 
-        ctk.CTkLabel(
-            license_info_frame,
-            text="🔐 라이센스 정보",
-            font=get_font("medium", bold=True)
-        ).pack(anchor="w", pady=(10, 5), padx=10)
-
-        # 개발 모드에서는 self.license_info 사용
-        if config.DEV_MODE:
-            license_info = self.license_info
-        elif hasattr(self, 'license_validator'):
-            license_info = self.license_validator.get_license_info()
-        else:
-            license_info = self.license_info
-
-        if license_info:
-            # 개발 모드와 일반 모드에서 키 이름이 다를 수 있음
-            status = license_info.get('status', '활성')
-            license_key = license_info.get('license_key', license_info.get('hardware_id', 'N/A'))
-            hardware_id = license_info.get('hardware_id', 'N/A')
-            expire_date = license_info.get('expire_date', 'N/A')
-            days_left = license_info.get('days_left', 9999)
-
-            license_text = f"""
-✅ 상태: {status}
-🔑 라이센스: {license_info.get('license_type_name', license_info.get('license_type', 'N/A'))}
-💻 하드웨어 ID: {hardware_id}
-📅 만료일: {expire_date}
-⏰ 남은 기간: {days_left if days_left < 9999 else '무제한'}일
-            """
-            text_color = "green" if days_left > 7 else "orange"
-        else:
-            license_text = "❌ 라이센스 정보 없음"
-            text_color = "red"
-        
-        license_label = ctk.CTkLabel(
-            license_info_frame,
-            text=license_text,
-            font=get_font("normal"),
-            justify="left",
-            text_color=text_color
-        )
-        license_label.pack(anchor="w", pady=5, padx=20)
-        
-        # 라이센스 관리 버튼
-        license_btn_frame = ctk.CTkFrame(license_info_frame, fg_color="transparent")
-        license_btn_frame.pack(pady=10, padx=20)
-        
-        def reenter_license():
-            if self._show_license_dialog("라이센스 재등록"):
-                # 정보 새로고침
-                self._create_system_tab()
-                messagebox.showinfo("성공", "라이센스가 갱신되었습니다.")
-        
-        reenter_btn = ctk.CTkButton(
-            license_btn_frame,
-            text="🔄 라이센스 재등록",
-            command=reenter_license
-        )
-        reenter_btn.pack(side="left", padx=5)
-        
         # 구분선
         separator = ctk.CTkFrame(system_frame, height=2, fg_color="gray")
         separator.pack(fill="x", padx=20, pady=20)
