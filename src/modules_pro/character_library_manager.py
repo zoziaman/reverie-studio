@@ -974,6 +974,7 @@ class CharacterLibraryManager:
                             character_id: str,
                             expression: str = "neutral",
                             pose: str = "standing",
+                            angle: str = "front",
                             fallback: bool = True) -> Optional[str]:
         """
         캐릭터 이미지 경로 반환 (설계서 4.1)
@@ -992,8 +993,20 @@ class CharacterLibraryManager:
             logger.warning(f"[CharacterLibraryManager] 캐릭터 없음: {character_id}")
             return None
 
+        # v63: 각도(턴어라운드) 우선 키 → 각도 없는 레거시 키로 폴백 (하위호환)
+        angle = str(angle or "front").strip().lower()
+        candidate_keys = []
+        if angle and angle != "front":
+            candidate_keys.append(f"{expression}_{pose}_{angle}")
+        candidate_keys.append(f"{expression}_{pose}_front")
+        candidate_keys.append(f"{expression}_{pose}")
         key = f"{expression}_{pose}"
-        images = entry.images.get(key, [])
+        images = []
+        for _ck in candidate_keys:
+            _imgs = entry.images.get(_ck, [])
+            if _imgs:
+                key, images = _ck, _imgs
+                break
 
         if images:
             # 품질 순 정렬 후 랜덤 선택 (상위 50%)
@@ -1119,12 +1132,14 @@ class CharacterLibraryManager:
                             character_id: str,
                             expression: str = "neutral",
                             pose: str = "standing",
+                            angle: str = "front",
                             fallback: bool = True) -> Dict[str, str]:
         """Return motiontoon part assets for the selected character variant."""
         image_path = self.get_character_image(
             character_id=character_id,
             expression=expression,
             pose=pose,
+            angle=angle,
             fallback=fallback,
         )
         if not image_path or not os.path.exists(image_path):

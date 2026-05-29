@@ -121,6 +121,7 @@ class VideoToonCharacterCue:
     emotion: str = "neutral"
     action: str = ""
     is_speaker: bool = False
+    facing: str = "front"  # v63: 시선 방향 (front/left/right/back) — 턴어라운드 합성용
 
 
 @dataclass(frozen=True)
@@ -143,6 +144,7 @@ class VideoToonSceneSpec:
     story_beat: str = ""
     camera_shot: str = ""
     shot_type: str = ""
+    facing: str = "front"  # v63: 주 피사체 시선 방향 (front/left/right/back)
     motion_preset: str = ""
     is_background_extra: bool = False
     key_props: List[str] = field(default_factory=list)
@@ -173,6 +175,7 @@ class VideoToonSceneSpec:
                     emotion=str(getattr(char, "emotion", "neutral") or "neutral"),
                     action=str(getattr(char, "action", "") or ""),
                     is_speaker=bool(getattr(char, "is_speaker", False)),
+                    facing=str(getattr(char, "facing", "front") or "front"),
                 )
             )
 
@@ -197,6 +200,7 @@ class VideoToonSceneSpec:
             story_beat=str(getattr(scene, "story_beat", "") or ""),
             camera_shot=str(getattr(scene, "camera_shot", "") or ""),
             shot_type=str(getattr(scene, "shot_type", "") or getattr(scene, "camera_shot", "") or ""),
+            facing=str(getattr(scene, "facing", "front") or "front"),
             motion_preset=str(getattr(scene, "motion_preset", "") or ""),
             is_background_extra=bool(getattr(scene, "is_background_extra", False)),
             key_props=[str(p) for p in list(getattr(scene, "key_props", []) or [])],
@@ -240,6 +244,8 @@ class VideoToonSceneSpec:
             "prompt": self.sd_prompt,
             "negative_prompt_policy": "pack_default_plus_video_toon_safety",
             "shot_type": self.shot_type,
+            "facing": self.facing,
+            "character_facings": {c.id: c.facing for c in self.characters if c.id},
             "motion_preset": self.motion_preset,
             "reference_assets": {
                 "character_reference_path": self.character_reference_path,

@@ -124,3 +124,32 @@ def test_layer_order_for_angle_drops_face_layers_on_back():
     contract = {"layer_order": ["variant_base", "eye_layer", "mouth_layer"]}
     assert am.layer_order_for_angle(contract, "front") == ["variant_base", "eye_layer", "mouth_layer"]
     assert am.layer_order_for_angle(contract, "back") == ["variant_base"]
+
+
+# --- T4: 변형 선택 리졸버 ---
+
+ANGLE_ACTOR_VARIANTS = am.expand_variants_with_angles(["neutral_standing", "talking_standing"])
+LEGACY_ACTOR_VARIANTS = ["neutral_standing", "talking_standing"]
+
+
+def test_select_variant_key_exact_angle_match():
+    assert am.select_variant_key(ANGLE_ACTOR_VARIANTS, "talking", "standing", "left") == "talking_standing_left"
+
+
+def test_select_variant_key_angle_fallback_to_front():
+    # back 변형이 없는 표정이면 front로 폴백
+    variants = ["neutral_standing_front", "neutral_standing_left"]
+    assert am.select_variant_key(variants, "neutral", "standing", "back") == "neutral_standing_front"
+
+
+def test_select_variant_key_legacy_two_part_actor_ignores_angle():
+    assert am.select_variant_key(LEGACY_ACTOR_VARIANTS, "talking", "standing", "right") == "talking_standing"
+
+
+def test_select_variant_key_expression_fallback_to_neutral():
+    variants = ["neutral_standing_front"]
+    assert am.select_variant_key(variants, "happy", "standing", "front") == "neutral_standing_front"
+
+
+def test_select_variant_key_returns_none_when_nothing_matches():
+    assert am.select_variant_key([], "neutral", "standing", "front") is None

@@ -366,6 +366,45 @@ def layer_order_for_angle(layering_contract, angle: str = "front") -> list:
     return [layer for layer in base_order if layer not in ("eye_layer", "mouth_layer")]
 
 
+def select_variant_key(
+    available_variants,
+    expression: str,
+    pose: str = "standing",
+    angle: str = "front",
+) -> Optional[str]:
+    """주어진 (표정, 포즈, 각도)에 가장 잘 맞는 variant_key를 available 목록에서 고른다.
+
+    폴백 순서(앞일수록 우선):
+      1) 요청 각도 정확 매치
+      2) front 각도
+      3) 각도 없는 레거시 2-파트 키 (표정_포즈)
+      4) 포즈를 standing으로 완화
+      5) 표정을 neutral로 완화
+    하나도 없으면 None.
+    """
+    available = list(available_variants or [])
+    available_set = set(available)
+    expression = (expression or "neutral").strip().lower()
+    pose = (pose or "standing").strip().lower()
+    angle = (angle or "front").strip().lower()
+
+    poses = [pose] if pose == "standing" else [pose, "standing"]
+    expressions = [expression] if expression == "neutral" else [expression, "neutral"]
+    # 각도 폴백: 요청각도 → front, 단 back은 front보다 측면이 더 자연스러우니 back→front
+    angles = [angle, "front"] if angle != "front" else ["front"]
+
+    candidates: list[str] = []
+    for exp in expressions:
+        for ps in poses:
+            for ang in angles:
+                candidates.append(_make_variant_key(exp, ps, ang))   # 3-파트
+            candidates.append(f"{exp}_{ps}")                          # 2-파트(레거시)
+    for cand in candidates:
+        if cand in available_set:
+            return cand
+    return None
+
+
 def _resolve_actor_root(actor_root: Optional[Path | str], repo_root: Optional[Path | str]) -> Path:
     root = Path(repo_root).resolve() if repo_root is not None else None
     if actor_root is None:
