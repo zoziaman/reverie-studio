@@ -2692,6 +2692,7 @@ class CharacterLibraryManager:
         character_id: str,
         expression: str = "neutral",
         pose: str = "standing",
+        angle: str = "front",
         fallback: bool = True,
     ) -> Dict[str, Any]:
         sheet = self.get_character_sheet(character_id)
@@ -2704,6 +2705,7 @@ class CharacterLibraryManager:
             normalized_expression,
             normalized_pose,
             fallback=fallback,
+            angle=angle,
         )
 
         variant: Dict[str, Any] = {}
@@ -2739,15 +2741,24 @@ class CharacterLibraryManager:
         pose: str,
         *,
         fallback: bool,
+        angle: str = "front",
     ) -> List[str]:
         expr = str(expression or "neutral").strip().lower() or "neutral"
         pose_name = str(pose or "standing").strip().lower() or "standing"
+        angle_name = str(angle or "front").strip().lower() or "front"
         keys: List[str] = []
 
         def _add_key(candidate_expression: str, candidate_pose: str) -> None:
-            key = f"{candidate_expression}_{candidate_pose}"
-            if key not in keys:
-                keys.append(key)
+            base = f"{candidate_expression}_{candidate_pose}"
+            # v63: 각도 키 우선 → front → 각도 없는 레거시(base) 순 (하위호환)
+            ordered = []
+            if angle_name and angle_name != "front":
+                ordered.append(f"{base}_{angle_name}")
+            ordered.append(f"{base}_front")
+            ordered.append(base)
+            for key in ordered:
+                if key not in keys:
+                    keys.append(key)
 
         _add_key(expr, pose_name)
         if not fallback:

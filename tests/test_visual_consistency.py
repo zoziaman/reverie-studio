@@ -1176,10 +1176,10 @@ class _FakeCharLibrary:
         )
         return True, []
 
-    def get_character_image(self, character_id, expression="neutral", pose="standing", fallback=True):
+    def get_character_image(self, character_id, expression="neutral", pose="standing", angle="front", fallback=True):
         return self.available.get((character_id, expression, pose))
 
-    def get_character_parts(self, character_id, expression="neutral", pose="standing", fallback=True):
+    def get_character_parts(self, character_id, expression="neutral", pose="standing", angle="front", fallback=True):
         image_path = self.available.get((character_id, expression, pose))
         if not image_path:
             return {}
@@ -1188,7 +1188,7 @@ class _FakeCharLibrary:
     def bind_character_sheet_variant(self, target_image_path, character_id, expression="neutral", pose="standing", fallback=True, rig_overrides=None):
         return self.sheet_parts.get((character_id, expression, pose), {})
 
-    def get_character_sheet_variant(self, character_id, expression="neutral", pose="standing", fallback=True):
+    def get_character_sheet_variant(self, character_id, expression="neutral", pose="standing", angle="front", fallback=True):
         parts = self.sheet_parts.get((character_id, expression, pose))
         image_path = self.available.get((character_id, expression, pose), "")
         if not parts and fallback:
@@ -1203,7 +1203,7 @@ class _FakeCharLibrary:
             "pose": pose,
         }
 
-    def has_character_sheet_variant(self, character_id, expression="neutral", pose="standing", fallback=True):
+    def has_character_sheet_variant(self, character_id, expression="neutral", pose="standing", angle="front", fallback=True):
         return bool(self.get_character_sheet_variant(character_id, expression, pose, fallback=fallback))
 
     def get_character_sheet_coverage(self, character_id, available_expressions=None, available_poses=None, required_variant_keys=None):
@@ -1664,7 +1664,7 @@ def test_visual_director_new_image_simple_sprite_without_library_avoids_fake_spl
     director._call_sd_api = _call_sd_api
     director.sd_client = object()
     director._create_placeholder_image = lambda image_path: Path(image_path).write_bytes(b"img")
-    director._get_from_library = lambda char_id, emotion, pose: ""
+    director._get_from_library = lambda char_id, emotion, pose, angle="front": ""
     director._get_motiontoon_rig_overrides = lambda char_id, emotion="", pose="": {"overlay_kind": "document"}
 
     primed = {}
@@ -1714,7 +1714,7 @@ def test_visual_director_simple_sprite_uses_pack_preferred_character_when_scene_
     director._use_simple_character_sprite_mode = lambda: True
     director._get_pack_preferred_character_ids = lambda: ["protagonist"]
     director._normalize_scene_variant = lambda char_id, emotion, pose: (emotion, pose)
-    director._ensure_simple_sprite_library_image = lambda char_id, emotion, pose: "sprite.png"
+    director._ensure_simple_sprite_library_image = lambda char_id, emotion, pose, angle="front": "sprite.png"
     director.prompt_composer = SimpleNamespace(
         compose_prompt=lambda scene: SimpleNamespace(positive="bg", negative="neg"),
         char_map={},

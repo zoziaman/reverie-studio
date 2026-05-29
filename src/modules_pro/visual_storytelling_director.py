@@ -973,11 +973,12 @@ Output ONLY the JSON below (no explanation):
         )
         return attached or assets
 
-    def _ensure_simple_sprite_library_image(self, char_id: str, emotion: str, pose: str) -> str:
+    def _ensure_simple_sprite_library_image(self, char_id: str, emotion: str, pose: str, angle: str = "front") -> str:
         if not char_id or not self.char_library_manager or not self.prompt_composer:
             return ""
 
-        current = self._get_from_library(char_id, emotion, pose)
+        angle = str(angle or "front").strip().lower() or "front"
+        current = self._get_from_library(char_id, emotion, pose, angle=angle)
         if current and os.path.exists(current):
             return current
 
@@ -987,13 +988,14 @@ Output ONLY the JSON below (no explanation):
             return ""
 
         try:
+            variant_key = f"{emotion}_{pose}_{angle}" if angle != "front" else f"{emotion}_{pose}"
             success, _ = self.char_library_manager.generate_character_library(
                 character_def=character_def,
-                variant_keys=[f"{emotion}_{pose}"],
+                variant_keys=[variant_key],
                 images_per_combo=1,
             )
             if success:
-                refreshed = self._get_from_library(char_id, emotion, pose)
+                refreshed = self._get_from_library(char_id, emotion, pose, angle=angle)
                 if refreshed and os.path.exists(refreshed):
                     logger.info(f"[VSD] simple sprite 라이브러리 생성 완료: {char_id}/{emotion}_{pose}")
                     return refreshed
@@ -1921,6 +1923,7 @@ Output ONLY the JSON below (no explanation):
         char_id = ""
         emotion = "neutral"
         pose = "standing"
+        facing = "front"  # v63: 시선 방향 (블로킹이 설정, 없으면 front)
         characters = getattr(scene, 'characters', [])
         if characters:
             char = characters[0]
@@ -1928,13 +1931,15 @@ Output ONLY the JSON below (no explanation):
                 char_id = char.id
                 emotion = getattr(char, 'emotion', 'neutral')
                 pose = getattr(char, 'action', 'standing')
+                facing = str(getattr(char, 'facing', 'front') or 'front')
             elif isinstance(char, dict):
                 char_id = char.get('id', '')
                 emotion = char.get('emotion', 'neutral')
                 pose = char.get('action', 'standing')
+                facing = str(char.get('facing', 'front') or 'front')
 
         # v59.1.3: 캐릭터 라이브러리에서 먼저 검색
-        library_image = self._get_from_library(char_id, emotion, pose) if char_id else None
+        library_image = self._get_from_library(char_id, emotion, pose, angle=facing) if char_id else None
         use_simple_sprite_mode = self._use_simple_character_sprite_mode()
         if use_simple_sprite_mode and not char_id:
             preferred_ids = self._get_pack_preferred_character_ids()
@@ -1944,9 +1949,9 @@ Output ONLY the JSON below (no explanation):
                 pose = "standing"
         emotion, pose = self._normalize_scene_variant(char_id, emotion, pose)
         if use_simple_sprite_mode and char_id and not library_image:
-            library_image = self._get_from_library(char_id, emotion, pose)
+            library_image = self._get_from_library(char_id, emotion, pose, angle=facing)
         if use_simple_sprite_mode and char_id and not library_image:
-            library_image = self._ensure_simple_sprite_library_image(char_id, emotion, pose)
+            library_image = self._ensure_simple_sprite_library_image(char_id, emotion, pose, angle=facing)
         if library_image:
             logger.info(f"[VSD] 캐릭터 라이브러리에서 이미지 발견: {char_id}/{emotion}")
 
@@ -2316,18 +2321,20 @@ Output ONLY the JSON below (no explanation):
                 f.write(_minimal_png(width, height))
             logger.debug(f"[VSD] 플레이스홀더 생성 (minimal PNG): {path}")
 
-    def _get_from_library(self, char_id: str, expression: str, pose: str = "standing") -> Optional[str]:
-        """캐릭터 라이브러리에서 이미지 경로 가져오기 (v59.1.3: CLM 연동)"""
+    def _get_from_library(self, char_id: str, expression: str, pose: str = "standing", angle: str = "front") -> Optional[str]:
+        """캐릭터 라이브러리에서 이미지 경로 가져오기 (v59.1.3: CLM 연동, v63: 각도 지원)"""
         if not self.char_library_manager:
             return None
 
         try:
             expression, pose = self._normalize_scene_variant(char_id, expression, pose)
+            angle = str(angle or "front").strip().lower() or "front"
             if hasattr(self.char_library_manager, "get_character_sheet_variant"):
                 variant = self.char_library_manager.get_character_sheet_variant(
                     character_id=char_id,
                     expression=expression,
                     pose=pose,
+                    angle=angle,
                     fallback=True,
                 )
                 image_path = str(variant.get("image_path", "") or "") if isinstance(variant, dict) else ""
@@ -2337,6 +2344,7 @@ Output ONLY the JSON below (no explanation):
                 character_id=char_id,
                 expression=expression,
                 pose=pose,
+                angle=angle,
                 fallback=True
             )
         except Exception as e:

@@ -2969,6 +2969,25 @@ Improve the story bible below based on the provided feedback.
         )
         visual_scenes = _attach_motion_beats_to_visual_scenes(visual_scenes, motiontoon_plan)
 
+        # v63: 캐릭터 시선 방향(facing) 자동 블로킹 — 턴어라운드 (없으면 front, 안전)
+        try:
+            from utils.scene_blocking import assign_scene_facings, apply_facings_to_characters
+            _prev_facings: Dict[str, str] = {}
+            for _scene in visual_scenes:
+                _chars = _scene.get("characters") if isinstance(_scene, dict) else getattr(_scene, "characters", None)
+                if not _chars:
+                    continue
+                _scene_type = (
+                    _scene.get("scene_type") if isinstance(_scene, dict)
+                    else getattr(_scene, "scene_type", "")
+                ) or "dialogue"
+                _facings = assign_scene_facings(_chars, scene_type=str(_scene_type), previous_facings=_prev_facings)
+                apply_facings_to_characters(_chars, _facings)
+                if _facings:
+                    _prev_facings = _facings
+        except Exception as e:
+            logger.debug(f"[ScenarioPlanner] facing 블로킹 스킵: {e}")
+
         # v57.7.6: mode에 슬래시 등 특수문자가 있을 수 있어 sanitize 적용
         safe_mode = _sanitize_for_path(mode)
         project_name = f"{category.capitalize()}_{safe_mode}_{_now_id()}"
