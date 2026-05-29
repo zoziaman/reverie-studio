@@ -1404,6 +1404,49 @@ class CharacterLibraryManager:
             logger.warning(f"[CharacterLibraryManager] failed to append pose reference: {e}")
             return payload
 
+    def _append_openpose_angle_payload(self, payload: Dict[str, Any], angle: str = "front") -> Dict[str, Any]:
+        """v63: 각도별 OpenPose 스켈레톤을 ControlNet 유닛으로 추가 (턴어라운드 정밀 생성).
+
+        스켈레톤: assets/actor_models/_openpose/<angle>.png (사전 렌더). 없으면 프롬프트만으로 폴백.
+        """
+        angle = str(angle or "front").strip().lower() or "front"
+        try:
+            from config.settings import config as _cfg
+            root = Path(getattr(_cfg, "PROJECT_ROOT", "") or getattr(_cfg, "BASE_DIR", "") or ".")
+        except Exception:
+            root = Path(".")
+        skeleton = root / "assets" / "actor_models" / "_openpose" / f"{angle}.png"
+        if not skeleton.exists():
+            return payload  # 스켈레톤 없으면 프롬프트만으로 생성 (안전 폴백)
+        try:
+            with open(skeleton, "rb") as fh:
+                encoded = base64.b64encode(fh.read()).decode("utf-8")
+            model = os.environ.get("REVERIE_OPENPOSE_CONTROLNET_MODEL", "control_v11p_sd15_openpose")
+            unit = {
+                "enabled": True,
+                "module": "none",  # 사전 렌더된 스켈레톤 → 전처리 불필요
+                "model": model,
+                "weight": 1.0,
+                "image": encoded,
+                "resize_mode": "Crop and Resize",
+                "control_mode": "Balanced",
+                "guidance_start": 0.0,
+                "guidance_end": 0.9,
+            }
+            result = dict(payload)
+            alwayson = dict(result.get("alwayson_scripts") or {})
+            controlnet = dict(alwayson.get("controlnet") or {})
+            args = list(controlnet.get("args") or [])
+            args.append(unit)
+            controlnet["args"] = args
+            alwayson["controlnet"] = controlnet
+            result["alwayson_scripts"] = alwayson
+            logger.info(f"[CharacterLibraryManager] OpenPose 각도 ControlNet 적용: {angle}")
+            return result
+        except Exception as e:
+            logger.warning(f"[CharacterLibraryManager] openpose angle payload 실패: {e}")
+            return payload
+
     @staticmethod
     def _get_variant_face_crop_box(image_path: str,
                                    variant: Dict[str, Any],
@@ -3226,16 +3269,21 @@ class CharacterLibraryManager:
         logger.info(f"[CharacterLibraryManager] 라이브러리 생성 시작: {char_id} ({char_name})")
 
         # 기본값
-        variant_pairs: List[Tuple[str, str]] = []
+        variant_pairs: List[Tuple[str, str, str]] = []
         if variant_keys:
             for raw_key in variant_keys:
                 key_str = str(raw_key).strip()
                 if not key_str:
                     continue
-                expression_name, pose_name = key_str.split("_", 1) if "_" in key_str else (key_str, "standing")
+                # v63: 3-파트 키(표정_포즈_각도) 지원, 각도 누락 시 front
+                _parts = key_str.split("_")
+                expression_name = _parts[0] if _parts else key_str
+                pose_name = _parts[1] if len(_parts) > 1 else "standing"
+                angle_name = _parts[2] if len(_parts) > 2 else "front"
                 pair = (
                     self.normalize_requested_expression(expression_name),
                     self.normalize_requested_pose(pose_name),
+                    angle_name,
                 )
                 if pair not in variant_pairs:
                     variant_pairs.append(pair)
@@ -3261,6 +3309,7 @@ class CharacterLibraryManager:
                     pair = (
                         self.normalize_requested_expression(expression_name),
                         self.normalize_requested_pose(pose_name),
+                        "front",
                     )
                     if pair not in variant_pairs:
                         variant_pairs.append(pair)
@@ -3295,8 +3344,8 @@ class CharacterLibraryManager:
 
         generation_overrides_by_variant = generation_overrides_by_variant or {}
 
-        for expression, pose in variant_pairs:
-            key = f"{expression}_{pose}"
+        for expression, pose, angle in variant_pairs:
+            key = f"{expression}_{pose}" if angle == "front" else f"{expression}_{pose}_{angle}"
 
             if key not in entry.images:
                 entry.images[key] = []
@@ -3331,6 +3380,15 @@ class CharacterLibraryManager:
                     full_prompt = composed.positive if composed else self._compose_library_prompt(
                         base_prompt, exp_prompt, pose_prompt
                     )
+                    # v63: 각도(turnaround) 뷰 프롬프트 추가
+                    if angle != "front":
+                        try:
+                            from utils.actor_model import ANGLE_VIEW_PROMPTS
+                            _av = ANGLE_VIEW_PROMPTS.get(angle, "")
+                            if _av:
+                                full_prompt = f"{full_prompt}, {_av}"
+                        except Exception:
+                            pass
                     composed_negative = composed.negative if composed else ""
                     full_negative = ", ".join([
                         p for p in [
@@ -3445,11 +3503,12 @@ class CharacterLibraryManager:
                                 pose_control_mode=override_pose_control_mode,
                                 pose_start_step=override_pose_start_step,
                                 pose_end_step=override_pose_end_step,
+                                angle=angle,
                             )
 
                             if result and result.get('images'):
                                 # 이미지 저장
-                                filename = f"{expression}_{pose}_{i+1:02d}.png"
+                                filename = f"{key}_{i+1:02d}.png"
                                 image_path = char_path / filename
 
                                 image_data = result['images'][0]
@@ -3582,8 +3641,9 @@ class CharacterLibraryManager:
                            pose_weight: Optional[float] = None,
                            pose_control_mode: str = "",
                            pose_start_step: Optional[float] = None,
-                           pose_end_step: Optional[float] = None) -> Optional[Dict]:
-        """SD WebUI API로 이미지 생성"""
+                           pose_end_step: Optional[float] = None,
+                           angle: str = "front") -> Optional[Dict]:
+        """SD WebUI API로 이미지 생성. v63: angle(front 외)이면 OpenPose ControlNet 적용."""
         try:
             import requests
 
@@ -3632,6 +3692,9 @@ class CharacterLibraryManager:
                 pose_start_step=pose_start_step,
                 pose_end_step=pose_end_step,
             )
+            # v63: 각도별 OpenPose 스켈레톤 ControlNet (front 외, 스켈레톤 존재 시)
+            if str(angle or "front").strip().lower() != "front":
+                payload = self._append_openpose_angle_payload(payload, angle)
 
             response = requests.post(url, json=payload, timeout=420)
 

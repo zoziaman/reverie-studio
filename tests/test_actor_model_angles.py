@@ -153,3 +153,13 @@ def test_select_variant_key_expression_fallback_to_neutral():
 
 def test_select_variant_key_returns_none_when_nothing_matches():
     assert am.select_variant_key([], "neutral", "standing", "front") is None
+
+
+# --- T3: OpenPose 생성 안전 폴백 ---
+
+def test_openpose_angle_payload_noop_without_skeleton():
+    from modules_pro.character_library_manager import CharacterLibraryManager
+    clm = CharacterLibraryManager.__new__(CharacterLibraryManager)
+    payload = {"prompt": "x", "steps": 15}
+    # 스켈레톤 PNG가 없는 각도 → payload 그대로(프롬프트만으로 폴백)
+    assert clm._append_openpose_angle_payload(payload, "zzz_no_skeleton") == payload
