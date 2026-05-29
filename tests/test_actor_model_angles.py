@@ -85,3 +85,42 @@ def test_scaffold_without_angles_is_backward_compatible(tmp_path):
     )
     manifest = _read_manifest(result)
     assert manifest["required_variants"] == list(am.DEFAULT_REQUIRED_VARIANTS)
+
+
+# --- T2: 각도별 앵커 / 레이어 ---
+
+def test_angle_uses_face_parts():
+    assert am.angle_uses_face_parts("front") is True
+    assert am.angle_uses_face_parts("left") is True
+    assert am.angle_uses_face_parts("back") is False
+
+
+def test_resolve_anchor_points_falls_back_to_flat():
+    contract = {"anchor_points": {"eye_center": {"x": 0.5, "y": 0.25}}, "anchor_points_by_angle": {}}
+    assert am.resolve_anchor_points(contract, "front") == {"eye_center": {"x": 0.5, "y": 0.25}}
+    assert am.resolve_anchor_points(contract, "back") == {"eye_center": {"x": 0.5, "y": 0.25}}
+
+
+def test_resolve_anchor_points_uses_per_angle_override():
+    contract = {
+        "anchor_points": {"eye_center": {"x": 0.5, "y": 0.25}},
+        "anchor_points_by_angle": {"left": {"eye_center": {"x": 0.4, "y": 0.26}}},
+    }
+    assert am.resolve_anchor_points(contract, "left") == {"eye_center": {"x": 0.4, "y": 0.26}}
+
+
+def test_resolve_anchor_points_mirrors_left_for_right():
+    contract = {
+        "anchor_points": {"eye_center": {"x": 0.5, "y": 0.25}},
+        "anchor_points_by_angle": {"left": {"eye_center": {"x": 0.4, "y": 0.26}}},
+    }
+    mirrored = am.resolve_anchor_points(contract, "right")
+    # left x=0.4 → right x=0.6 (1-x), y 유지
+    assert mirrored["eye_center"]["x"] == 0.6
+    assert mirrored["eye_center"]["y"] == 0.26
+
+
+def test_layer_order_for_angle_drops_face_layers_on_back():
+    contract = {"layer_order": ["variant_base", "eye_layer", "mouth_layer"]}
+    assert am.layer_order_for_angle(contract, "front") == ["variant_base", "eye_layer", "mouth_layer"]
+    assert am.layer_order_for_angle(contract, "back") == ["variant_base"]

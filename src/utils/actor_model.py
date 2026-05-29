@@ -170,6 +170,9 @@ DEFAULT_LAYERING_CONTRACT = {
         "eye_center": {"x": 0.5, "y": 0.25},
         "mouth_center": {"x": 0.5, "y": 0.38},
     },
+    # v63: 각도별 앵커 오버라이드(선택). 비어 있으면 위 평면 anchor_points를 모든 각도에 사용.
+    # 측면/후면은 눈·입 중심이 정면과 달라 여기서 각도별로 보정한다.
+    "anchor_points_by_angle": {},
     "layer_order": ["variant_base", "eye_layer", "mouth_layer"],
     "naming_policy": {
         "variant": "variants/{variant_key}.png",
@@ -322,6 +325,47 @@ def expand_variants_with_angles(base_variants, angles=DEFAULT_ANGLES) -> list[st
     return expanded
 
 
+def angle_uses_face_parts(angle: str) -> bool:
+    """해당 각도가 눈/입 파츠 레이어를 쓰는지. back은 얼굴이 안 보여 False."""
+    return str(angle or "front").strip().lower() not in ANGLES_WITHOUT_FACE_PARTS
+
+
+def resolve_anchor_points(layering_contract, angle: str = "front") -> dict:
+    """각도에 맞는 앵커 좌표를 반환.
+
+    우선순위: anchor_points_by_angle[angle] > (right이면 left를 x-미러) > 평면 anchor_points.
+    """
+    angle = str(angle or "front").strip().lower()
+    contract = layering_contract if isinstance(layering_contract, Mapping) else {}
+    flat = dict(contract.get("anchor_points") or {})
+    by_angle = contract.get("anchor_points_by_angle") or {}
+    if not isinstance(by_angle, Mapping):
+        by_angle = {}
+
+    if angle in by_angle and isinstance(by_angle[angle], Mapping):
+        return dict(by_angle[angle])
+
+    # right 각도에 명시 앵커가 없고 left가 있으면 좌우 미러(x → 1-x)로 산출
+    if angle == "right" and isinstance(by_angle.get("left"), Mapping):
+        mirrored: dict[str, dict[str, float]] = {}
+        for anchor_key, point in by_angle["left"].items():
+            if isinstance(point, Mapping) and "x" in point and "y" in point:
+                mirrored[anchor_key] = {"x": 1.0 - float(point["x"]), "y": float(point["y"])}
+        if mirrored:
+            return mirrored
+
+    return flat
+
+
+def layer_order_for_angle(layering_contract, angle: str = "front") -> list:
+    """각도별 레이어 순서. back 등 얼굴 미표시 각도는 eye/mouth 레이어를 제외."""
+    contract = layering_contract if isinstance(layering_contract, Mapping) else {}
+    base_order = list(contract.get("layer_order") or ["variant_base", "eye_layer", "mouth_layer"])
+    if angle_uses_face_parts(angle):
+        return base_order
+    return [layer for layer in base_order if layer not in ("eye_layer", "mouth_layer")]
+
+
 def _resolve_actor_root(actor_root: Optional[Path | str], repo_root: Optional[Path | str]) -> Path:
     root = Path(repo_root).resolve() if repo_root is not None else None
     if actor_root is None:
@@ -421,6 +465,25 @@ def _normalize_layering_contract(value: Any) -> dict[str, Any]:
             except (TypeError, ValueError):
                 continue
             contract["anchor_points"][str(anchor_key)] = {"x": x, "y": y}
+    # v63: 각도별 앵커 오버라이드 정규화 ({angle: {anchor: {x, y}}})
+    angle_anchors = value.get("anchor_points_by_angle")
+    if isinstance(angle_anchors, Mapping):
+        contract.setdefault("anchor_points_by_angle", {})
+        for angle_key, angle_value in angle_anchors.items():
+            if not isinstance(angle_value, Mapping):
+                continue
+            normalized_angle: dict[str, dict[str, float]] = {}
+            for anchor_key, anchor_value in angle_value.items():
+                if not isinstance(anchor_value, Mapping):
+                    continue
+                try:
+                    x = float(anchor_value.get("x"))
+                    y = float(anchor_value.get("y"))
+                except (TypeError, ValueError):
+                    continue
+                normalized_angle[str(anchor_key)] = {"x": x, "y": y}
+            if normalized_angle:
+                contract["anchor_points_by_angle"][str(angle_key)] = normalized_angle
     layer_order = _string_list(value.get("layer_order"))
     if layer_order:
         contract["layer_order"] = layer_order
@@ -462,6 +525,34 @@ def _validate_layering_contract(data: Mapping[str, Any], result: ActorModelValid
                 value = anchor.get(axis)
                 if not isinstance(value, (int, float)):
                     result.add_error(f"layering_contract.anchor_points.{required_anchor}.{axis} must be numeric")
+
+    # v63: 각도별 앵커 오버라이드 검증(선택). 있으면 각 항목 구조가 올바라야 한다.
+    angle_anchors = contract.get("anchor_points_by_angle")
+    if angle_anchors is not None:
+        if not isinstance(angle_anchors, Mapping):
+            result.add_error("layering_contract.anchor_points_by_angle must be an object")
+        else:
+            for angle_key, angle_value in angle_anchors.items():
+                if angle_key not in DEFAULT_ANGLES:
+                    result.add_warning(
+                        f"layering_contract.anchor_points_by_angle has unknown angle '{angle_key}'"
+                    )
+                if not isinstance(angle_value, Mapping):
+                    result.add_error(
+                        f"layering_contract.anchor_points_by_angle.{angle_key} must be an object"
+                    )
+                    continue
+                for anchor_key, anchor in angle_value.items():
+                    if not isinstance(anchor, Mapping):
+                        result.add_error(
+                            f"layering_contract.anchor_points_by_angle.{angle_key}.{anchor_key} must be an object"
+                        )
+                        continue
+                    for axis in ("x", "y"):
+                        if not isinstance(anchor.get(axis), (int, float)):
+                            result.add_error(
+                                f"layering_contract.anchor_points_by_angle.{angle_key}.{anchor_key}.{axis} must be numeric"
+                            )
 
     layer_order = _string_list(contract.get("layer_order"))
     if not layer_order:
