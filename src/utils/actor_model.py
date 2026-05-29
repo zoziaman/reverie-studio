@@ -75,6 +75,24 @@ DEFAULT_EYE_SHAPES = (
     "eyes_worried",
     "eyes_angry",
 )
+# v63: 캐릭터 다각도(턴어라운드) 지원. variant_key = "표정_포즈_각도".
+# 각도 누락 시 "front"로 해석(하위호환). back은 얼굴 파츠(눈/입) 비활성.
+DEFAULT_ANGLES = (
+    "front",
+    "left",
+    "right",
+    "back",
+)
+ANGLES_WITHOUT_FACE_PARTS = ("back",)
+# 각도별 SD 생성 프롬프트 + OpenPose 스켈레톤 레퍼런스(턴어라운드 정밀 생성용).
+# 스켈레톤 PNG는 assets/actor_models/_openpose/<angle>.png 에 둔다(없으면 프롬프트만 사용).
+ANGLE_VIEW_PROMPTS = {
+    "front": "facing forward, front view, looking toward the viewer, symmetric pose",
+    "left": "facing to the left, left three-quarter / profile view, head turned left",
+    "right": "facing to the right, right three-quarter / profile view, head turned right",
+    "back": "back view, seen from behind, back of the head and shoulders, face not visible",
+}
+OPENPOSE_SKELETON_DIR = "assets/actor_models/_openpose"
 DEFAULT_ROLE_RANGE = (
     "lead",
     "support",
@@ -264,9 +282,44 @@ def _relative_to_root(path: Path, repo_root: Optional[Path | str]) -> str:
         return (Path(path.parent.name) / path.name).as_posix()
 
 
-def _variant_parts(variant_key: str) -> tuple[str, str]:
-    expression, _, pose = variant_key.partition("_")
-    return expression or variant_key, pose or "standing"
+def _variant_parts(variant_key: str) -> tuple[str, str, str]:
+    """variant_key를 (expression, pose, angle)로 분해.
+
+    형식: "표정_포즈_각도" (예: neutral_standing_front).
+    각도 누락(2-파트 레거시 키)이면 angle="front"로 해석(하위호환).
+    """
+    parts = variant_key.split("_")
+    expression = parts[0] if parts and parts[0] else variant_key
+    pose = parts[1] if len(parts) > 1 and parts[1] else "standing"
+    angle = parts[2] if len(parts) > 2 and parts[2] else "front"
+    return expression, pose, angle
+
+
+def _make_variant_key(expression: str, pose: str = "standing", angle: str = "front") -> str:
+    """(expression, pose, angle) → variant_key."""
+    return f"{expression}_{pose}_{angle}"
+
+
+def expand_variants_with_angles(base_variants, angles=DEFAULT_ANGLES) -> list[str]:
+    """2-파트 base 변형 목록을 각도까지 곱해 전체 커버리지 키 목록으로 확장.
+
+    예: ["neutral_standing"] × ["front","left","right","back"]
+       → ["neutral_standing_front", ..._left, ..._right, ..._back]
+    이미 각도가 붙은 키(3-파트)는 그대로 둔다.
+    """
+    expanded: list[str] = []
+    for variant in base_variants:
+        expression, pose, existing_angle = _variant_parts(variant)
+        if len(str(variant).split("_")) > 2:
+            # 이미 각도 포함
+            if variant not in expanded:
+                expanded.append(variant)
+            continue
+        for angle in angles:
+            key = _make_variant_key(expression, pose, angle)
+            if key not in expanded:
+                expanded.append(key)
+    return expanded
 
 
 def _resolve_actor_root(actor_root: Optional[Path | str], repo_root: Optional[Path | str]) -> Path:
@@ -443,18 +496,22 @@ def _variant_groups(variants: list[str], mouth_shapes: list[str], eye_shapes: li
     core_variants: list[str] = []
     emotion_variants: list[str] = []
     poses: list[str] = []
+    angles: list[str] = []
     for variant in variants:
-        expression, pose = _variant_parts(variant)
+        expression, pose, angle = _variant_parts(variant)
         if expression in core_expressions:
             core_variants.append(variant)
         else:
             emotion_variants.append(variant)
         if pose and pose not in poses:
             poses.append(pose)
+        if angle and angle not in angles:
+            angles.append(angle)
     return {
         "core_variants": core_variants,
         "emotion_variants": emotion_variants,
         "poses": poses,
+        "angles": angles,
         "mouth_shapes": list(mouth_shapes),
         "eye_shapes": list(eye_shapes),
     }
@@ -583,6 +640,8 @@ def _asset_request(
     negative_prompt: str,
     expression: str = "",
     pose: str = "",
+    angle: str = "",
+    pose_reference_path: str = "",
 ) -> dict[str, Any]:
     request: dict[str, Any] = {
         "request_id": f"{actor_id}__{request_type}__{key}",
@@ -598,6 +657,12 @@ def _asset_request(
         request["expression"] = expression
     if pose:
         request["pose"] = pose
+    if angle:
+        request["angle"] = angle
+    if pose_reference_path:
+        # v63: 각도별 ControlNet OpenPose 스켈레톤 레퍼런스 (턴어라운드 정밀 생성)
+        request["pose_reference_path"] = pose_reference_path
+        request["controlnet_pose"] = True
     return request
 
 
@@ -626,7 +691,9 @@ def _build_asset_requests_from_contract(
 
     requests: list[dict[str, Any]] = []
     for variant_key in validation.required_variants:
-        expression, pose = _variant_parts(variant_key)
+        expression, pose, angle = _variant_parts(variant_key)
+        angle_view = ANGLE_VIEW_PROMPTS.get(angle, ANGLE_VIEW_PROMPTS["front"])
+        skeleton_rel = f"{OPENPOSE_SKELETON_DIR}/{angle}.png"
         prompt = "\n\n".join(
             [
                 identity_prompt,
@@ -634,6 +701,7 @@ def _build_asset_requests_from_contract(
                 f"Requested variant: {variant_key}",
                 f"Expression: {expression}",
                 f"Pose: {pose}",
+                f"Angle/View: {angle} ({angle_view})",
                 "Output: one transparent-capable half-body video-toon actor image, no background, no text.",
             ]
         )
@@ -647,6 +715,8 @@ def _build_asset_requests_from_contract(
                 negative_prompt=negative_prompt,
                 expression=expression,
                 pose=pose,
+                angle=angle,
+                pose_reference_path=skeleton_rel,
             )
         )
 
@@ -862,9 +932,15 @@ def scaffold_actor_model(
     required_variants: Optional[list[str] | str] = None,
     mouth_shapes: Optional[list[str] | str] = None,
     eye_shapes: Optional[list[str] | str] = None,
+    include_angles: bool = False,
     force: bool = False,
 ) -> Path:
-    """Create a public-safe reusable video-toon actor model package."""
+    """Create a public-safe reusable video-toon actor model package.
+
+    include_angles=True: 각 변형을 front/left/right/back 각도로 확장하여
+    전체 턴어라운드 커버리지를 생성한다(v63). 소비 로직(에피소드 자산
+    계획/커버리지)이 각도 인식이 된 뒤 기본값을 켤 예정 — 현재는 opt-in.
+    """
     actor_id = str(actor_id or "").strip()
     if not actor_id:
         raise ValueError("actor_id is required")
@@ -878,6 +954,8 @@ def scaffold_actor_model(
 
     roles = _coerce_string_list(role_range, DEFAULT_ROLE_RANGE)
     variants = _coerce_string_list(required_variants, DEFAULT_REQUIRED_VARIANTS)
+    if include_angles:
+        variants = expand_variants_with_angles(variants)
     mouths = _coerce_string_list(mouth_shapes, DEFAULT_MOUTH_SHAPES)
     eyes = _coerce_string_list(eye_shapes, DEFAULT_EYE_SHAPES)
     if not roles:
