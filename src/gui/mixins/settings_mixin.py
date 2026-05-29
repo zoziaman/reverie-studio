@@ -1066,13 +1066,13 @@ class SettingsMixin:
             self._update_motiontoon_status()
             return self.settings_manager.get_motiontoon_render_mode()
         except Exception:
-            if hasattr(self, "motiontoon_status_label"):
+            if getattr(self, "motiontoon_status_label", None) is not None:
                 self.motiontoon_status_label.configure(text="", text_color="#888888")
             return "classic_dynamic"
 
     def _update_motiontoon_status(self):
         """Show pack-side motiontoon support in the GUI."""
-        if not hasattr(self, "motiontoon_status_label"):
+        if getattr(self, "motiontoon_status_label", None) is None:
             return
 
         try:

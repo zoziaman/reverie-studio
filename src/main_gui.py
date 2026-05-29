@@ -172,6 +172,6 @@ _setup_global_exception_handler()
 
 if __name__ == "__main__":
     print("-" * 60)
-    print("Reverie Automation GUI v60.1.0 Start")
+    print("Reverie Automation GUI v63.0 Start")
     print("-" * 60)
     main()

@@ -170,7 +170,20 @@ class ReverieGUI(ServerMixin, SDModelMixin, AuthMixin, ChannelMixin, ProductionM
         # UI 생성
         self._create_ui()
         self.protocol("WM_DELETE_WINDOW", self._on_app_close)
-    
+
+        # v63: 첫 실행 마법사(withdraw) 후 메인 창이 숨겨진 채 남는 문제 방지
+        # CTk의 withdraw/deiconify 타이밍 이슈 → 이벤트 루프 시작 후 강제 표시
+        self.after(0, self._ensure_visible)
+
+    def _ensure_visible(self):
+        """마법사 후 메인 창을 확실히 표시 (CTk withdraw/deiconify 타이밍 보정)"""
+        try:
+            self.deiconify()
+            self.lift()
+            self.focus_force()
+        except Exception:
+            pass
+
     def _load_api_settings(self):
         """저장된 API 설정 로드"""
         try:
