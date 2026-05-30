@@ -218,3 +218,4 @@ CODE_REVIEW_REPORT_v*.md
 # YouTube OAuth token pickles
 src/config/token_*.pickle
 src/config/*_token.pickle
+tools/_smoke_out*/
