@@ -3227,7 +3227,8 @@ class CharacterLibraryManager:
                                    variant_keys: List[str] = None,
                                    images_per_combo: int = None,
                                    progress_callback: callable = None,
-                                   generation_overrides_by_variant: Optional[Dict[str, Dict[str, Any]]] = None) -> Tuple[bool, List[str]]:
+                                   generation_overrides_by_variant: Optional[Dict[str, Dict[str, Any]]] = None,
+                                   include_angles: Optional[bool] = None) -> Tuple[bool, List[str]]:
         """
         캐릭터 이미지 라이브러리 자동 생성 (설계서 4.1)
 
@@ -3313,6 +3314,29 @@ class CharacterLibraryManager:
                     )
                     if pair not in variant_pairs:
                         variant_pairs.append(pair)
+
+        # v63: 턴어라운드 — 각 (표정,포즈)를 front/left/right/back 4각도로 확장.
+        # include_angles: 명시값 > env REVERIE_TURNAROUND(0이면 끔) > 기본 True.
+        # 이미 각도가 지정된 pair(front 외)는 그대로 두고, front pair만 4각도로 곱한다.
+        if include_angles is None:
+            include_angles = os.environ.get("REVERIE_TURNAROUND", "1").strip().lower() not in ("0", "false", "no", "off")
+        if include_angles:
+            try:
+                from utils.actor_model import DEFAULT_ANGLES
+            except Exception:
+                DEFAULT_ANGLES = ("front", "left", "right", "back")
+            expanded_pairs: List[Tuple[str, str, str]] = []
+            for expr_n, pose_n, angle_n in variant_pairs:
+                if angle_n != "front":
+                    if (expr_n, pose_n, angle_n) not in expanded_pairs:
+                        expanded_pairs.append((expr_n, pose_n, angle_n))
+                    continue
+                for ang in DEFAULT_ANGLES:
+                    cand = (expr_n, pose_n, ang)
+                    if cand not in expanded_pairs:
+                        expanded_pairs.append(cand)
+            variant_pairs = expanded_pairs
+
         images_per_combo = images_per_combo or self.config.auto_generate_count
 
         # 캐릭터 폴더 생성

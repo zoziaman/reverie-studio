@@ -622,6 +622,7 @@ def test_character_library_generation_overrides_pass_anchor_img2img_settings(tmp
         character_def=character_def,
         variant_keys=["neutral_standing"],
         images_per_combo=1,
+        include_angles=False,
         generation_overrides_by_variant={
             "neutral_standing": {
                 "init_image_path": str(anchor_path),
@@ -680,6 +681,7 @@ def test_character_library_generation_overrides_pass_consistency_and_pose_refere
         character_def=character_def,
         variant_keys=["neutral_sitting"],
         images_per_combo=1,
+        include_angles=False,
         generation_overrides_by_variant={
             "neutral_sitting": {
                 "consistency_image_path": str(reference_path),

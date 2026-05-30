@@ -989,10 +989,12 @@ Output ONLY the JSON below (no explanation):
 
         try:
             variant_key = f"{emotion}_{pose}_{angle}" if angle != "front" else f"{emotion}_{pose}"
+            # on-demand: 지금 필요한 그 각도 1개만 생성 (4각도 확장 비활성)
             success, _ = self.char_library_manager.generate_character_library(
                 character_def=character_def,
                 variant_keys=[variant_key],
                 images_per_combo=1,
+                include_angles=False,
             )
             if success:
                 refreshed = self._get_from_library(char_id, emotion, pose, angle=angle)
